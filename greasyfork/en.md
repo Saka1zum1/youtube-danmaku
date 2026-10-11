@@ -1,0 +1,64 @@
+## Introduction
+
+YouTube Danmaku turns new YouTube live-chat messages into scrolling danmaku over the video — just like on Bilibili.
+
+No more constantly glancing at the chat panel. Messages flow across the screen so you never miss the action.
+
+## How to Use
+
+1. Install the Tampermonkey extension
+2. Install this script, then open a YouTube watch page that has live chat or chat replay (`/watch` or `/live/...`)
+3. Keep the chat docked on the right side of the page. A popped-out chat window is not read
+4. Two new buttons appear at the left of the player's right-hand controls:
+   - **Danmaku button** — Toggle danmaku on/off
+   - **Settings button** — Open the options panel
+5. Customize appearance or enable translation in the settings panel
+
+**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself.
+
+### Live Danmaku
+
+- Automatically captures new live-chat and chat-replay messages and displays them on the video
+- Shows message content only — each sender gets a stable color. Owner and moderator colors are kept
+- Hover or click any danmaku to pause it
+- Click to reveal the sender. The copy button in the bubble writes the message into the live chat input
+
+### Customization
+
+- Adjust scroll speed, font size, and choose from 18 system fonts
+- Scroll area: full screen / top half / top quarter
+- Auto-adapts to fullscreen, theater mode, and window resize
+
+### Real-Time Translation (Optional)
+
+- Engines: Auto, Microsoft, Google, Volcengine, Caiyun, and Tencent Transmart
+- Source language is detected automatically; the translation replaces the on-screen text
+- Choose the target language and translation speed
+- Numbers and symbols are left as-is. Busy chat is merged into fewer requests
+
+### Quality of Life
+
+- No flood of historical messages when you join a stream
+- No burst of queued messages when you return to the tab
+- UI follows the browser language (Chinese / English)
+- Zero external dependencies — lightweight and fast
+
+## FAQ
+
+**Q: Translation doesn't work?**
+A: Translation calls Microsoft, Google, Volcengine, Caiyun, or Tencent, depending on the engine you picked. A network proxy may be required in some regions.
+
+**Q: No danmaku appears?**
+A: Open a watch page with live chat or chat replay, and keep that chat docked on the page. A popped-out chat window is not read. Ordinary videos without live chat have nothing to show.
+
+**Q: Too many danmaku on screen?**
+A: Slow down the speed, reduce the scroll area, or turn danmaku off entirely.
+
+**Q: Which browsers are supported?**
+A: Any browser with Tampermonkey — Chrome, Edge, Firefox, Safari, and more. The desktop `youtube.com` watch page is the supported layout.
+
+## Privacy
+
+- This script only runs on YouTube pages
+- When translation is on, the text to translate is sent to the selected engine: Microsoft, Google, Volcengine, Caiyun, or Tencent Transmart
+- Settings are stored locally in your browser. Nothing else is uploaded

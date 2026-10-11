@@ -1,0 +1,85 @@
+# YouTube 彈幕
+
+[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md)
+
+把 YouTube 直播聊天轉成影片上滾動彈幕的油猴腳本。互動與翻譯架構參考 [Twitch Danmaku](https://github.com/Saka1zum1/twitch-danmaku)（MIT），播放器與聊天則改為讀取 YouTube 觀看頁。
+
+## 功能
+
+- **即時彈幕** — 直播聊天的新訊息在畫面上滾動
+- **發送者配色** — 滾動時只顯示內容；每位使用者顏色固定，房主 / 管理員沿用身份色
+- **互動暫停** — 懸停或點擊暫停；點擊可看發送者，翻譯過的彈幕會附上原文
+- **複製到聊天室** — 提示框的複製按鈕把文字寫入直播聊天輸入框
+- **自訂** — 速度、字型、滾動區域（全螢幕 / 上半部 / 頂部 1/4）
+- **全螢幕自適應** — 跟隨播放器縮放、劇院模式與全螢幕
+- **即時翻譯** — Microsoft、Google、火山翻譯、彩雲小譯、騰訊互動翻譯。尖峰時合併請求，被限流的引擎會先跳過。純數字與符號不翻譯
+- **防堆積** — 進房時已在列表中的訊息，以及其後約 2.5 秒內的訊息，不會一次刷出
+- **雙語介面** — 跟隨瀏覽器語言（中文 / 英文）
+
+## 安裝
+
+1. 安裝 [Tampermonkey](https://www.tampermonkey.net/)
+2. 用油猴開啟 [`dist/youtube-danmaku.user.js`](dist/youtube-danmaku.user.js)，或把檔案內容貼進新腳本後儲存
+3. 若腳本沒有執行，請在瀏覽器的擴充功能設定中允許使用者腳本
+
+或從原始碼建置：
+
+```bash
+git clone <this-repository>
+cd youtube-danmaku
+npm run build
+```
+
+建置結果是 `dist/youtube-danmaku.user.js`。
+
+## 使用
+
+1. 開啟有直播聊天或聊天重播的 YouTube 觀看頁（`/watch` 或 `/live/...`）
+2. 聊天保持嵌在頁面右側。腳本讀取 `ytd-live-chat-frame#chat` 裡的 `iframe#chatframe`。彈出的獨立聊天視窗不會被監聽
+3. 新訊息在 `ytd-player #movie_player` 的 `.html5-video-container` 上滾動
+4. 播放器右側控制組最左邊會多出兩個按鈕：
+   - **彈幕** — 開關滾動
+   - **設定** — 打開選項
+5. 懸停一則彈幕會暫停；點擊可看是誰發的
+6. 點複製圖示後，文字會進入直播聊天輸入框，仍需自己送出
+7. 懸停時，指標離開約 0.3 秒後繼續滾動；點擊鎖定後，點提示框外面才會繼續
+
+## 設定
+
+| 選項 | 說明 |
+|------|------|
+| 滾動速度 | 1–10，越大越快 |
+| 字型大小 | 14–40 px |
+| 字型 | 18 種系統字型 |
+| 滾動區域 | 全螢幕 / 上半部 / 頂部 1/4 |
+| 啟用翻譯 | 畫面上改為顯示譯文 |
+| 翻譯引擎 | 自動切換 / Microsoft / Google / 火山翻譯 / 彩雲小譯 / 騰訊互動翻譯 |
+| 目標語言 | 來源語言自動偵測 |
+| 翻譯速度 | 1–10 則/秒。忙碌時多則會合成較少的請求 |
+
+設定存在本機，下次開啟仍然有效。
+
+## 開發
+
+```bash
+npm run build
+npm run watch
+```
+
+`demo/preview.html` 用本機頁面代替觀看頁（播放器、控制列、聊天列表）。先建置，再用靜態伺服器開啟：
+
+```bash
+npx serve .
+```
+
+前往 `/demo/preview.html`。列表裡已有的訊息不會滾動；預熱結束後新加的訊息會從畫面上飄過。預覽頁在瀏覽器分頁位於背景時也會繼續跑。
+
+## 注意事項
+
+- 支援的是桌面版 `youtube.com` 觀看頁。腳本也會符合 `m.youtube.com`，但行動版播放器結構可能不同
+- 翻譯會請求 Microsoft、Google、火山、彩雲或騰訊，部分地區需要代理
+- YouTube 改版後，聊天讀取或控制列按鈕可能失效，歡迎回報
+
+## 授權
+
+[MIT](LICENSE)。彈幕互動與翻譯堆疊改編自 [Twitch Danmaku](https://github.com/Saka1zum1/twitch-danmaku) © 2026 kakageo。

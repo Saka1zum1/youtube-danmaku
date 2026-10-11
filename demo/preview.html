@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-ydm-preview="true">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="require-trusted-types-for 'script'">
+  <title>YouTube Danmaku preview</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0f0f0f;
+      color: #f1f1f1;
+      font-family: Roboto, Arial, sans-serif;
+    }
+    .layout {
+      display: flex;
+      gap: 16px;
+      padding: 68px 16px 16px;
+      align-items: flex-start;
+    }
+    #movie_player {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      background: #000;
+    }
+    .page-header,
+    .video-title {
+      position: relative;
+      z-index: 20;
+      background: #0f0f0f;
+    }
+    .page-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      z-index: 2000;
+    }
+    .html5-video-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      background: #111;
+      object-fit: cover;
+    }
+    .ytp-chrome-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 48px;
+      z-index: 40;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+    }
+    .ytp-right-controls {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 48px;
+      display: flex;
+      align-items: center;
+    }
+    ytd-live-chat-frame {
+      width: 320px;
+      height: 596px;
+      background: #181818;
+      display: flex;
+      flex-direction: column;
+    }
+    #items {
+      flex: 1;
+      overflow: auto;
+      padding: 8px;
+      font-size: 13px;
+    }
+    #items yt-live-chat-text-message-renderer {
+      display: block;
+      margin: 6px 0;
+    }
+    #author-name { font-weight: 600; margin-right: 6px; }
+    #input {
+      margin: 8px;
+      min-height: 36px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 6px 8px;
+    }
+    .toolbar { margin: 0 8px 8px; }
+    button {
+      background: #272727;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header"></div>
+  <div class="layout">
+    <ytd-watch-flexy class="ytd-page-manager">
+      <div id="movie_player" class="html5-video-player">
+        <div class="html5-video-container">
+          <video class="video-stream html5-main-video"></video>
+        </div>
+        <div class="ytp-chrome-bottom">
+          <div class="ytp-right-controls"></div>
+        </div>
+      </div>
+    </ytd-watch-flexy>
+    <ytd-live-chat-frame id="chat">
+      <div id="items" class="yt-live-chat-item-list-renderer">
+        <yt-live-chat-text-message-renderer id="history-1">
+          <span id="author-name" style="color:#aaaaaa">History</span>
+          <span id="message">already on screen</span>
+        </yt-live-chat-text-message-renderer>
+      </div>
+      <div id="input" class="yt-live-chat-text-input-field-renderer" contenteditable="true"></div>
+      <div class="toolbar">
+        <button id="add-chat" type="button">Add chat</button>
+      </div>
+    </ytd-live-chat-frame>
+  </div>
+  <script>
+    function GM_addStyle(css) {
+      const style = document.createElement('style');
+      style.textContent = css;
+      document.documentElement.appendChild(style);
+    }
+    function GM_getValue(key, fallback) {
+      try {
+        const raw = localStorage.getItem('ydm-preview:' + key);
+        return raw == null ? fallback : JSON.parse(raw);
+      } catch (_) {
+        return fallback;
+      }
+    }
+    function GM_setValue(key, value) {
+      localStorage.setItem('ydm-preview:' + key, JSON.stringify(value));
+    }
+    function GM_xmlhttpRequest(details) {
+      if (details && typeof details.onerror === 'function') details.onerror({});
+    }
+    function GM_setClipboard(text) {
+      if (navigator.clipboard) return navigator.clipboard.writeText(text);
+    }
+  </script>
+  <script src="../dist/youtube-danmaku.user.js?v=9"></script>
+  <script>
+    const samples = [
+      ['Alice', '#ff8a80', 'hello from chat'],
+      ['小明', '#ffd600', '这是一条中文弹幕'],
+      ['Bob', '#82b1ff', 'lol lol lol lol lol'],
+    ];
+    let seq = 0;
+
+    function addMessage(name, color, text) {
+      const item = document.createElement('yt-live-chat-text-message-renderer');
+      item.id = 'live-' + (++seq);
+      const author = document.createElement('span');
+      author.id = 'author-name';
+      author.style.color = color;
+      author.textContent = name;
+      const link = document.createElement('a');
+      link.href = 'https://www.youtube.com/@' + encodeURIComponent(name);
+      link.appendChild(author);
+      const message = document.createElement('span');
+      message.id = 'message';
+      message.textContent = text;
+      item.append(link, message);
+      document.getElementById('items').appendChild(item);
+    }
+
+    document.getElementById('add-chat').addEventListener('click', () => {
+      const sample = samples[seq % samples.length];
+      addMessage(sample[0], sample[1], sample[2] + ' ' + (seq + 1));
+    });
+
+    setTimeout(() => {
+      samples.forEach((sample, index) => {
+        setTimeout(() => addMessage(sample[0], sample[1], sample[2]), index * 700);
+      });
+    }, 4000);
+  </script>
+</body>
+</html>

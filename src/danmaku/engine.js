@@ -1,0 +1,279 @@
+function appendDanmakuContent(item, message, parts) {
+  if (!Array.isArray(parts) || !parts.length) {
+    item.textContent = message || '';
+    return;
+  }
+
+  for (const part of parts) {
+    if (part?.type === 'emote') {
+      const src = safeEmoteSrc(part.src);
+      if (!src) {
+        if (part.alt) item.appendChild(document.createTextNode(part.alt));
+        continue;
+      }
+      const slot = document.createElement('span');
+      slot.className = 'ydm-emote';
+      slot.style.display = 'inline-block';
+      slot.style.width = '1.15em';
+      slot.style.height = '1.15em';
+      const img = document.createElement('img');
+      img.alt = part.alt || '';
+      img.src = src;
+      img.draggable = false;
+      img.referrerPolicy = 'no-referrer';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.fontSize = '0';
+      slot.appendChild(img);
+      item.appendChild(slot);
+      continue;
+    }
+    if (part?.text) item.appendChild(document.createTextNode(part.text));
+  }
+
+  if (!item.childNodes.length) item.textContent = message || '';
+}
+
+class DanmakuEngine {
+  constructor(getSettings) {
+    this.getSettings = getSettings;
+    this.laneManager = new LaneManager();
+    this.layer = null;
+    this.playerEl = null;
+    this.overlayEl = null;
+    this.resizeObserver = null;
+    this.controlsObserver = null;
+    this.controlsHeight = SCROLL_AREA_BOTTOM_RESERVE;
+    this.boundUpdate = () => this.updateLayout();
+  }
+
+  insertLayer() {
+    const overlay = this.overlayEl || this.playerEl;
+    overlay.appendChild(this.layer);
+  }
+
+  async mount() {
+    this.playerEl = await waitForElement(SELECTORS.player);
+    if (!this.playerEl) {
+      console.warn('[YDM] Video player not found');
+      return;
+    }
+
+    this.overlayEl = this.playerEl.querySelector('.html5-video-container') || this.playerEl;
+    if (getComputedStyle(this.overlayEl).position === 'static') {
+      this.overlayEl.style.position = 'relative';
+    }
+
+    this.layer = document.createElement('div');
+    this.layer.className = 'ydm-danmaku-layer';
+    this.layer.setAttribute('aria-hidden', 'true');
+    this.insertLayer();
+
+    this.resizeObserver = new ResizeObserver(this.boundUpdate);
+    this.resizeObserver.observe(this.playerEl);
+
+    const chrome = this.playerEl.querySelector(SELECTORS.playerChrome);
+    if (chrome) {
+      this.controlsObserver = new ResizeObserver(this.boundUpdate);
+      this.controlsObserver.observe(chrome);
+    }
+
+    window.addEventListener('resize', this.boundUpdate);
+    document.addEventListener('fullscreenchange', this.boundUpdate);
+    document.addEventListener('webkitfullscreenchange', this.boundUpdate);
+    this.updateLayout();
+  }
+
+  destroy() {
+    window.removeEventListener('resize', this.boundUpdate);
+    document.removeEventListener('fullscreenchange', this.boundUpdate);
+    document.removeEventListener('webkitfullscreenchange', this.boundUpdate);
+    this.resizeObserver?.disconnect();
+    this.controlsObserver?.disconnect();
+    hideDanmakuTooltip();
+    this.layer?.remove();
+    this.layer = null;
+    this.playerEl = null;
+    this.overlayEl = null;
+  }
+
+  getLaneHeight() {
+    return this.getSettings().fontSize + 8;
+  }
+
+  getBottomReserve() {
+    const player = this.playerEl;
+    const controls = player?.querySelector(SELECTORS.playerChrome);
+    const autohide = player?.classList.contains('ytp-autohide');
+    if (controls && !autohide) {
+      const height = controls.getBoundingClientRect().height;
+      if (height > 8) this.controlsHeight = Math.ceil(height) + 4;
+    }
+    return this.controlsHeight;
+  }
+
+  getScrollAreaRect(playerRect) {
+    const laneHeight = this.getLaneHeight();
+    const h = playerRect.height;
+
+    switch (this.getSettings().scrollArea) {
+      case 'top-half':
+        return { top: 0, height: Math.max(laneHeight, h * 0.5) };
+      case 'top-quarter':
+        return { top: 0, height: Math.max(laneHeight, h * 0.25) };
+      default:
+        return { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+    }
+  }
+
+  migrateDanmakuItems(items, oldRect, newWidth, newHeight) {
+    const oldWidth = oldRect.width || 1;
+    const oldHeight = oldRect.height || 1;
+
+    for (const item of items) {
+      if (!item.isConnected) continue;
+
+      const top = parseFloat(item.style.top) || 0;
+      item.style.top = `${(top / oldHeight) * newHeight}px`;
+
+      const oldTravel = parseFloat(item.style.getPropertyValue('--ydm-travel')) || oldWidth;
+      const oldDuration = parseFloat(item.style.getPropertyValue('--ydm-duration')) || 8000;
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(item).transform);
+      const progress = oldTravel > 0 ? clamp(-matrix.m41 / oldTravel, 0, 1) : 0;
+
+      const itemWidth = item.offsetWidth;
+      const newTravel = newWidth + itemWidth;
+      const newDuration = (newTravel / oldTravel) * oldDuration;
+      const remaining = Math.max(0, newDuration * (1 - progress));
+
+      item._ydmClearRemoveTimer?.();
+
+      const wasPaused = item.classList.contains('ydm-paused');
+      if (wasPaused) item.classList.remove('ydm-paused');
+
+      item.style.setProperty('--ydm-travel', `${newTravel}px`);
+      item.style.setProperty('--ydm-start', `${-progress * newTravel}px`);
+      item.style.setProperty('--ydm-duration', `${remaining}ms`);
+      item.style.animation = 'none';
+      void item.offsetWidth;
+      item.style.animation = '';
+
+      if (wasPaused) item.classList.add('ydm-paused');
+      item._ydmScheduleRemove?.(remaining);
+    }
+  }
+
+  updateLayout() {
+    if (!this.layer || !this.playerEl) return;
+
+    const rect = this.playerEl.getBoundingClientRect();
+    const area = this.getScrollAreaRect(rect);
+    const oldRect = this.layer.getBoundingClientRect();
+    const items = [...this.layer.querySelectorAll('.ydm-danmaku-item')];
+    const shouldMigrate = items.length > 0;
+
+    if (shouldMigrate) hideDanmakuTooltip();
+    if (this.layer.parentElement !== this.overlayEl) this.insertLayer();
+
+    Object.assign(this.layer.style, {
+      position: 'absolute',
+      top: `${area.top}px`,
+      left: '0',
+      width: '100%',
+      height: `${area.height}px`,
+      zIndex: '2',
+    });
+
+    const newWidth = this.layer.clientWidth;
+    const newHeight = this.layer.clientHeight;
+    if (shouldMigrate && (
+      Math.abs(oldRect.width - newWidth) > 1
+      || Math.abs(oldRect.height - newHeight) > 1
+    )) {
+      this.migrateDanmakuItems(items, oldRect, newWidth, newHeight);
+    }
+
+    const laneHeight = this.getLaneHeight();
+    this.laneManager.reset(Math.floor(newHeight / laneHeight), laneHeight);
+    this.layer.style.display = this.getSettings().enabled ? 'block' : 'none';
+  }
+
+  render({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
+    const settings = this.getSettings();
+    const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
+    if (!settings.enabled || !this.layer || (!message && !hasEmote)) return;
+
+    const layerWidth = this.layer.clientWidth || 800;
+    const speed = clamp(settings.speed, 1, 10);
+    const baseDuration = 30000;
+    const laneHeight = this.getLaneHeight();
+
+    const item = document.createElement('div');
+    item.className = 'ydm-danmaku-item';
+    appendDanmakuContent(item, message, parts);
+    item.style.top = '0';
+    item.style.color = safeCssColor(usernameColor);
+    item.style.fontSize = `${settings.fontSize}px`;
+    item.style.fontFamily = settings.fontFamily;
+    item.style.visibility = 'hidden';
+    item.style.animation = 'none';
+
+    this.layer.appendChild(item);
+    const itemWidth = item.offsetWidth;
+    const travel = layerWidth + itemWidth;
+    const durationMs = Math.round((travel / layerWidth) * (baseDuration / speed));
+    const lane = this.laneManager.acquire(durationMs);
+
+    item.style.top = `${lane * laneHeight}px`;
+    item.style.visibility = '';
+    item.style.setProperty('--ydm-travel', `${travel}px`);
+    item.style.setProperty('--ydm-start', '0px');
+    item.style.setProperty('--ydm-duration', `${durationMs}ms`);
+    void item.offsetWidth;
+    item.style.animation = '';
+
+    const startAt = Date.now();
+    let pausedAt = 0;
+    let totalPaused = 0;
+    let removeTimer = null;
+
+    const scheduleRemove = (remainingMs = durationMs) => {
+      const elapsed = Date.now() - startAt - totalPaused;
+      const remaining = remainingMs ?? Math.max(0, durationMs - elapsed);
+      clearTimeout(removeTimer);
+      removeTimer = setTimeout(() => item.remove(), remaining + 500);
+    };
+
+    item._ydmClearRemoveTimer = () => clearTimeout(removeTimer);
+    item._ydmScheduleRemove = scheduleRemove;
+
+    const onPause = () => {
+      pausedAt = Date.now();
+      clearTimeout(removeTimer);
+    };
+
+    const onResume = () => {
+      if (pausedAt) {
+        totalPaused += Date.now() - pausedAt;
+        pausedAt = 0;
+      }
+      scheduleRemove();
+    };
+
+    attachDanmakuInteraction(item, {
+      username,
+      usernameColor,
+      profileUrl,
+      originalMessage,
+      translated,
+      onPause,
+      onResume,
+    });
+    scheduleRemove();
+
+    item.addEventListener('animationend', () => {
+      clearTimeout(removeTimer);
+      item.remove();
+    }, { once: true });
+  }
+}

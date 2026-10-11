@@ -1,0 +1,70 @@
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const SRC = path.join(ROOT, 'src');
+const OUT = path.join(ROOT, 'dist', 'youtube-danmaku.user.js');
+
+const MODULES = [
+  'userscript-header.js',
+  'i18n.js',
+  'config.js',
+  'storage.js',
+  'utils/dom.js',
+  'danmaku/lanes.js',
+  'danmaku/engine.js',
+  'danmaku/interaction.js',
+  'danmaku/emitter.js',
+  'translate/dictionary.js',
+  'translate/translator.js',
+  'translate/phrases.js',
+  'translate/queue.js',
+  'chat/dedupe.js',
+  'chat/parser.js',
+  'chat/observer.js',
+  'ui/styles.js',
+  'ui/icons.js',
+  'ui/panel.js',
+  'ui/control-button.js',
+  'main.js',
+];
+
+function build() {
+  const headerPath = path.join(SRC, 'userscript-header.js');
+  const header = fs.readFileSync(headerPath, 'utf8').trim();
+
+  const bodyParts = MODULES
+    .filter((file) => file !== 'userscript-header.js')
+    .map((file) => {
+      const fullPath = path.join(SRC, file);
+      if (!fs.existsSync(fullPath)) {
+        throw new Error(`Missing source file: ${file}`);
+      }
+      return fs.readFileSync(fullPath, 'utf8').trim();
+    });
+
+  const banner = `(function () {
+'use strict';
+`;
+
+  const footer = `
+})();`;
+
+  const output = `${header}\n\n${banner}${bodyParts.join('\n\n')}${footer}\n`;
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+  fs.writeFileSync(OUT, output, 'utf8');
+  console.log(`Built ${OUT} (${(output.length / 1024).toFixed(1)} KB)`);
+}
+
+build();
+
+if (process.argv.includes('--watch')) {
+  console.log('Watching for changes...');
+  fs.watch(SRC, { recursive: true }, () => {
+    try {
+      build();
+    } catch (err) {
+      console.error(err.message);
+    }
+  });
+}
