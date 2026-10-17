@@ -4,6 +4,7 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   speed: 5,
   fontSize: 22,
+  opacity: 100,
   fontFamily: 'system-ui, sans-serif',
   scrollArea: 'full',
   translateEnabled: false,

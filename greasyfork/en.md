@@ -25,7 +25,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 ### Customization
 
-- Adjust scroll speed, font size, and choose from 18 system fonts
+- Adjust scroll speed, font size, danmaku opacity (10–100%), and choose from 18 system fonts
 - Scroll area: full screen / top half / top quarter
 - Block keywords. A message is hidden when the original text or the translation contains one
 - Auto-adapts to fullscreen, theater mode, and window resize

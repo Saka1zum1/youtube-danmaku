@@ -101,6 +101,10 @@ class DanmakuEngine {
     return this.getSettings().fontSize + 8;
   }
 
+  getItemOpacity() {
+    return clamp(this.getSettings().opacity ?? 100, 10, 100) / 100;
+  }
+
   getBottomReserve() {
     const player = this.playerEl;
     const controls = player?.querySelector(SELECTORS.playerChrome);
@@ -196,6 +200,11 @@ class DanmakuEngine {
     const laneHeight = this.getLaneHeight();
     this.laneManager.reset(Math.floor(newHeight / laneHeight), laneHeight);
     this.layer.style.display = this.getSettings().enabled ? 'block' : 'none';
+
+    const opacity = this.getItemOpacity();
+    for (const item of items) {
+      if (item.isConnected) item.style.opacity = String(opacity);
+    }
   }
 
   render({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
@@ -215,6 +224,7 @@ class DanmakuEngine {
     item.style.color = safeCssColor(usernameColor);
     item.style.fontSize = `${settings.fontSize}px`;
     item.style.fontFamily = settings.fontFamily;
+    item.style.opacity = String(this.getItemOpacity());
     item.style.visibility = 'hidden';
     item.style.animation = 'none';
 

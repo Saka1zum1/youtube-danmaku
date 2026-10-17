@@ -3,7 +3,7 @@
 // @name:zh-CN   YouTube 弹幕
 // @name:zh-TW   YouTube 彈幕
 // @namespace    youtube-danmaku
-// @version      1.0.1
+// @version      1.0.2
 // @description  Turn YouTube live chat into scrolling danmaku on the video
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製與即時翻譯
@@ -41,6 +41,7 @@ const LOCALES = {
     panelClose: '关闭',
     scrollSpeed: '滚动速度',
     fontSize: '字体大小',
+    danmakuOpacity: '弹幕透明度',
     fontFamily: '字体',
     scrollArea: '滚动区域',
     translateEnable: '启用翻译',
@@ -102,6 +103,7 @@ const LOCALES = {
     panelClose: 'Close',
     scrollSpeed: 'Scroll speed',
     fontSize: 'Font size',
+    danmakuOpacity: 'Danmaku opacity',
     fontFamily: 'Font',
     scrollArea: 'Scroll area',
     translateEnable: 'Enable translation',
@@ -238,6 +240,7 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   speed: 5,
   fontSize: 22,
+  opacity: 100,
   fontFamily: 'system-ui, sans-serif',
   scrollArea: 'full',
   translateEnabled: false,
@@ -290,6 +293,7 @@ function loadSettings() {
         merged.translateProvider = DEFAULT_SETTINGS.translateProvider;
       }
       merged.blockKeywords = normalizeBlockKeywords(merged.blockKeywords);
+      merged.opacity = clamp(Number(merged.opacity) || DEFAULT_SETTINGS.opacity, 10, 100);
       return merged;
     }
   } catch (_) {
@@ -715,6 +719,10 @@ class DanmakuEngine {
     return this.getSettings().fontSize + 8;
   }
 
+  getItemOpacity() {
+    return clamp(this.getSettings().opacity ?? 100, 10, 100) / 100;
+  }
+
   getBottomReserve() {
     const player = this.playerEl;
     const controls = player?.querySelector(SELECTORS.playerChrome);
@@ -810,6 +818,11 @@ class DanmakuEngine {
     const laneHeight = this.getLaneHeight();
     this.laneManager.reset(Math.floor(newHeight / laneHeight), laneHeight);
     this.layer.style.display = this.getSettings().enabled ? 'block' : 'none';
+
+    const opacity = this.getItemOpacity();
+    for (const item of items) {
+      if (item.isConnected) item.style.opacity = String(opacity);
+    }
   }
 
   render({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
@@ -829,6 +842,7 @@ class DanmakuEngine {
     item.style.color = safeCssColor(usernameColor);
     item.style.fontSize = `${settings.fontSize}px`;
     item.style.fontFamily = settings.fontFamily;
+    item.style.opacity = String(this.getItemOpacity());
     item.style.visibility = 'hidden';
     item.style.animation = 'none';
 
@@ -1308,6 +1322,7 @@ const TWITCH_DICTIONARY = {
   EZ: dictEntry('轻松', '輕鬆', 'EZ'),
   Clap: dictEntry('（鼓掌）', '（鼓掌）', 'Clap'),
   NPC: dictEntry('工具人', '工具人', 'NPC'),
+  ICANT: dictEntry('我做不到', '我做不到', 'ICANT'),
   W: dictEntry('神', '神', 'W'),
   L: dictEntry('拉胯', '拉胯', 'L'),
   F: dictEntry('F', 'F', 'F'),
@@ -3323,6 +3338,7 @@ class SettingsPanel {
     body.append(
       this.createRange(t('scrollSpeed'), 'speed', 1, 10, 1, (v) => String(v)),
       this.createRange(t('fontSize'), 'fontSize', 14, 40, 1, (v) => `${v}px`),
+      this.createRange(t('danmakuOpacity'), 'opacity', 10, 100, 5, (v) => `${v}%`),
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),

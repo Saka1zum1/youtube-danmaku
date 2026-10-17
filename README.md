@@ -10,7 +10,7 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 - **Sender colors** — The scrolling line is the message only; each chatter gets a stable color, and owner / moderator colors are kept
 - **Interactive pause** — Hover or click to pause; click to show the sender, and the original text when a line was translated
 - **Copy to chat** — The tooltip copy button writes the message into the live chat input
-- **Customization** — Speed, font, scroll area (full / top half / top quarter)
+- **Customization** — Speed, font, opacity, scroll area (full / top half / top quarter)
 - **Fullscreen-aware** — Follows player resize, theater mode, and fullscreen
 - **Translation** — Microsoft, Google, Volcengine, Caiyun, and Tencent Transmart. Busy chat is batched, and a rate-limited engine is skipped. Numbers and symbols are left as-is
 - **Anti-flood** — Messages already on screen when you join, and the first 2.5 seconds after that, are not fired as a burst
@@ -50,6 +50,7 @@ The built script is `dist/youtube-danmaku.user.js`.
 |--------|-------------|
 | Scroll speed | 1–10, higher is faster |
 | Font size | 14–40 px |
+| Danmaku opacity | 10–100% |
 | Font | 18 system fonts |
 | Scroll area | Full / top half / top quarter |
 | Translation | Replaces the on-screen text |

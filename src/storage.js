@@ -10,6 +10,7 @@ function loadSettings() {
         merged.translateProvider = DEFAULT_SETTINGS.translateProvider;
       }
       merged.blockKeywords = normalizeBlockKeywords(merged.blockKeywords);
+      merged.opacity = clamp(Number(merged.opacity) || DEFAULT_SETTINGS.opacity, 10, 100);
       return merged;
     }
   } catch (_) {

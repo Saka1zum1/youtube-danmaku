@@ -203,6 +203,7 @@ class SettingsPanel {
     body.append(
       this.createRange(t('scrollSpeed'), 'speed', 1, 10, 1, (v) => String(v)),
       this.createRange(t('fontSize'), 'fontSize', 14, 40, 1, (v) => `${v}px`),
+      this.createRange(t('danmakuOpacity'), 'opacity', 10, 100, 5, (v) => `${v}%`),
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),
