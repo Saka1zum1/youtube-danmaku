@@ -206,6 +206,8 @@ class SettingsPanel {
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),
+      this.createKeywordBlock(),
+      this.createDivider(),
       this.createToggle(t('translateEnable'), 'translateEnabled'),
       this.createSelect(t('translateProvider'), 'translateProvider', getTranslateProviderOptions()),
       this.createSelect(t('translateTarget'), 'translateTargetLang', getTranslateLangOptions()),
@@ -215,6 +217,94 @@ class SettingsPanel {
     this.balloon.append(header, body);
     const mountTarget = getFullscreenElement() || document.body;
     mountTarget.appendChild(this.balloon);
+  }
+
+  createKeywordBlock() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const label = document.createElement('div');
+    label.className = 'ydm-balloon-label';
+    label.textContent = t('blockKeywords');
+
+    const hint = document.createElement('div');
+    hint.className = 'ydm-keyword-hint';
+    hint.textContent = t('blockKeywordHint');
+
+    const form = document.createElement('div');
+    form.className = 'ydm-keyword-add';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'ydm-balloon-input';
+    input.maxLength = 40;
+    input.placeholder = t('blockKeywordPlaceholder');
+    input.setAttribute('aria-label', t('blockKeywords'));
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'ydm-keyword-add-btn';
+    addBtn.textContent = t('blockKeywordAdd');
+
+    const list = document.createElement('div');
+    list.className = 'ydm-keyword-list';
+
+    const renderList = () => {
+      list.replaceChildren();
+      for (const word of this.settings.blockKeywords || []) {
+        const chip = document.createElement('span');
+        chip.className = 'ydm-keyword-chip';
+
+        const text = document.createElement('span');
+        text.textContent = word;
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ydm-keyword-remove';
+        remove.setAttribute('aria-label', `${t('blockKeywordRemove')} ${word}`);
+        remove.textContent = '×';
+        remove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const next = (this.settings.blockKeywords || []).filter((item) => item !== word);
+          this.updateSetting('blockKeywords', next);
+          renderList();
+        });
+
+        chip.append(text, remove);
+        list.appendChild(chip);
+      }
+    };
+
+    const addWord = () => {
+      const word = input.value.trim().slice(0, 40);
+      if (!word) return;
+      const current = this.settings.blockKeywords || [];
+      if (current.some((item) => item.toLowerCase() === word.toLowerCase())) {
+        input.value = '';
+        return;
+      }
+      if (current.length >= 50) return;
+      this.updateSetting('blockKeywords', [...current, word]);
+      input.value = '';
+      renderList();
+    };
+
+    addBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      addWord();
+    });
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      addWord();
+    });
+
+    form.append(input, addBtn);
+    row.append(label, hint, form, list);
+    renderList();
+    return row;
   }
 
   createDivider() {

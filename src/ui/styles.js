@@ -309,7 +309,8 @@ function injectStyles() {
       height: 4px;
     }
 
-    .ydm-balloon-select {
+    .ydm-balloon-select,
+    .ydm-balloon-input {
       width: 100%;
       padding: 6px 8px;
       border: 1px solid #3a3a3a;
@@ -317,6 +318,76 @@ function injectStyles() {
       background: #0f0f0f;
       color: #f1f1f1;
       font-size: 13px;
+    }
+
+    .ydm-keyword-hint {
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .ydm-keyword-add {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ydm-keyword-add-btn {
+      flex-shrink: 0;
+      border: none;
+      border-radius: 8px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .ydm-keyword-add-btn:hover {
+      background: #4a4a4a;
+    }
+
+    .ydm-keyword-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ydm-keyword-list:empty {
+      display: none;
+    }
+
+    .ydm-keyword-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      max-width: 100%;
+      padding: 2px 2px 2px 8px;
+      border-radius: 999px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      font-size: 12px;
+    }
+
+    .ydm-keyword-chip > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ydm-keyword-remove {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 18px;
+    }
+
+    .ydm-keyword-remove:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
     }
 
     .ydm-balloon-divider {

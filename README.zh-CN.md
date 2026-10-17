@@ -66,13 +66,7 @@ npm run build
 npm run watch
 ```
 
-`demo/preview.html` 用本地页面代替观看页（播放器、控制栏、聊天列表）。先构建，再用静态服务器打开：
-
-```bash
-npx serve .
-```
-
-访问 `/demo/preview.html`。列表里已有的消息不会滚动；预热结束后新加的消息会从画面上飘过。预览页在浏览器标签位于后台时也会继续跑。
+公开演示不需要构建：[demo/preview.html](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)。它用页面代替观看页（播放器、控制栏、聊天列表）。列表里已有的消息不会滚动；预热结束后新加的消息会从画面上飘过。预览页在浏览器标签位于后台时也会继续跑。
 
 ## 注意事项
 

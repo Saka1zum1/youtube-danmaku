@@ -27,6 +27,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 - Adjust scroll speed, font size, and choose from 18 system fonts
 - Scroll area: full screen / top half / top quarter
+- Block keywords. A message is hidden when the original text or the translation contains one
 - Auto-adapts to fullscreen, theater mode, and window resize
 
 ### Real-Time Translation (Optional)
@@ -42,6 +43,14 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 - No burst of queued messages when you return to the tab
 - UI follows the browser language (Chinese / English)
 - Zero external dependencies — lightweight and fast
+
+## Demo
+
+Open the demo in your browser. No install or build step is required:
+
+[YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)
+
+The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, settings panel, and keyword list work on this page.
 
 ## FAQ
 

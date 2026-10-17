@@ -134,6 +134,8 @@ class ChatObserver {
     const settings = this.getSettings();
     if (!this.isActive() || !settings.enabled) return;
 
+    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) return;
+
     const shielded = shieldEmoteParts(parsed.parts);
     const base = {
       username: parsed.username,
@@ -154,9 +156,12 @@ class ChatObserver {
 
     this.translateQueue.enqueue(shielded.text, (translated, original) => {
       if (!this.isActive()) return;
+      const latest = this.getSettings();
       const rendered = translated?.trim() ? translated : original;
       const parts = restoreEmoteParts(rendered, shielded.emotes) || parsed.parts;
       const message = partsToText(parts) || parsed.message;
+      if (messageMatchesBlock(parsed.message, latest.blockKeywords)) return;
+      if (messageMatchesBlock(message, latest.blockKeywords)) return;
       this.danmakuEmitter.enqueue({
         ...base,
         parts,

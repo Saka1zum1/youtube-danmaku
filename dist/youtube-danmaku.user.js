@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         YouTube Danmaku
+// @name         YouTube Danmaku - Bullet Chat
 // @name:zh-CN   YouTube 弹幕
 // @name:zh-TW   YouTube 彈幕
 // @namespace    youtube-danmaku
-// @version      1.0.0
+// @version      1.0.1
 // @description  Turn YouTube live chat into scrolling danmaku on the video
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製與即時翻譯
@@ -87,6 +87,11 @@ const LOCALES = {
     langPt: 'Português',
     tooltipCopy: '复制到聊天框',
     tooltipOpenProfile: '打开发送者主页',
+    blockKeywords: '屏蔽关键词',
+    blockKeywordHint: '原文和译文都会屏蔽',
+    blockKeywordPlaceholder: '输入关键词',
+    blockKeywordAdd: '添加',
+    blockKeywordRemove: '移除关键词',
   },
   en: {
     danmakuToggle: 'Danmaku toggle',
@@ -143,6 +148,11 @@ const LOCALES = {
     langPt: 'Portuguese',
     tooltipCopy: 'Copy to chat',
     tooltipOpenProfile: 'Open sender profile',
+    blockKeywords: 'Blocked keywords',
+    blockKeywordHint: 'Matches the original text and the translation',
+    blockKeywordPlaceholder: 'Add a keyword',
+    blockKeywordAdd: 'Add',
+    blockKeywordRemove: 'Remove keyword',
   },
 };
 
@@ -234,6 +244,7 @@ const DEFAULT_SETTINGS = {
   translateProvider: 'microsoft',
   translateTargetLang: getDefaultTranslateTargetLang(),
   translateSpeed: 3,
+  blockKeywords: [],
 };
 
 const SELECTORS = {
@@ -278,16 +289,43 @@ function loadSettings() {
       if (!TRANSLATE_PROVIDERS.includes(merged.translateProvider)) {
         merged.translateProvider = DEFAULT_SETTINGS.translateProvider;
       }
+      merged.blockKeywords = normalizeBlockKeywords(merged.blockKeywords);
       return merged;
     }
   } catch (_) {
     /* ignore */
   }
-  return { ...DEFAULT_SETTINGS };
+  return { ...DEFAULT_SETTINGS, blockKeywords: [] };
 }
 
 function saveSettings(settings) {
   GM_setValue(STORAGE_KEY, settings);
+}
+
+function normalizeBlockKeywords(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  const words = [];
+  for (const item of value) {
+    if (typeof item !== 'string') continue;
+    const word = item.trim().slice(0, 40);
+    if (!word) continue;
+    const key = word.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    words.push(word);
+    if (words.length >= 50) break;
+  }
+  return words;
+}
+
+function messageMatchesBlock(text, keywords) {
+  const haystack = String(text || '').toLowerCase();
+  if (!haystack || !keywords?.length) return false;
+  return keywords.some((word) => {
+    const needle = String(word || '').trim().toLowerCase();
+    return needle.length > 0 && haystack.includes(needle);
+  });
 }
 
 function clamp(value, min, max) {
@@ -2592,6 +2630,8 @@ class ChatObserver {
     const settings = this.getSettings();
     if (!this.isActive() || !settings.enabled) return;
 
+    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) return;
+
     const shielded = shieldEmoteParts(parsed.parts);
     const base = {
       username: parsed.username,
@@ -2612,9 +2652,12 @@ class ChatObserver {
 
     this.translateQueue.enqueue(shielded.text, (translated, original) => {
       if (!this.isActive()) return;
+      const latest = this.getSettings();
       const rendered = translated?.trim() ? translated : original;
       const parts = restoreEmoteParts(rendered, shielded.emotes) || parsed.parts;
       const message = partsToText(parts) || parsed.message;
+      if (messageMatchesBlock(parsed.message, latest.blockKeywords)) return;
+      if (messageMatchesBlock(message, latest.blockKeywords)) return;
       this.danmakuEmitter.enqueue({
         ...base,
         parts,
@@ -2936,7 +2979,8 @@ function injectStyles() {
       height: 4px;
     }
 
-    .ydm-balloon-select {
+    .ydm-balloon-select,
+    .ydm-balloon-input {
       width: 100%;
       padding: 6px 8px;
       border: 1px solid #3a3a3a;
@@ -2944,6 +2988,76 @@ function injectStyles() {
       background: #0f0f0f;
       color: #f1f1f1;
       font-size: 13px;
+    }
+
+    .ydm-keyword-hint {
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .ydm-keyword-add {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ydm-keyword-add-btn {
+      flex-shrink: 0;
+      border: none;
+      border-radius: 8px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .ydm-keyword-add-btn:hover {
+      background: #4a4a4a;
+    }
+
+    .ydm-keyword-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ydm-keyword-list:empty {
+      display: none;
+    }
+
+    .ydm-keyword-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      max-width: 100%;
+      padding: 2px 2px 2px 8px;
+      border-radius: 999px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      font-size: 12px;
+    }
+
+    .ydm-keyword-chip > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ydm-keyword-remove {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 18px;
+    }
+
+    .ydm-keyword-remove:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
     }
 
     .ydm-balloon-divider {
@@ -3212,6 +3326,8 @@ class SettingsPanel {
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),
+      this.createKeywordBlock(),
+      this.createDivider(),
       this.createToggle(t('translateEnable'), 'translateEnabled'),
       this.createSelect(t('translateProvider'), 'translateProvider', getTranslateProviderOptions()),
       this.createSelect(t('translateTarget'), 'translateTargetLang', getTranslateLangOptions()),
@@ -3221,6 +3337,94 @@ class SettingsPanel {
     this.balloon.append(header, body);
     const mountTarget = getFullscreenElement() || document.body;
     mountTarget.appendChild(this.balloon);
+  }
+
+  createKeywordBlock() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const label = document.createElement('div');
+    label.className = 'ydm-balloon-label';
+    label.textContent = t('blockKeywords');
+
+    const hint = document.createElement('div');
+    hint.className = 'ydm-keyword-hint';
+    hint.textContent = t('blockKeywordHint');
+
+    const form = document.createElement('div');
+    form.className = 'ydm-keyword-add';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'ydm-balloon-input';
+    input.maxLength = 40;
+    input.placeholder = t('blockKeywordPlaceholder');
+    input.setAttribute('aria-label', t('blockKeywords'));
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'ydm-keyword-add-btn';
+    addBtn.textContent = t('blockKeywordAdd');
+
+    const list = document.createElement('div');
+    list.className = 'ydm-keyword-list';
+
+    const renderList = () => {
+      list.replaceChildren();
+      for (const word of this.settings.blockKeywords || []) {
+        const chip = document.createElement('span');
+        chip.className = 'ydm-keyword-chip';
+
+        const text = document.createElement('span');
+        text.textContent = word;
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ydm-keyword-remove';
+        remove.setAttribute('aria-label', `${t('blockKeywordRemove')} ${word}`);
+        remove.textContent = '×';
+        remove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const next = (this.settings.blockKeywords || []).filter((item) => item !== word);
+          this.updateSetting('blockKeywords', next);
+          renderList();
+        });
+
+        chip.append(text, remove);
+        list.appendChild(chip);
+      }
+    };
+
+    const addWord = () => {
+      const word = input.value.trim().slice(0, 40);
+      if (!word) return;
+      const current = this.settings.blockKeywords || [];
+      if (current.some((item) => item.toLowerCase() === word.toLowerCase())) {
+        input.value = '';
+        return;
+      }
+      if (current.length >= 50) return;
+      this.updateSetting('blockKeywords', [...current, word]);
+      input.value = '';
+      renderList();
+    };
+
+    addBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      addWord();
+    });
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      addWord();
+    });
+
+    form.append(input, addBtn);
+    row.append(label, hint, form, list);
+    renderList();
+    return row;
   }
 
   createDivider() {

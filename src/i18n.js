@@ -54,6 +54,11 @@ const LOCALES = {
     langPt: 'Português',
     tooltipCopy: '复制到聊天框',
     tooltipOpenProfile: '打开发送者主页',
+    blockKeywords: '屏蔽关键词',
+    blockKeywordHint: '原文和译文都会屏蔽',
+    blockKeywordPlaceholder: '输入关键词',
+    blockKeywordAdd: '添加',
+    blockKeywordRemove: '移除关键词',
   },
   en: {
     danmakuToggle: 'Danmaku toggle',
@@ -110,6 +115,11 @@ const LOCALES = {
     langPt: 'Portuguese',
     tooltipCopy: 'Copy to chat',
     tooltipOpenProfile: 'Open sender profile',
+    blockKeywords: 'Blocked keywords',
+    blockKeywordHint: 'Matches the original text and the translation',
+    blockKeywordPlaceholder: 'Add a keyword',
+    blockKeywordAdd: 'Add',
+    blockKeywordRemove: 'Remove keyword',
   },
 };
 

@@ -66,13 +66,7 @@ npm run build
 npm run watch
 ```
 
-`demo/preview.html` is a local stand-in for the watch page (player, control bar, and chat list). Build first, then open it with a static server:
-
-```bash
-npx serve .
-```
-
-Visit `/demo/preview.html`. Lines already in the list stay put; lines added after the short warm-up scroll across the video. The preview keeps running when its browser tab is in the background.
+The public demo needs no build step: [demo/preview.html](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. The preview keeps running when its browser tab is in the background.
 
 ## Notes
 
