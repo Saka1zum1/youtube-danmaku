@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.2.0
+// @version      1.2.1
 // @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
@@ -141,7 +141,12 @@ const LOCALES = {
     historyNoDuration: '还没读到视频时长，将导出全部时间。',
     historyFormat: '导出格式',
     historyDownload: '下载',
+    historyPause: '暂停',
+    historyResume: '继续',
+    historyCancel: '取消',
     historyDownloading: '正在读取聊天回放…',
+    historyPaused: '已暂停',
+    historyCancelled: '已取消下载。',
     historyProgress: '已读取',
     historyDone: '已导出',
     historyNone: '没有可下载的聊天回放。请确认这是保留了聊天的直播回放，并且聊天嵌在页面右侧。',
@@ -255,7 +260,12 @@ const LOCALES = {
     historyNoDuration: 'Video length is not ready yet. The export will include the full timeline.',
     historyFormat: 'Export format',
     historyDownload: 'Download',
+    historyPause: 'Pause',
+    historyResume: 'Resume',
+    historyCancel: 'Cancel',
     historyDownloading: 'Reading chat replay…',
+    historyPaused: 'Paused',
+    historyCancelled: 'Download cancelled.',
     historyProgress: 'Loaded',
     historyDone: 'Exported',
     historyNone: 'No chat replay to download. Open an archived live with chat saved, and keep that chat docked on the page.',
@@ -369,7 +379,12 @@ const LOCALES = {
     historyNoDuration: '動画の長さがまだ分かりません。全時間を書き出します。',
     historyFormat: '書き出し形式',
     historyDownload: 'ダウンロード',
+    historyPause: '一時停止',
+    historyResume: '再開',
+    historyCancel: 'キャンセル',
     historyDownloading: 'チャットリプレイを読み取り中…',
+    historyPaused: '一時停止中',
+    historyCancelled: 'ダウンロードをキャンセルしました。',
     historyProgress: '読み取り済み',
     historyDone: '書き出し完了',
     historyNone: 'ダウンロードできるチャットリプレイがありません。チャットが残っているアーカイブを開き、チャットをページ右側にドックしてください。',
@@ -3503,7 +3518,29 @@ async function postReplayContinuation(token, offsetMs) {
   return response.json();
 }
 
-async function fetchLiveChatHistory({ onProgress, shouldAbort, startMs = 0, endMs = Infinity } = {}) {
+async function waitHistoryControl(shouldPause, shouldAbort) {
+  while (shouldPause?.()) {
+    if (shouldAbort?.()) {
+      const error = new Error('aborted');
+      error.code = 'aborted';
+      throw error;
+    }
+    await delay(120);
+  }
+  if (shouldAbort?.()) {
+    const error = new Error('aborted');
+    error.code = 'aborted';
+    throw error;
+  }
+}
+
+async function fetchLiveChatHistory({
+  onProgress,
+  shouldAbort,
+  shouldPause,
+  startMs = 0,
+  endMs = Infinity,
+} = {}) {
   let token = readReplayContinuation();
   if (!token) {
     await waitForElement('iframe#chatframe', document, 8000);
@@ -3522,16 +3559,13 @@ async function fetchLiveChatHistory({ onProgress, shouldAbort, startMs = 0, endM
   let pages = 0;
 
   while (token && pages < HISTORY_PAGE_LIMIT) {
-    if (shouldAbort?.()) {
-      const error = new Error('aborted');
-      error.code = 'aborted';
-      throw error;
-    }
+    await waitHistoryControl(shouldPause, shouldAbort);
     if (seenTokens.has(token)) break;
     seenTokens.add(token);
     pages += 1;
 
     const data = await postReplayContinuation(token, offset);
+    await waitHistoryControl(shouldPause, shouldAbort);
     const live = data?.continuationContents?.liveChatContinuation;
     if (!live) break;
 
@@ -4267,22 +4301,56 @@ function injectStyles() {
       color: #ff8a80;
     }
 
-    .ydm-history-download {
-      display: block;
-      width: calc(100% - 24px);
+    .ydm-history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       margin: 0 12px 12px;
+    }
+
+    .ydm-history-download,
+    .ydm-history-pause,
+    .ydm-history-resume,
+    .ydm-history-cancel {
       border: none;
       border-radius: 8px;
-      background: #ff4e45;
-      color: #fff;
       padding: 8px 12px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    .ydm-history-download:disabled {
+    .ydm-history-download {
+      flex: 1 1 100%;
+      background: #ff4e45;
+      color: #fff;
+    }
+
+    .ydm-history-pause,
+    .ydm-history-resume {
+      flex: 1 1 auto;
+      background: #3ea6ff;
+      color: #0f0f0f;
+    }
+
+    .ydm-history-cancel {
+      flex: 1 1 auto;
+      background: #272727;
+      color: #fff;
+    }
+
+    .ydm-history-download:disabled,
+    .ydm-history-pause:disabled,
+    .ydm-history-resume:disabled,
+    .ydm-history-cancel:disabled {
       opacity: 0.6;
       cursor: default;
+    }
+
+    .ydm-history-download[hidden],
+    .ydm-history-pause[hidden],
+    .ydm-history-resume[hidden],
+    .ydm-history-cancel[hidden] {
+      display: none;
     }
 
     .ydm-switch {
@@ -5019,6 +5087,8 @@ class HistoryPanel {
     this.isOpen = false;
     this.busy = false;
     this.abort = false;
+    this.paused = false;
+    this.progressCount = 0;
     this.keywords = '';
     this.usernames = '';
     this.includeSuperchat = true;
@@ -5027,6 +5097,9 @@ class HistoryPanel {
     this.endSec = 0;
     this.statusEl = null;
     this.downloadBtn = null;
+    this.pauseBtn = null;
+    this.resumeBtn = null;
+    this.cancelBtn = null;
     this.boundReposition = () => this.reposition();
     this.boundOutsideClick = (e) => this.handleOutsideClick(e);
   }
@@ -5055,6 +5128,7 @@ class HistoryPanel {
   close() {
     const wasOpen = this.isOpen;
     this.abort = true;
+    this.paused = false;
     this.busy = false;
     this.isOpen = false;
     this.anchor = null;
@@ -5062,6 +5136,9 @@ class HistoryPanel {
     this.balloon = null;
     this.statusEl = null;
     this.downloadBtn = null;
+    this.pauseBtn = null;
+    this.resumeBtn = null;
+    this.cancelBtn = null;
     window.removeEventListener('resize', this.boundReposition);
     document.removeEventListener('fullscreenchange', this.boundReposition);
     document.removeEventListener('webkitfullscreenchange', this.boundReposition);
@@ -5104,6 +5181,52 @@ class HistoryPanel {
     this.statusEl.classList.toggle('ydm-history-status--error', !!isError);
   }
 
+  setProgressStatus() {
+    const count = this.progressCount;
+    if (this.paused) {
+      this.setStatus(
+        count > 0 ? `${t('historyPaused')} · ${t('historyProgress')} ${count}` : t('historyPaused'),
+        false,
+      );
+      return;
+    }
+    this.setStatus(
+      count > 0 ? `${t('historyProgress')} ${count}` : t('historyDownloading'),
+      false,
+    );
+  }
+
+  updateActionButtons() {
+    const downloading = this.busy && !this.paused;
+    const paused = this.busy && this.paused;
+    if (this.downloadBtn) this.downloadBtn.hidden = this.busy;
+    if (this.pauseBtn) this.pauseBtn.hidden = !downloading;
+    if (this.resumeBtn) this.resumeBtn.hidden = !paused;
+    if (this.cancelBtn) this.cancelBtn.hidden = !this.busy;
+  }
+
+  pauseDownload() {
+    if (!this.busy || this.paused || this.abort) return;
+    this.paused = true;
+    this.setProgressStatus();
+    this.updateActionButtons();
+  }
+
+  resumeDownload() {
+    if (!this.busy || !this.paused || this.abort) return;
+    this.paused = false;
+    this.setProgressStatus();
+    this.updateActionButtons();
+  }
+
+  cancelDownload() {
+    if (!this.busy || this.abort) return;
+    this.abort = true;
+    this.paused = false;
+    this.setStatus(t('historyCancelled'), false);
+    this.updateActionButtons();
+  }
+
   render() {
     this.balloon = document.createElement('div');
     this.balloon.className = 'ydm-balloon ydm-history-panel';
@@ -5140,6 +5263,10 @@ class HistoryPanel {
 
     this.statusEl = document.createElement('p');
     this.statusEl.className = 'ydm-history-status';
+
+    const actions = document.createElement('div');
+    actions.className = 'ydm-history-actions';
+
     this.downloadBtn = document.createElement('button');
     this.downloadBtn.type = 'button';
     this.downloadBtn.className = 'ydm-history-download';
@@ -5149,7 +5276,40 @@ class HistoryPanel {
       e.stopPropagation();
       this.startDownload();
     });
-    body.append(this.statusEl, this.downloadBtn);
+
+    this.pauseBtn = document.createElement('button');
+    this.pauseBtn.type = 'button';
+    this.pauseBtn.className = 'ydm-history-pause';
+    this.pauseBtn.textContent = t('historyPause');
+    this.pauseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.pauseDownload();
+    });
+
+    this.resumeBtn = document.createElement('button');
+    this.resumeBtn.type = 'button';
+    this.resumeBtn.className = 'ydm-history-resume';
+    this.resumeBtn.textContent = t('historyResume');
+    this.resumeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.resumeDownload();
+    });
+
+    this.cancelBtn = document.createElement('button');
+    this.cancelBtn.type = 'button';
+    this.cancelBtn.className = 'ydm-history-cancel';
+    this.cancelBtn.textContent = t('historyCancel');
+    this.cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.cancelDownload();
+    });
+
+    actions.append(this.downloadBtn, this.pauseBtn, this.resumeBtn, this.cancelBtn);
+    body.append(this.statusEl, actions);
+    this.updateActionButtons();
 
     this.balloon.append(header, body);
     this.balloon.addEventListener('click', (e) => e.stopPropagation());
@@ -5274,7 +5434,9 @@ class HistoryPanel {
     if (this.busy) return;
     this.busy = true;
     this.abort = false;
-    if (this.downloadBtn) this.downloadBtn.disabled = true;
+    this.paused = false;
+    this.progressCount = 0;
+    this.updateActionButtons();
     this.setStatus(t('historyDownloading'), false);
     const duration = currentDurationSeconds();
     const startMs = duration ? this.startSec * 1000 : 0;
@@ -5284,9 +5446,16 @@ class HistoryPanel {
         startMs,
         endMs,
         shouldAbort: () => this.abort || !this.isOpen,
-        onProgress: (count) => this.setStatus(`${t('historyProgress')} ${count}`, false),
+        shouldPause: () => this.paused && this.isOpen && !this.abort,
+        onProgress: (count) => {
+          this.progressCount = count;
+          if (!this.abort && this.isOpen) this.setProgressStatus();
+        },
       });
-      if (this.abort || !this.isOpen) return;
+      if (this.abort || !this.isOpen) {
+        if (this.isOpen && this.abort) this.setStatus(t('historyCancelled'), false);
+        return;
+      }
       const filtered = filterLiveChatHistory(fetched, {
         keywords: this.keywords,
         usernames: this.usernames,
@@ -5299,11 +5468,16 @@ class HistoryPanel {
       downloadLiveChatFile(filtered, this.format, currentVideoId());
       this.setStatus(`${t('historyDone')} ${filtered.length}`, false);
     } catch (err) {
-      if (this.abort || err?.code === 'aborted') return;
+      if (this.abort || err?.code === 'aborted') {
+        if (this.isOpen) this.setStatus(t('historyCancelled'), false);
+        return;
+      }
       this.setStatus(err?.code === 'no-history' ? t('historyNone') : t('historyFailed'), true);
     } finally {
       this.busy = false;
-      if (this.downloadBtn) this.downloadBtn.disabled = false;
+      this.paused = false;
+      this.abort = false;
+      this.updateActionButtons();
     }
   }
 }
