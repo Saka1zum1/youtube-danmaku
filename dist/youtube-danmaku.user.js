@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.1.0
+// @version      1.2.0
 // @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
@@ -129,6 +129,24 @@ const LOCALES = {
     superchatSlide: '滑入',
     superchatPop: '弹出',
     superchatShine: '闪光',
+    historyToggle: '下载聊天记录',
+    historyPanelTitle: '下载聊天记录',
+    historyHint: '读取已保留的聊天回放。聊天需嵌在页面右侧。关键词和用户名留空表示不筛选，多个用逗号分隔。',
+    historyKeywords: '内容关键词',
+    historyKeywordsHint: '只保留包含这些词的消息',
+    historyUsernames: '用户名',
+    historyUsernamesHint: '只保留这些用户的消息',
+    historySuperchat: '包含 Super Chat',
+    historyRange: '时间范围',
+    historyNoDuration: '还没读到视频时长，将导出全部时间。',
+    historyFormat: '导出格式',
+    historyDownload: '下载',
+    historyDownloading: '正在读取聊天回放…',
+    historyProgress: '已读取',
+    historyDone: '已导出',
+    historyNone: '没有可下载的聊天回放。请确认这是保留了聊天的直播回放，并且聊天嵌在页面右侧。',
+    historyFailed: '读取聊天回放失败，请稍后重试。',
+    historyEmpty: '筛选后没有消息。',
   },
   en: {
     danmakuToggle: 'Danmaku toggle',
@@ -225,6 +243,24 @@ const LOCALES = {
     superchatSlide: 'Slide',
     superchatPop: 'Pop',
     superchatShine: 'Shine',
+    historyToggle: 'Download chat history',
+    historyPanelTitle: 'Download chat history',
+    historyHint: 'Reads the saved chat replay. Keep chat docked on the page. Leave keywords and usernames empty to skip those filters. Separate multiple values with commas.',
+    historyKeywords: 'Keywords',
+    historyKeywordsHint: 'Keep messages that contain these words',
+    historyUsernames: 'Usernames',
+    historyUsernamesHint: 'Keep messages from these users',
+    historySuperchat: 'Include Super Chat',
+    historyRange: 'Time range',
+    historyNoDuration: 'Video length is not ready yet. The export will include the full timeline.',
+    historyFormat: 'Export format',
+    historyDownload: 'Download',
+    historyDownloading: 'Reading chat replay…',
+    historyProgress: 'Loaded',
+    historyDone: 'Exported',
+    historyNone: 'No chat replay to download. Open an archived live with chat saved, and keep that chat docked on the page.',
+    historyFailed: 'Could not read the chat replay. Try again later.',
+    historyEmpty: 'No messages match these filters.',
   },
   ja: {
     danmakuToggle: '弾幕の切替',
@@ -321,6 +357,24 @@ const LOCALES = {
     superchatSlide: 'スライド',
     superchatPop: 'ポップ',
     superchatShine: 'シャイン',
+    historyToggle: 'チャット履歴をダウンロード',
+    historyPanelTitle: 'チャット履歴をダウンロード',
+    historyHint: '保存されたチャットリプレイを読み取ります。チャットはページ右側にドックしたままにしてください。キーワードとユーザー名が空なら、その条件では絞り込みません。複数はカンマで区切ります。',
+    historyKeywords: 'キーワード',
+    historyKeywordsHint: 'これらの語を含むメッセージだけ残す',
+    historyUsernames: 'ユーザー名',
+    historyUsernamesHint: 'これらのユーザーのメッセージだけ残す',
+    historySuperchat: 'Super Chat を含める',
+    historyRange: '時間範囲',
+    historyNoDuration: '動画の長さがまだ分かりません。全時間を書き出します。',
+    historyFormat: '書き出し形式',
+    historyDownload: 'ダウンロード',
+    historyDownloading: 'チャットリプレイを読み取り中…',
+    historyProgress: '読み取り済み',
+    historyDone: '書き出し完了',
+    historyNone: 'ダウンロードできるチャットリプレイがありません。チャットが残っているアーカイブを開き、チャットをページ右側にドックしてください。',
+    historyFailed: 'チャットリプレイを読み取れませんでした。しばらくしてからもう一度試してください。',
+    historyEmpty: '条件に合うメッセージがありません。',
   },
 };
 
@@ -3332,6 +3386,271 @@ class ChatObserver {
   }
 }
 
+const HISTORY_PAGE_LIMIT = 4000;
+
+function pageWindow() {
+  return typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+}
+
+function currentVideoId() {
+  try {
+    const url = new URL(location.href);
+    const fromQuery = url.searchParams.get('v');
+    if (fromQuery) return fromQuery;
+  } catch (_) {
+    /* ignore */
+  }
+  const live = location.pathname.match(/^\/live\/([^/]+)/);
+  return live?.[1] || 'youtube';
+}
+
+function currentDurationSeconds() {
+  const video = document.querySelector('video.html5-main-video');
+  if (video && Number.isFinite(video.duration) && video.duration > 0) return video.duration;
+  const seconds = Number(pageWindow().ytInitialPlayerResponse?.videoDetails?.lengthSeconds);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+}
+
+function readReplayContinuation() {
+  const iframe = document.querySelector('iframe#chatframe, ytd-live-chat-frame#chat iframe');
+  const src = iframe?.src || '';
+  if (src.includes('live_chat_replay')) {
+    try {
+      const token = new URL(src, location.origin).searchParams.get('continuation');
+      if (token) return token;
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  const bar = pageWindow().ytInitialData?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer;
+  const token = bar?.continuations?.[0]?.reloadContinuationData?.continuation;
+  if (!token) return '';
+  if (bar.isReplay === false) return '';
+  return token;
+}
+
+function runsToText(node) {
+  if (!node) return '';
+  if (typeof node.simpleText === 'string') return node.simpleText;
+  if (!Array.isArray(node.runs)) return '';
+  return node.runs.map((run) => {
+    if (run?.text) return run.text;
+    const emoji = run?.emoji;
+    return emoji?.shortcuts?.[0] || emoji?.emojiId || '';
+  }).join('');
+}
+
+function parseHistoryRenderer(renderer, type, offsetMs) {
+  if (!renderer) return null;
+  const author = runsToText(renderer.authorName).replace(/\s+/g, ' ').trim();
+  const message = (runsToText(renderer.message) || runsToText(renderer.headerSubtext) || '').replace(/\s+/g, ' ').trim();
+  const amount = runsToText(renderer.purchaseAmountText).replace(/\s+/g, ' ').trim();
+  if (!author && !message && !amount) return null;
+  return {
+    id: renderer.id || '',
+    offsetMs,
+    author,
+    message,
+    amount,
+    type,
+  };
+}
+
+function parseHistoryAction(action, fallbackOffset) {
+  const replay = action?.replayChatItemAction;
+  const offsetMs = Number(replay?.videoOffsetTimeMsec ?? fallbackOffset) || 0;
+  const nested = replay?.actions || [action];
+  const items = [];
+  for (const entry of nested) {
+    const item = entry?.addChatItemAction?.item;
+    if (!item) continue;
+    const parsed = parseHistoryRenderer(item.liveChatTextMessageRenderer, 'message', offsetMs)
+      || parseHistoryRenderer(item.liveChatPaidMessageRenderer, 'superchat', offsetMs)
+      || parseHistoryRenderer(item.liveChatPaidStickerRenderer, 'superchat', offsetMs)
+      || parseHistoryRenderer(item.liveChatMembershipItemRenderer, 'member', offsetMs);
+    if (parsed) items.push(parsed);
+  }
+  return items;
+}
+
+async function postReplayContinuation(token, offsetMs) {
+  const page = pageWindow();
+  const key = page.ytcfg?.get?.('INNERTUBE_API_KEY');
+  const context = page.ytcfg?.get?.('INNERTUBE_CONTEXT');
+  if (!key || !context || typeof page.fetch !== 'function') {
+    const error = new Error('failed');
+    error.code = 'failed';
+    throw error;
+  }
+  const response = await page.fetch(
+    `https://www.youtube.com/youtubei/v1/live_chat/get_live_chat_replay?prettyPrint=false&key=${encodeURIComponent(key)}`,
+    {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        context,
+        continuation: token,
+        currentPlayerState: { playerOffsetMs: String(Math.max(0, Math.floor(offsetMs || 0))) },
+      }),
+    },
+  );
+  if (!response.ok) {
+    const error = new Error('failed');
+    error.code = 'failed';
+    throw error;
+  }
+  return response.json();
+}
+
+async function fetchLiveChatHistory({ onProgress, shouldAbort, startMs = 0, endMs = Infinity } = {}) {
+  let token = readReplayContinuation();
+  if (!token) {
+    await waitForElement('iframe#chatframe', document, 8000);
+    token = readReplayContinuation();
+  }
+  if (!token) {
+    const error = new Error('no-history');
+    error.code = 'no-history';
+    throw error;
+  }
+
+  const items = [];
+  const seen = new Set();
+  const seenTokens = new Set();
+  let offset = Math.max(0, startMs);
+  let pages = 0;
+
+  while (token && pages < HISTORY_PAGE_LIMIT) {
+    if (shouldAbort?.()) {
+      const error = new Error('aborted');
+      error.code = 'aborted';
+      throw error;
+    }
+    if (seenTokens.has(token)) break;
+    seenTokens.add(token);
+    pages += 1;
+
+    const data = await postReplayContinuation(token, offset);
+    const live = data?.continuationContents?.liveChatContinuation;
+    if (!live) break;
+
+    let pageMax = 0;
+    for (const action of live.actions || []) {
+      for (const item of parseHistoryAction(action, offset)) {
+        pageMax = Math.max(pageMax, item.offsetMs);
+        if (item.offsetMs < startMs || item.offsetMs > endMs) continue;
+        const key = item.id || `${item.offsetMs}:${item.author}:${item.message}:${item.amount}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        items.push(item);
+      }
+    }
+    onProgress?.(items.length);
+
+    const next = live.continuations?.[0]?.liveChatReplayContinuationData;
+    if (!next?.continuation) break;
+    if (Number.isFinite(endMs) && pageMax > endMs) break;
+    token = next.continuation;
+    offset = pageMax || offset;
+    await delay(60);
+  }
+
+  items.sort((a, b) => a.offsetMs - b.offsetMs);
+  return items;
+}
+
+function splitHistoryTerms(value) {
+  return String(value || '')
+    .split(/[,，\n]/)
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function filterLiveChatHistory(items, { keywords, usernames, includeSuperchat }) {
+  const words = splitHistoryTerms(keywords);
+  const names = splitHistoryTerms(usernames);
+  return items.filter((item) => {
+    if (item.type === 'superchat' && !includeSuperchat) return false;
+    const message = `${item.amount} ${item.message}`.toLowerCase();
+    const author = item.author.toLowerCase();
+    if (words.length && !words.some((word) => message.includes(word))) return false;
+    if (names.length && !names.some((name) => author.includes(name))) return false;
+    return true;
+  });
+}
+
+function formatHistoryClock(offsetMs) {
+  const total = Math.max(0, Math.floor(Number(offsetMs) / 1000));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const mm = String(minutes).padStart(2, '0');
+  const ss = String(seconds).padStart(2, '0');
+  return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function formatHistoryRangeLabel(seconds) {
+  return formatHistoryClock(Math.max(0, seconds) * 1000);
+}
+
+function csvCell(value) {
+  const text = String(value ?? '');
+  if (/[",\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
+}
+
+function exportLiveChatText(items, format, videoId) {
+  if (format === 'json') {
+    return JSON.stringify({
+      videoId,
+      url: location.href,
+      exportedAt: new Date().toISOString(),
+      count: items.length,
+      messages: items.map((item) => ({
+        offsetMs: item.offsetMs,
+        time: formatHistoryClock(item.offsetMs),
+        author: item.author,
+        message: item.message,
+        type: item.type
+      })),
+    }, null, 2);
+  }
+  if (format === 'csv') {
+    const rows = ['offset_ms,time,author,message,type,amount'];
+    for (const item of items) {
+      rows.push([
+        item.offsetMs,
+        formatHistoryClock(item.offsetMs),
+        item.author,
+        item.message,
+        item.type,
+      ].map(csvCell).join(','));
+    }
+    return `\uFEFF${rows.join('\n')}`;
+  }
+  return items.map((item) => {
+    const amount = item.amount ? ` (${item.amount})` : '';
+    return `[${formatHistoryClock(item.offsetMs)}] ${item.author}${amount}: ${item.message}`;
+  }).join('\n');
+}
+
+function downloadLiveChatFile(items, format, videoId) {
+  const ext = format === 'json' || format === 'csv' ? format : 'txt';
+  const mime = format === 'json'
+    ? 'application/json'
+    : format === 'csv'
+      ? 'text/csv'
+      : 'text/plain';
+  const blob = new Blob([exportLiveChatText(items, ext, videoId)], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `livechat_${videoId}.${ext}`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
 function injectStyles() {
   GM_addStyle(`
     .ydm-danmaku-layer {
@@ -3931,6 +4250,41 @@ function injectStyles() {
       background: rgba(255, 255, 255, 0.08);
     }
 
+    .ydm-history-status {
+      margin: 0;
+      padding: 4px 12px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.45;
+      min-height: 1.45em;
+    }
+
+    .ydm-history-status:empty {
+      display: none;
+    }
+
+    .ydm-history-status--error {
+      color: #ff8a80;
+    }
+
+    .ydm-history-download {
+      display: block;
+      width: calc(100% - 24px);
+      margin: 0 12px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ff4e45;
+      color: #fff;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ydm-history-download:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
     .ydm-switch {
       position: relative;
       width: 40px;
@@ -3988,6 +4342,8 @@ const ICON_SPEECH_ON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 
 const ICON_SPEECH_MUTE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>`;
 
 const ICON_SPEECH_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;
+
+const ICON_DOWNLOAD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1z"/></svg>`;
 
 class SettingsPanel {
   constructor({ settings, onChange, onClose }) {
@@ -4655,17 +5011,317 @@ class SpeechPanel {
   }
 }
 
+class HistoryPanel {
+  constructor({ onClose }) {
+    this.onClose = onClose;
+    this.balloon = null;
+    this.anchor = null;
+    this.isOpen = false;
+    this.busy = false;
+    this.abort = false;
+    this.keywords = '';
+    this.usernames = '';
+    this.includeSuperchat = true;
+    this.format = 'json';
+    this.startSec = 0;
+    this.endSec = 0;
+    this.statusEl = null;
+    this.downloadBtn = null;
+    this.boundReposition = () => this.reposition();
+    this.boundOutsideClick = (e) => this.handleOutsideClick(e);
+  }
+
+  toggle(anchor) {
+    if (this.isOpen && this.anchor === anchor) this.close();
+    else this.open(anchor);
+  }
+
+  open(anchor) {
+    this.close();
+    this.anchor = anchor;
+    this.isOpen = true;
+    const duration = currentDurationSeconds();
+    if (!this.endSec || this.endSec > duration) this.endSec = duration;
+    this.render();
+    this.reposition();
+    requestAnimationFrame(() => this.reposition());
+    window.addEventListener('resize', this.boundReposition);
+    document.addEventListener('fullscreenchange', this.boundReposition);
+    document.addEventListener('webkitfullscreenchange', this.boundReposition);
+    document.addEventListener('scroll', this.boundReposition, true);
+    setTimeout(() => document.addEventListener('click', this.boundOutsideClick, true), 0);
+  }
+
+  close() {
+    const wasOpen = this.isOpen;
+    this.abort = true;
+    this.busy = false;
+    this.isOpen = false;
+    this.anchor = null;
+    this.balloon?.remove();
+    this.balloon = null;
+    this.statusEl = null;
+    this.downloadBtn = null;
+    window.removeEventListener('resize', this.boundReposition);
+    document.removeEventListener('fullscreenchange', this.boundReposition);
+    document.removeEventListener('webkitfullscreenchange', this.boundReposition);
+    document.removeEventListener('scroll', this.boundReposition, true);
+    document.removeEventListener('click', this.boundOutsideClick, true);
+    if (wasOpen) this.onClose?.();
+  }
+
+  handleOutsideClick(e) {
+    if (!this.balloon || !this.isOpen) return;
+    if (this.balloon.contains(e.target)) return;
+    if (this.anchor?.contains(e.target)) return;
+    this.close();
+  }
+
+  reposition() {
+    if (!this.balloon || !this.anchor) return;
+    const mountTarget = getFullscreenElement() || document.body;
+    if (this.balloon.parentElement !== mountTarget) mountTarget.appendChild(this.balloon);
+    const rect = this.anchor.getBoundingClientRect();
+    const width = 340;
+    const gap = 8;
+    const height = this.balloon.offsetHeight;
+    let left = rect.right - width;
+    let top = rect.top - height - gap;
+    left = clamp(left, 8, window.innerWidth - width - 8);
+    if (top < 8) top = rect.bottom + gap;
+    Object.assign(this.balloon.style, {
+      position: 'fixed',
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${width}px`,
+      zIndex: '100000',
+    });
+  }
+
+  setStatus(text, isError) {
+    if (!this.statusEl) return;
+    this.statusEl.textContent = text;
+    this.statusEl.classList.toggle('ydm-history-status--error', !!isError);
+  }
+
+  render() {
+    this.balloon = document.createElement('div');
+    this.balloon.className = 'ydm-balloon ydm-history-panel';
+
+    const header = document.createElement('div');
+    header.className = 'ydm-balloon-header';
+    const title = document.createElement('div');
+    title.className = 'ydm-balloon-title';
+    title.textContent = t('historyPanelTitle');
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-balloon-close';
+    closeBtn.textContent = t('panelClose');
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.close();
+    });
+    header.append(title, closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'ydm-balloon-body ydm-balloon-body--speech';
+    const hint = document.createElement('p');
+    hint.className = 'ydm-speech-note';
+    hint.textContent = t('historyHint');
+
+    body.append(
+      hint,
+      this.createField(t('historyKeywords'), t('historyKeywordsHint'), 'keywords'),
+      this.createField(t('historyUsernames'), t('historyUsernamesHint'), 'usernames'),
+      this.createSuperchatToggle(),
+      this.createTimeRange(),
+      this.createFormat(),
+    );
+
+    this.statusEl = document.createElement('p');
+    this.statusEl.className = 'ydm-history-status';
+    this.downloadBtn = document.createElement('button');
+    this.downloadBtn.type = 'button';
+    this.downloadBtn.className = 'ydm-history-download';
+    this.downloadBtn.textContent = t('historyDownload');
+    this.downloadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.startDownload();
+    });
+    body.append(this.statusEl, this.downloadBtn);
+
+    this.balloon.append(header, body);
+    this.balloon.addEventListener('click', (e) => e.stopPropagation());
+    this.balloon.addEventListener('pointerdown', (e) => e.stopPropagation());
+    (getFullscreenElement() || document.body).appendChild(this.balloon);
+  }
+
+  createField(label, placeholder, key) {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = label;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'ydm-balloon-input';
+    input.placeholder = placeholder;
+    input.value = this[key];
+    input.addEventListener('input', () => {
+      this[key] = input.value;
+    });
+    row.append(labelEl, input);
+    return row;
+  }
+
+  createSuperchatToggle() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--toggle';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = t('historySuperchat');
+    const switchWrap = document.createElement('label');
+    switchWrap.className = 'ydm-switch';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = this.includeSuperchat;
+    const slider = document.createElement('span');
+    slider.className = 'ydm-switch-slider';
+    input.addEventListener('change', () => {
+      this.includeSuperchat = input.checked;
+    });
+    switchWrap.append(input, slider);
+    row.append(labelEl, switchWrap);
+    return row;
+  }
+
+  createTimeRange() {
+    const duration = currentDurationSeconds();
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = t('historyRange');
+    row.appendChild(labelEl);
+    if (!duration) {
+      const note = document.createElement('p');
+      note.className = 'ydm-speech-note';
+      note.textContent = t('historyNoDuration');
+      row.appendChild(note);
+      return row;
+    }
+    if (!this.endSec) this.endSec = duration;
+    const value = document.createElement('span');
+    value.className = 'ydm-balloon-value';
+    const updateLabel = () => {
+      value.textContent = `${formatHistoryRangeLabel(this.startSec)} – ${formatHistoryRangeLabel(this.endSec)}`;
+    };
+    updateLabel();
+    const header = document.createElement('div');
+    header.className = 'ydm-balloon-field-header';
+    header.append(labelEl, value);
+
+    const start = this.createRangeInput(0, duration, this.startSec, (next) => {
+      this.startSec = Math.min(next, this.endSec);
+      start.value = String(this.startSec);
+      updateLabel();
+    });
+    const end = this.createRangeInput(0, duration, this.endSec, (next) => {
+      this.endSec = Math.max(next, this.startSec);
+      end.value = String(this.endSec);
+      updateLabel();
+    });
+    row.replaceChildren(header, start, end);
+    return row;
+  }
+
+  createRangeInput(min, max, value, onInput) {
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.className = 'ydm-balloon-range';
+    input.min = String(min);
+    input.max = String(Math.max(min, Math.floor(max)));
+    input.step = '1';
+    input.value = String(Math.floor(value));
+    input.addEventListener('input', () => onInput(Number(input.value)));
+    return input;
+  }
+
+  createFormat() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = t('historyFormat');
+    const select = document.createElement('select');
+    select.className = 'ydm-balloon-select';
+    for (const format of ['json', 'csv', 'txt']) {
+      const option = document.createElement('option');
+      option.value = format;
+      option.textContent = format.toUpperCase();
+      if (format === this.format) option.selected = true;
+      select.appendChild(option);
+    }
+    select.addEventListener('change', () => {
+      this.format = select.value;
+    });
+    row.append(labelEl, select);
+    return row;
+  }
+
+  async startDownload() {
+    if (this.busy) return;
+    this.busy = true;
+    this.abort = false;
+    if (this.downloadBtn) this.downloadBtn.disabled = true;
+    this.setStatus(t('historyDownloading'), false);
+    const duration = currentDurationSeconds();
+    const startMs = duration ? this.startSec * 1000 : 0;
+    const endMs = duration ? this.endSec * 1000 : Infinity;
+    try {
+      const fetched = await fetchLiveChatHistory({
+        startMs,
+        endMs,
+        shouldAbort: () => this.abort || !this.isOpen,
+        onProgress: (count) => this.setStatus(`${t('historyProgress')} ${count}`, false),
+      });
+      if (this.abort || !this.isOpen) return;
+      const filtered = filterLiveChatHistory(fetched, {
+        keywords: this.keywords,
+        usernames: this.usernames,
+        includeSuperchat: this.includeSuperchat,
+      });
+      if (!filtered.length) {
+        this.setStatus(fetched.length ? t('historyEmpty') : t('historyNone'), true);
+        return;
+      }
+      downloadLiveChatFile(filtered, this.format, currentVideoId());
+      this.setStatus(`${t('historyDone')} ${filtered.length}`, false);
+    } catch (err) {
+      if (this.abort || err?.code === 'aborted') return;
+      this.setStatus(err?.code === 'no-history' ? t('historyNone') : t('historyFailed'), true);
+    } finally {
+      this.busy = false;
+      if (this.downloadBtn) this.downloadBtn.disabled = false;
+    }
+  }
+}
+
 class ControlButton {
-  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, getSettings, isPanelOpen, isSpeechPanelOpen }) {
+  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, onToggleHistory, getSettings, isPanelOpen, isSpeechPanelOpen, isHistoryPanelOpen }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
     this.onToggleSpeech = onToggleSpeech;
+    this.onToggleHistory = onToggleHistory;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
     this.isSpeechPanelOpen = isSpeechPanelOpen;
+    this.isHistoryPanelOpen = isHistoryPanelOpen;
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
+    this.historyBtn = null;
     this.settingsBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
@@ -4720,6 +5376,13 @@ class ControlButton {
         this.onToggleSpeech(this.speechBtn);
       });
 
+      this.historyBtn = this.createBtn('ydm-history-btn', t('historyToggle'), ICON_DOWNLOAD);
+      this.historyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.onToggleHistory(this.historyBtn);
+      });
+
       this.settingsBtn = this.createBtn('ydm-settings-btn', t('settingsToggle'), ICON_SETTINGS);
       this.settingsBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -4727,13 +5390,14 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.wrap.append(this.danmakuBtn, this.speechBtn, this.settingsBtn);
+      this.wrap.append(this.danmakuBtn, this.settingsBtn, this.speechBtn, this.historyBtn);
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
       else this.controlsGroup.appendChild(this.wrap);
 
       this.updateDanmakuState();
       this.updateSpeechState();
+      this.updateHistoryState();
       this.updatePanelState();
     } finally {
       this.mounting = false;
@@ -4743,18 +5407,21 @@ class ControlButton {
   remount() {
     if (this.wrap?.isConnected) return;
     const existing = document.querySelector('.ydm-controls-wrap');
-    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn')) {
+    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn') && existing.querySelector('.ydm-history-btn')) {
       this.wrap = existing;
       this.danmakuBtn = existing.querySelector('.ydm-danmaku-btn');
       this.speechBtn = existing.querySelector('.ydm-speech-btn');
+      this.historyBtn = existing.querySelector('.ydm-history-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
       this.updateSpeechState();
+      this.updateHistoryState();
       return;
     }
     existing?.remove();
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
+    this.historyBtn = null;
     this.settingsBtn = null;
     this.mount();
   }
@@ -4784,11 +5451,20 @@ class ControlButton {
     this.speechBtn.setAttribute('aria-expanded', this.isSpeechPanelOpen?.() ? 'true' : 'false');
   }
 
+  updateHistoryState() {
+    if (!this.historyBtn) return;
+    const open = !!this.isHistoryPanelOpen?.();
+    this.historyBtn.classList.toggle('ydm-active', open);
+    this.historyBtn.title = t('historyToggle');
+    this.historyBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
   updatePanelState() {
     if (!this.settingsBtn) return;
     this.settingsBtn.classList.toggle('ydm-active', this.isPanelOpen());
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
     this.updateSpeechState();
+    this.updateHistoryState();
   }
 
   destroy() {
@@ -4796,6 +5472,7 @@ class ControlButton {
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
+    this.historyBtn = null;
     this.settingsBtn = null;
     this.mounting = false;
   }
@@ -4808,6 +5485,7 @@ let translateQueue = null;
 let chatObserver = null;
 let settingsPanel = null;
 let speechPanel = null;
+let historyPanel = null;
 let controlButton = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
@@ -4858,6 +5536,7 @@ function teardown() {
   translateQueue?.clear();
   settingsPanel?.close();
   speechPanel?.close();
+  historyPanel?.close();
   cancelSpeech();
   chatObserver = null;
   danmaku = null;
@@ -4909,21 +5588,36 @@ async function boot() {
     speechPanel.settings = settings;
   }
 
+  if (!historyPanel) {
+    historyPanel = new HistoryPanel({
+      onClose: () => controlButton?.updateHistoryState(),
+    });
+  }
+
   const controls = new ControlButton({
     onToggleDanmaku: toggleDanmaku,
     onTogglePanel: (anchor) => {
       speechPanel.close();
+      historyPanel.close();
       settingsPanel.toggle(anchor);
       controls.updatePanelState();
     },
     onToggleSpeech: (anchor) => {
       settingsPanel.close();
+      historyPanel.close();
       speechPanel.toggle(anchor);
+      controls.updatePanelState();
+    },
+    onToggleHistory: (anchor) => {
+      settingsPanel.close();
+      speechPanel.close();
+      historyPanel.toggle(anchor);
       controls.updatePanelState();
     },
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
+    isHistoryPanelOpen: () => historyPanel.isOpen,
   });
 
   await engine.mount();
