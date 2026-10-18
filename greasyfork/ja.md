@@ -67,7 +67,7 @@ YouTube Danmaku は、YouTube のライブチャットやチャットリプレ�
 
 ブラウザで開くだけで試せます。インストールやビルドは不要です：
 
-[YouTube 弾幕デモ](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)
+[YouTube 弾幕デモ](https://saka1zum1.github.io/youtube-danmaku/)
 
 YouTube 視聴ページの代わりに、プレーヤー、コントロールバー、ライブチャット一覧があります。一覧に既にあるメッセージは流れません。短いウォームアップ後、新着メッセージが動画上を流れます。弾幕ボタン、読み上げパネル、設定パネル、キーワード一覧もこのページで試せます。
 

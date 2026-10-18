@@ -67,7 +67,7 @@ YouTube 弹幕让你在看 YouTube 直播或聊天回放时，把直播聊天里
 
 在浏览器里打开即可试用，不需要安装或构建：
 
-[YouTube 弹幕演示](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)
+[YouTube 弹幕演示](https://saka1zum1.github.io/youtube-danmaku/)
 
 这个页面代替 YouTube 观看页，包含播放器、控制栏和直播聊天列表。列表里已有的消息不会滚动。短暂停顿之后，新消息会从画面上飘过。弹幕开关、朗读面板、设置面板和关键词列表都可以在这个页面里试用。
 

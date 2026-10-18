@@ -67,7 +67,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 Open the demo in your browser. No install or build step is required:
 
-[YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)
+[YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/)
 
 The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, read-aloud panel, settings panel, and keyword list work on this page.
 

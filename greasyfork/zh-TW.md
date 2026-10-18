@@ -67,7 +67,7 @@ YouTube 彈幕讓你在觀看 YouTube 直播或聊天重播時，把直播聊天
 
 在瀏覽器裡開啟即可試用，不需要安裝或建置：
 
-[YouTube 彈幕演示](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)
+[YouTube 彈幕演示](https://saka1zum1.github.io/youtube-danmaku/)
 
 這個頁面代替 YouTube 觀看頁，包含播放器、控制列和直播聊天列表。列表裡已有的訊息不會滾動。短暫停頓之後，新訊息會從畫面上飄過。彈幕開關、朗讀面板、設定面板和關鍵詞列表都可以在這個頁面裡試用。
 

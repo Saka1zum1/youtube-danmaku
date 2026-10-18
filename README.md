@@ -76,7 +76,7 @@ npm run build
 npm run watch
 ```
 
-The public demo needs no build step: [demo/preview.html](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. The read-aloud button and speech panel work on this page. The preview keeps running when its browser tab is in the background.
+The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. The read-aloud button and speech panel work on this page. The preview keeps running when its browser tab is in the background.
 
 ## Notes
 

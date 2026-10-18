@@ -76,7 +76,7 @@ npm run build
 npm run watch
 ```
 
-公開演示不需要建置：[demo/preview.html](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)。它用頁面代替觀看頁（播放器、控制列、聊天列表）。列表裡已有的訊息不會滾動；預熱結束後新加的訊息會從畫面上飄過。朗讀按鈕和朗讀面板可以在這個頁面裡試用。預覽頁在瀏覽器分頁位於背景時也會繼續跑。
+公開演示不需要建置：[YouTube 彈幕演示](https://saka1zum1.github.io/youtube-danmaku/)。它用頁面代替觀看頁（播放器、控制列、聊天列表）。列表裡已有的訊息不會滾動；預熱結束後新加的訊息會從畫面上飄過。朗讀按鈕和朗讀面板可以在這個頁面裡試用。預覽頁在瀏覽器分頁位於背景時也會繼續跑。
 
 ## 注意事項
 
