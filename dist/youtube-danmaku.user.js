@@ -2,11 +2,13 @@
 // @name         YouTube Danmaku - Bullet Chat
 // @name:zh-CN   YouTube 弹幕
 // @name:zh-TW   YouTube 彈幕
+// @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.0.2
-// @description  Turn YouTube live chat into scrolling danmaku on the video
-// @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制与实时翻译
-// @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製與即時翻譯
+// @version      1.1.0
+// @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
+// @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
+// @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
+// @description:ja  YouTube のライブチャットを動画上に流れる弾幕に変換します。一時停止、コピー、読み上げ、リアルタイム翻訳に対応
 // @author       youtube-danmaku
 // @license      MIT
 // @match        https://www.youtube.com/*
@@ -93,6 +95,40 @@ const LOCALES = {
     blockKeywordPlaceholder: '输入关键词',
     blockKeywordAdd: '添加',
     blockKeywordRemove: '移除关键词',
+    speechToggle: '弹幕朗读',
+    speechPanelTitle: '弹幕朗读',
+    speechEnable: '启用朗读',
+    speechOn: '朗读已开启',
+    speechMute: '朗读已静音',
+    speechOff: '朗读已关闭',
+    speechTest: '试读',
+    speechTestText: '这是一条测试弹幕 ABC',
+    speechPlay: '按设定速度试读',
+    speechPlayFast: '按变速模式试读',
+    speechVolume: '音量',
+    speechPitch: '音高',
+    speechVoice: '声音',
+    speechVoiceLang: '语言',
+    speechVoiceDefault: '默认',
+    speechRate: '朗读速度',
+    speechPace: '变速模式',
+    speechMaxSeconds: '单条最长',
+    speechSeconds: '秒',
+    speechPaceHint: '超出最长朗读时间时自动加快。开启翻译后按译文长度计算。重复内容最多读 3 遍，纯符号、纯表情和纯数字不朗读。',
+    speechBuffer: '保留条数',
+    speechBufferHint: '超过这个数量时丢掉更早的弹幕，避免朗读一直追不上',
+    speechUnsupported: '当前浏览器不支持语音朗读',
+    tooltipSpeak: '朗读这条弹幕',
+    superchatPinned: 'Super Chat 悬停',
+    superchatPosition: '悬停位置',
+    superchatDuration: '悬停时间',
+    superchatAnimation: '悬停动画',
+    superchatTop: '顶部',
+    superchatBottom: '底部',
+    superchatFade: '淡入淡出',
+    superchatSlide: '滑入',
+    superchatPop: '弹出',
+    superchatShine: '闪光',
   },
   en: {
     danmakuToggle: 'Danmaku toggle',
@@ -155,6 +191,136 @@ const LOCALES = {
     blockKeywordPlaceholder: 'Add a keyword',
     blockKeywordAdd: 'Add',
     blockKeywordRemove: 'Remove keyword',
+    speechToggle: 'Read danmaku',
+    speechPanelTitle: 'Read danmaku',
+    speechEnable: 'Read danmaku aloud',
+    speechOn: 'Reading is on',
+    speechMute: 'Reading is muted',
+    speechOff: 'Reading is off',
+    speechTest: 'Trial',
+    speechTestText: 'This is a test ABC',
+    speechPlay: 'Play at set speed',
+    speechPlayFast: 'Play with pace mode',
+    speechVolume: 'Volume',
+    speechPitch: 'Pitch',
+    speechVoice: 'Voice',
+    speechVoiceLang: 'Language',
+    speechVoiceDefault: 'Default',
+    speechRate: 'Reading speed',
+    speechPace: 'Pace mode',
+    speechMaxSeconds: 'Max per line',
+    speechSeconds: 'sec',
+    speechPaceHint: 'Speed up when a line would exceed the max time. With translation on, length uses the translated text. Repeated phrases are read at most 3 times. Symbols, emotes, and numbers alone are skipped.',
+    speechBuffer: 'Keep latest',
+    speechBufferHint: 'Older lines beyond this count are dropped so reading can catch up',
+    speechUnsupported: 'Speech synthesis is not available in this browser',
+    tooltipSpeak: 'Read this danmaku',
+    superchatPinned: 'Pin Super Chats',
+    superchatPosition: 'Pin position',
+    superchatDuration: 'Pin time',
+    superchatAnimation: 'Pin animation',
+    superchatTop: 'Top',
+    superchatBottom: 'Bottom',
+    superchatFade: 'Fade',
+    superchatSlide: 'Slide',
+    superchatPop: 'Pop',
+    superchatShine: 'Shine',
+  },
+  ja: {
+    danmakuToggle: '弾幕の切替',
+    danmakuOn: '弾幕をオフ',
+    danmakuOff: '弾幕をオン',
+    settingsToggle: '弾幕設定',
+    panelTitle: '弾幕設定',
+    panelClose: '閉じる',
+    scrollSpeed: 'スクロール速度',
+    fontSize: 'フォントサイズ',
+    danmakuOpacity: '弾幕の透明度',
+    fontFamily: 'フォント',
+    scrollArea: '表示エリア',
+    translateEnable: '翻訳を有効にする',
+    translateProvider: '翻訳エンジン',
+    translateProviderAuto: '自動',
+    translateProviderMicrosoft: 'Microsoft Translator',
+    translateProviderGoogle: 'Google 翻訳',
+    translateProviderVolcengine: 'Volcengine',
+    translateProviderCaiyun: '彩雲（Caiyun）',
+    translateProviderTencent: '腾讯 Transmart',
+    translateTarget: '翻訳先言語',
+    translateSpeed: '翻訳速度',
+    translateSpeedUnit: '件/秒',
+    scrollAreaFull: '全画面',
+    scrollAreaTopHalf: '上半分',
+    scrollAreaTopQuarter: '上部 1/4',
+    fontSystem: 'システム既定',
+    fontYaHei: 'Microsoft YaHei',
+    fontSimSun: 'SimSun（宋体）',
+    fontSimHei: 'SimHei（黒体）',
+    fontArial: 'Arial',
+    fontRoboto: 'Roboto',
+    fontImpact: 'Impact',
+    fontGeorgia: 'Georgia',
+    fontTimes: 'Times New Roman',
+    fontVerdana: 'Verdana',
+    fontTahoma: 'Tahoma',
+    fontTrebuchet: 'Trebuchet MS',
+    fontCourier: 'Courier New',
+    fontConsolas: 'Consolas',
+    fontComicSans: 'Comic Sans MS',
+    fontSerif: 'Serif',
+    fontSansSerif: 'Sans-serif',
+    fontMonospace: 'Monospace',
+    langZhCN: '中国語（簡体字）',
+    langZhTW: '中国語（繁体字）',
+    langEn: '英語',
+    langJa: '日本語',
+    langKo: '韓国語',
+    langEs: 'スペイン語',
+    langFr: 'フランス語',
+    langDe: 'ドイツ語',
+    langRu: 'ロシア語',
+    langPt: 'ポルトガル語',
+    tooltipCopy: 'チャット入力欄にコピー',
+    tooltipOpenProfile: '送信者のプロフィールを開く',
+    blockKeywords: 'ブロックするキーワード',
+    blockKeywordHint: '原文と訳文の両方に適用されます',
+    blockKeywordPlaceholder: 'キーワードを入力',
+    blockKeywordAdd: '追加',
+    blockKeywordRemove: 'キーワードを削除',
+    speechToggle: '弾幕読み上げ',
+    speechPanelTitle: '弾幕読み上げ',
+    speechEnable: '読み上げを有効にする',
+    speechOn: '読み上げオン',
+    speechMute: '読み上げミュート',
+    speechOff: '読み上げオフ',
+    speechTest: '試し読み',
+    speechTestText: 'これはテストです ABC',
+    speechPlay: '設定速度で再生',
+    speechPlayFast: '变速モードで再生',
+    speechVolume: '音量',
+    speechPitch: '高さ',
+    speechVoice: '声',
+    speechVoiceLang: '言語',
+    speechVoiceDefault: 'デフォルト',
+    speechRate: '読み上げ速度',
+    speechPace: '变速モード',
+    speechMaxSeconds: '1件の上限',
+    speechSeconds: '秒',
+    speechPaceHint: '上限時間を超えるときは自動で速くします。翻訳がオンのときは訳文の長さを使います。繰り返しは最大3回まで。記号だけ、絵文字だけ、数字だけは読み上げません。',
+    speechBuffer: '追いかける件数',
+    speechBufferHint: 'この件数より古い弾幕は捨てて、読み上げが遅れ続けないようにします',
+    speechUnsupported: 'このブラウザは音声読み上げに対応していません',
+    tooltipSpeak: 'この弾幕を読み上げる',
+    superchatPinned: 'Super Chat を固定',
+    superchatPosition: '固定位置',
+    superchatDuration: '固定時間',
+    superchatAnimation: '固定アニメーション',
+    superchatTop: '上部',
+    superchatBottom: '下部',
+    superchatFade: 'フェード',
+    superchatSlide: 'スライド',
+    superchatPop: 'ポップ',
+    superchatShine: 'シャイン',
   },
 };
 
@@ -162,6 +328,7 @@ function detectLocale() {
   const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
   for (const lang of langs) {
     if (lang && /^zh(-|$)/i.test(lang)) return 'zh';
+    if (lang && /^ja(-|$)/i.test(lang)) return 'ja';
   }
   return 'en';
 }
@@ -193,6 +360,22 @@ function getFontOptions() {
     { label: t('fontSerif'), value: 'serif' },
     { label: t('fontSansSerif'), value: 'sans-serif' },
     { label: t('fontMonospace'), value: 'monospace' },
+  ];
+}
+
+function getSuperchatPositionOptions() {
+  return [
+    { label: t('superchatTop'), value: 'top' },
+    { label: t('superchatBottom'), value: 'bottom' },
+  ];
+}
+
+function getSuperchatAnimationOptions() {
+  return [
+    { label: t('superchatFade'), value: 'fade' },
+    { label: t('superchatSlide'), value: 'slide' },
+    { label: t('superchatPop'), value: 'pop' },
+    { label: t('superchatShine'), value: 'shine' },
   ];
 }
 
@@ -231,7 +414,9 @@ function getTranslateLangOptions() {
 }
 
 function getDefaultTranslateTargetLang() {
-  return LOCALE === 'zh' ? 'zh-CN' : 'en';
+  if (LOCALE === 'zh') return 'zh-CN';
+  if (LOCALE === 'ja') return 'ja';
+  return 'en';
 }
 
 const SCROLL_AREA_BOTTOM_RESERVE = 56;
@@ -248,6 +433,19 @@ const DEFAULT_SETTINGS = {
   translateTargetLang: getDefaultTranslateTargetLang(),
   translateSpeed: 3,
   blockKeywords: [],
+  speechEnabled: false,
+  speechVolume: 80,
+  speechPitch: 100,
+  speechVoice: '',
+  speechLang: '',
+  speechRate: 100,
+  speechPace: true,
+  speechMaxSeconds: 4,
+  speechBuffer: 5,
+  superchatPinned: false,
+  superchatPosition: 'top',
+  superchatDuration: 6,
+  superchatAnimation: 'slide',
 };
 
 const SELECTORS = {
@@ -294,6 +492,24 @@ function loadSettings() {
       }
       merged.blockKeywords = normalizeBlockKeywords(merged.blockKeywords);
       merged.opacity = clamp(Number(merged.opacity) || DEFAULT_SETTINGS.opacity, 10, 100);
+      if (typeof merged.speechEnabled !== 'boolean') {
+        merged.speechEnabled = merged.speechMode === 'on' || merged.speechMode === 'mute';
+        if (merged.speechMode === 'mute') merged.speechVolume = 0;
+      }
+      delete merged.speechMode;
+      delete merged.speechFastest;
+      merged.speechVolume = clamp(finiteNumber(merged.speechVolume, DEFAULT_SETTINGS.speechVolume), 0, 100);
+      merged.speechPitch = clamp(finiteNumber(merged.speechPitch, DEFAULT_SETTINGS.speechPitch), 0, 200);
+      merged.speechRate = clamp(finiteNumber(merged.speechRate, DEFAULT_SETTINGS.speechRate), 50, 200);
+      merged.speechPace = !!merged.speechPace;
+      merged.speechMaxSeconds = clamp(finiteNumber(merged.speechMaxSeconds, DEFAULT_SETTINGS.speechMaxSeconds), 1, 15);
+      merged.speechBuffer = clamp(finiteNumber(merged.speechBuffer, DEFAULT_SETTINGS.speechBuffer), 1, 25);
+      merged.speechVoice = typeof merged.speechVoice === 'string' ? merged.speechVoice : '';
+      merged.speechLang = typeof merged.speechLang === 'string' ? merged.speechLang : '';
+      merged.superchatPinned = !!merged.superchatPinned;
+      if (!['top', 'bottom'].includes(merged.superchatPosition)) merged.superchatPosition = 'top';
+      if (!['fade', 'slide', 'pop', 'shine'].includes(merged.superchatAnimation)) merged.superchatAnimation = 'slide';
+      merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 15);
       return merged;
     }
   } catch (_) {
@@ -334,6 +550,11 @@ function messageMatchesBlock(text, keywords) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function finiteNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function isPageActive() {
@@ -616,6 +837,243 @@ class LaneManager {
   }
 }
 
+const SPEECH_GAP_MS = 250;
+
+let speechSpeaker = null;
+
+class DanmakuSpeaker {
+  constructor(getSettings) {
+    this.getSettings = getSettings;
+    this.queue = [];
+    this.token = 0;
+    this.busy = false;
+    this.timer = null;
+    this.supported = typeof window.speechSynthesis !== 'undefined';
+    this.keepAlive = null;
+    if (!this.supported) return;
+    this.keepAlive = setInterval(() => {
+      const synth = window.speechSynthesis;
+      if (!synth?.speaking || synth.paused) return;
+      synth.pause();
+      synth.resume();
+    }, 10000);
+  }
+
+  destroy() {
+    clearInterval(this.keepAlive);
+    this.keepAlive = null;
+    this.cancel();
+  }
+
+  canAutoSpeak() {
+    const settings = this.getSettings();
+    return !!settings.speechEnabled && Number(settings.speechVolume) > 0;
+  }
+
+  rateFor(text, paced) {
+    const settings = this.getSettings();
+    const base = clamp(Number(settings.speechRate) || 100, 50, 200) / 100;
+    const usePace = paced ?? !!settings.speechPace;
+    if (!usePace) return base;
+    const maxSeconds = clamp(Number(settings.speechMaxSeconds) || 4, 1, 15);
+    const estimate = estimateSpeechSeconds(text, base);
+    if (estimate <= maxSeconds) return base;
+    return clamp(base * (estimate / maxSeconds), base, 10);
+  }
+
+  listVoices() {
+    if (!this.supported) return [];
+    return window.speechSynthesis.getVoices();
+  }
+
+  findVoice() {
+    const voices = this.listVoices();
+    if (!voices.length) return null;
+    const settings = this.getSettings();
+    if (settings.speechVoice) {
+      const picked = voices.find((voice) => voice.voiceURI === settings.speechVoice || voice.name === settings.speechVoice);
+      if (picked) return picked;
+    }
+    const lang = String(settings.speechLang || navigator.language || '').toLowerCase();
+    const prefix = lang.slice(0, 2);
+    return voices.find((voice) => voice.default && voice.lang.toLowerCase().startsWith(prefix))
+      || voices.find((voice) => prefix && voice.lang.toLowerCase().startsWith(prefix))
+      || voices.find((voice) => voice.default)
+      || voices[0];
+  }
+
+  request(text) {
+    if (!this.supported || document.hidden || !this.canAutoSpeak()) return;
+    const spoken = prepareSpeechText(text);
+    if (!spoken) return;
+    this.queue.push(spoken);
+    if (!this.busy) this.pump();
+  }
+
+  speakNow(text) {
+    const spoken = prepareSpeechText(text);
+    if (!spoken || !this.supported) return;
+    if (this.busy && this.queue.length) this.queue.shift();
+    this.token += 1;
+    const token = this.token;
+    clearTimeout(this.timer);
+    this.busy = true;
+    window.speechSynthesis.cancel();
+    this.timer = setTimeout(() => {
+      if (token !== this.token) return;
+      this.play(spoken, this.rateFor(spoken), token, () => this.pump());
+    }, 60);
+  }
+
+  preview(text, paced) {
+    const spoken = limitSpeechRepeats(normalizeSpeechText(text));
+    if (!spoken || !this.supported) return;
+    this.token += 1;
+    const token = this.token;
+    clearTimeout(this.timer);
+    this.busy = true;
+    window.speechSynthesis.cancel();
+    this.timer = setTimeout(() => {
+      if (token !== this.token) return;
+      this.play(spoken, this.rateFor(spoken, paced), token, () => this.pump());
+    }, 60);
+  }
+
+  pump() {
+    if (!this.supported || !this.canAutoSpeak()) {
+      this.queue = [];
+      this.busy = false;
+      return;
+    }
+    const buffer = clamp(Number(this.getSettings().speechBuffer) || 5, 1, 25);
+    if (this.queue.length > buffer) this.queue = this.queue.slice(-buffer);
+    if (!this.queue.length) {
+      this.busy = false;
+      return;
+    }
+    const text = this.queue[0];
+    const rate = this.rateFor(text);
+    this.busy = true;
+    this.token += 1;
+    const token = this.token;
+    this.play(text, rate, token, () => {
+      if (this.queue[0] === text) this.queue.shift();
+      this.timer = setTimeout(() => this.pump(), SPEECH_GAP_MS);
+    });
+  }
+
+  play(text, rate, token, onDone) {
+    if (token !== this.token || !this.supported) return;
+    const settings = this.getSettings();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.volume = clamp(Number(settings.speechVolume), 0, 100) / 100;
+    utterance.pitch = clamp(Number(settings.speechPitch), 0, 200) / 100;
+    utterance.rate = clamp(rate, 0.1, 10);
+    const voice = this.findVoice();
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    }
+    let settled = false;
+    const finish = (event) => {
+      if (settled || token !== this.token) return;
+      if (event?.type === 'error' && (event.error === 'interrupted' || event.error === 'canceled')) return;
+      settled = true;
+      onDone?.();
+    };
+    utterance.addEventListener('end', finish);
+    utterance.addEventListener('error', finish);
+    window.speechSynthesis.resume();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  cancel() {
+    this.token += 1;
+    this.queue = [];
+    this.busy = false;
+    clearTimeout(this.timer);
+    this.timer = null;
+    if (this.supported) window.speechSynthesis.cancel();
+  }
+}
+
+function normalizeSpeechText(text) {
+  return String(text || '').replace(/\s+/g, ' ').trim();
+}
+
+function speechSourceText(message, parts) {
+  if (Array.isArray(parts) && parts.length) {
+    return parts
+      .filter((part) => part?.type === 'text' && part.text)
+      .map((part) => part.text)
+      .join(' ');
+  }
+  return message || '';
+}
+
+function limitSpeechRepeats(text, maxRepeats = 3) {
+  let out = String(text || '');
+  const maxUnit = Math.floor(out.length / (maxRepeats + 1));
+  for (let len = maxUnit; len >= 1; len -= 1) {
+    const pattern = new RegExp(`([\\s\\S]{${len}})\\1{${maxRepeats},}`, 'g');
+    out = out.replace(pattern, (_match, unit) => unit.repeat(maxRepeats));
+  }
+  return out.replace(/(\S+)(?:\s+\1){3,}/g, (_match, token) => Array(maxRepeats).fill(token).join(' '));
+}
+
+function hasReadableSpeech(text) {
+  const stripped = String(text || '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/\p{N}/gu, '')
+    .replace(/\p{P}/gu, '')
+    .replace(/\p{S}/gu, '')
+    .replace(/\s+/g, '');
+  return stripped.length > 0;
+}
+
+function prepareSpeechText(text) {
+  const spoken = limitSpeechRepeats(normalizeSpeechText(text));
+  return hasReadableSpeech(spoken) ? spoken : '';
+}
+
+function estimateSpeechSeconds(text, rate) {
+  let units = 0;
+  for (const ch of String(text || '')) {
+    if (/\s/.test(ch)) continue;
+    units += /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/.test(ch) ? 1 : 0.45;
+  }
+  return (units * 0.24) / (rate || 1);
+}
+
+function ensureSpeechSpeaker(getSettings) {
+  if (!speechSpeaker) speechSpeaker = new DanmakuSpeaker(getSettings);
+  return speechSpeaker;
+}
+
+function requestSpeech(text) {
+  speechSpeaker?.request(text);
+}
+
+function speakTextNow(text) {
+  speechSpeaker?.speakNow(text);
+}
+
+function previewSpeech(text, fast) {
+  speechSpeaker?.preview(text, fast);
+}
+
+function cancelSpeech() {
+  speechSpeaker?.cancel();
+}
+
+function listSpeechVoices() {
+  return speechSpeaker?.listVoices() || [];
+}
+
+function speechSupported() {
+  return !!speechSpeaker?.supported;
+}
+
 function appendDanmakuContent(item, message, parts) {
   if (!Array.isArray(parts) || !parts.length) {
     item.textContent = message || '';
@@ -657,6 +1115,9 @@ class DanmakuEngine {
     this.getSettings = getSettings;
     this.laneManager = new LaneManager();
     this.layer = null;
+    this.superchatLayer = null;
+    this.pinnedItem = null;
+    this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
     this.resizeObserver = null;
@@ -668,6 +1129,7 @@ class DanmakuEngine {
   insertLayer() {
     const overlay = this.overlayEl || this.playerEl;
     overlay.appendChild(this.layer);
+    if (this.superchatLayer) overlay.appendChild(this.superchatLayer);
   }
 
   async mount() {
@@ -685,6 +1147,9 @@ class DanmakuEngine {
     this.layer = document.createElement('div');
     this.layer.className = 'ydm-danmaku-layer';
     this.layer.setAttribute('aria-hidden', 'true');
+    this.superchatLayer = document.createElement('div');
+    this.superchatLayer.className = 'ydm-superchat-layer';
+    this.superchatLayer.setAttribute('aria-hidden', 'true');
     this.insertLayer();
 
     this.resizeObserver = new ResizeObserver(this.boundUpdate);
@@ -710,7 +1175,11 @@ class DanmakuEngine {
     this.controlsObserver?.disconnect();
     hideDanmakuTooltip();
     this.layer?.remove();
+    this.superchatLayer?.remove();
     this.layer = null;
+    this.superchatLayer = null;
+    this.pinnedItem = null;
+    this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
   }
@@ -734,18 +1203,48 @@ class DanmakuEngine {
     return this.controlsHeight;
   }
 
+  getPinnedBandHeight() {
+    return this.getLaneHeight() + 18;
+  }
+
+  getPinnedBandRect(playerHeight) {
+    if (!this.pinnedItem || !this.getSettings().superchatPinned) return null;
+    const band = this.getPinnedBandHeight();
+    const pos = this.getSettings().superchatPosition === 'bottom' ? 'bottom' : 'top';
+    const top = pos === 'bottom'
+      ? Math.max(0, playerHeight - this.getBottomReserve() - band)
+      : 8;
+    return { pos, top, height: band };
+  }
+
   getScrollAreaRect(playerRect) {
     const laneHeight = this.getLaneHeight();
     const h = playerRect.height;
+    let area;
 
     switch (this.getSettings().scrollArea) {
       case 'top-half':
-        return { top: 0, height: Math.max(laneHeight, h * 0.5) };
+        area = { top: 0, height: Math.max(laneHeight, h * 0.5) };
+        break;
       case 'top-quarter':
-        return { top: 0, height: Math.max(laneHeight, h * 0.25) };
+        area = { top: 0, height: Math.max(laneHeight, h * 0.25) };
+        break;
       default:
-        return { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+        area = { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+        break;
     }
+
+    const band = this.getPinnedBandRect(h);
+    if (!band) return area;
+    const areaBottom = area.top + area.height;
+    const bandBottom = band.top + band.height;
+    if (bandBottom <= area.top || band.top >= areaBottom) return area;
+    if (band.pos === 'top') {
+      const nextTop = Math.max(area.top, bandBottom + 4);
+      return { top: nextTop, height: Math.max(laneHeight, areaBottom - nextTop) };
+    }
+    const nextBottom = Math.min(areaBottom, band.top - 4);
+    return { top: area.top, height: Math.max(laneHeight, nextBottom - area.top) };
   }
 
   migrateDanmakuItems(items, oldRect, newWidth, newHeight) {
@@ -788,6 +1287,13 @@ class DanmakuEngine {
   updateLayout() {
     if (!this.layer || !this.playerEl) return;
 
+    const settings = this.getSettings();
+    if (!settings.superchatPinned || !settings.enabled) {
+      this.superchatQueue = [];
+      this.pinnedItem?.remove();
+      this.pinnedItem = null;
+    }
+
     const rect = this.playerEl.getBoundingClientRect();
     const area = this.getScrollAreaRect(rect);
     const oldRect = this.layer.getBoundingClientRect();
@@ -818,6 +1324,7 @@ class DanmakuEngine {
     const laneHeight = this.getLaneHeight();
     this.laneManager.reset(Math.floor(newHeight / laneHeight), laneHeight);
     this.layer.style.display = this.getSettings().enabled ? 'block' : 'none';
+    this.layoutSuperchat(rect);
 
     const opacity = this.getItemOpacity();
     for (const item of items) {
@@ -825,7 +1332,102 @@ class DanmakuEngine {
     }
   }
 
-  render({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
+  layoutSuperchat(playerRect) {
+    if (!this.superchatLayer) return;
+    const band = this.getPinnedBandRect(playerRect.height);
+    if (!band) {
+      this.superchatLayer.style.display = 'none';
+      return;
+    }
+    this.superchatLayer.classList.toggle('ydm-sc-bottom', band.pos === 'bottom');
+    Object.assign(this.superchatLayer.style, {
+      display: 'flex',
+      position: 'absolute',
+      top: `${band.top}px`,
+      left: '0',
+      width: '100%',
+      height: `${band.height}px`,
+      zIndex: '4',
+    });
+  }
+
+  render(payload) {
+    const settings = this.getSettings();
+    if (payload.superchat && settings.superchatPinned) {
+      this.queueSuperchat(payload);
+      return;
+    }
+    this.renderScrolling(payload);
+  }
+
+  queueSuperchat(payload) {
+    if (!this.superchatLayer || !this.getSettings().enabled) return;
+    if (this.pinnedItem) {
+      this.superchatQueue.push(payload);
+      if (this.superchatQueue.length > 6) this.superchatQueue.shift();
+      return;
+    }
+    this.mountSuperchat(payload);
+  }
+
+  mountSuperchat({ username, message, parts, usernameColor, profileUrl, originalMessage, translated, superchatStyle }) {
+    const settings = this.getSettings();
+    const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
+    if (!this.superchatLayer || (!message && !hasEmote)) return;
+
+    const animation = ['fade', 'slide', 'pop', 'shine'].includes(settings.superchatAnimation)
+      ? settings.superchatAnimation
+      : 'slide';
+    const duration = clamp(Number(settings.superchatDuration) || 6, 2, 15);
+    const item = document.createElement('div');
+    item.className = `ydm-superchat-item ydm-sc-${animation}`;
+    item.style.setProperty('--ydm-sc-duration', `${duration}s`);
+    item.style.background = safeCssColor(superchatStyle?.background || '#e53935');
+    item.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
+    item.style.fontSize = `${settings.fontSize}px`;
+    item.style.fontFamily = settings.fontFamily;
+    appendDanmakuContent(item, message, parts);
+    this.superchatLayer.appendChild(item);
+    this.pinnedItem = item;
+    this.updateLayout();
+    requestSpeech(speechSourceText(message, parts));
+
+    let fallback = null;
+    const armFallback = (ms) => {
+      clearTimeout(fallback);
+      fallback = setTimeout(() => this.finishSuperchat(item), ms);
+    };
+    armFallback((duration + 2) * 1000);
+    item.addEventListener('animationend', (event) => {
+      if (event.target !== item || event.animationName === 'ydm-sc-shine-sweep') return;
+      clearTimeout(fallback);
+      this.finishSuperchat(item);
+    });
+
+    attachDanmakuInteraction(item, {
+      username,
+      usernameColor,
+      profileUrl,
+      originalMessage,
+      translated,
+      onPause: () => clearTimeout(fallback),
+      onResume: () => armFallback(20000),
+    });
+  }
+
+  finishSuperchat(item) {
+    if (!item || (!item.isConnected && this.pinnedItem !== item)) return;
+    if (this.pinnedItem === item) this.pinnedItem = null;
+    item.remove();
+    const next = this.superchatQueue.shift();
+    if (next && this.getSettings().superchatPinned && this.getSettings().enabled) {
+      this.mountSuperchat(next);
+      return;
+    }
+    this.updateLayout();
+  }
+
+  renderScrolling({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
     const settings = this.getSettings();
     const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
     if (!settings.enabled || !this.layer || (!message && !hasEmote)) return;
@@ -888,6 +1490,8 @@ class DanmakuEngine {
       scheduleRemove();
     };
 
+    requestSpeech(speechSourceText(message, parts));
+
     attachDanmakuInteraction(item, {
       username,
       usernameColor,
@@ -933,7 +1537,7 @@ function showClickLockBackdrop(mount) {
   clickLockBackdrop.className = 'ydm-click-lock-backdrop';
   clickLockBackdrop.addEventListener('pointerdown', (e) => {
     const otherDanmaku = document.elementsFromPoint(e.clientX, e.clientY)
-      .find((el) => el.classList?.contains('ydm-danmaku-item') && el !== activeTooltipItem);
+      .find((el) => (el.classList?.contains('ydm-danmaku-item') || el.classList?.contains('ydm-superchat-item')) && el !== activeTooltipItem);
 
     hideDanmakuTooltip();
 
@@ -972,7 +1576,7 @@ function ensureTooltipDismissListener() {
   document.addEventListener('pointerdown', (e) => {
     if (!activeTooltip) return;
     if (activeTooltip.contains(e.target)) return;
-    if (e.target.closest?.('.ydm-danmaku-item') === activeTooltipItem) return;
+    if (e.target.closest?.('.ydm-danmaku-item, .ydm-superchat-item') === activeTooltipItem) return;
     if (clickLockBackdrop?.contains(e.target)) return;
     hideDanmakuTooltip();
   }, true);
@@ -1182,6 +1786,24 @@ function attachDanmakuInteraction(item, {
       header.classList.add('ydm-danmaku-tooltip-header--solo');
     }
 
+    const actions = document.createElement('div');
+    actions.className = 'ydm-danmaku-tooltip-actions';
+
+    const spokenText = (item.textContent || messageText || '').trim();
+    if (spokenText) {
+      const speakBtn = document.createElement('button');
+      speakBtn.type = 'button';
+      speakBtn.className = 'ydm-danmaku-tooltip-speak';
+      speakBtn.setAttribute('aria-label', t('tooltipSpeak'));
+      appendMarkup(speakBtn, ICON_SPEECH_ON);
+      speakBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        speakTextNow(spokenText);
+      });
+      actions.appendChild(speakBtn);
+    }
+
     if (messageText) {
       const copyBtn = document.createElement('button');
       copyBtn.type = 'button';
@@ -1197,8 +1819,10 @@ function attachDanmakuInteraction(item, {
         ]);
         hideDanmakuTooltip();
       });
-      header.appendChild(copyBtn);
+      actions.appendChild(copyBtn);
     }
+
+    if (actions.childElementCount) header.appendChild(actions);
 
     bubble.appendChild(header);
 
@@ -2486,9 +3110,32 @@ function parseChatMessage(msgEl) {
   const username = usernameEl?.textContent?.replace(/\s+/g, ' ').trim() || '';
   const usernameColor = getUsernameColor(msgEl, username);
   const profileUrl = getYouTubeProfileUrl(msgEl);
+  const superchat = msgEl.tagName === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
+    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER';
 
   msgEl.classList.add('ydm-processed');
-  return { message, parts, username, usernameColor, profileUrl };
+  return {
+    message,
+    parts,
+    username,
+    usernameColor,
+    profileUrl,
+    superchat,
+    superchatStyle: superchat ? readSuperchatStyle(msgEl) : null,
+  };
+}
+
+function readSuperchatStyle(msgEl) {
+  const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
+  const headerStyle = header ? getComputedStyle(header) : null;
+  const background = usableCssColor(headerStyle?.backgroundColor) || '#e53935';
+  const color = usableCssColor(headerStyle?.color) || '#ffffff';
+  return { background, color };
+}
+
+function usableCssColor(value) {
+  if (!value || value === 'transparent' || value === 'rgba(0, 0, 0, 0)') return '';
+  return value;
 }
 
 function markExistingMessages(chatRoot) {
@@ -2654,6 +3301,8 @@ class ChatObserver {
       profileUrl: parsed.profileUrl,
       originalMessage: parsed.message,
       parts: parsed.parts,
+      superchat: !!parsed.superchat,
+      superchatStyle: parsed.superchatStyle || null,
     };
 
     if (!settings.translateEnabled) {
@@ -2736,6 +3385,99 @@ function injectStyles() {
       z-index: 30;
     }
 
+    .ydm-superchat-layer {
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .ydm-superchat-item {
+      position: relative;
+      max-width: calc(100% - 24px);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: auto;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      animation-duration: var(--ydm-sc-duration, 6s);
+      animation-timing-function: ease;
+      animation-fill-mode: forwards;
+    }
+
+    .ydm-superchat-item.ydm-sc-fade,
+    .ydm-superchat-item.ydm-sc-shine {
+      animation-name: ydm-sc-fade;
+    }
+
+    .ydm-superchat-item.ydm-sc-slide {
+      animation-name: ydm-sc-slide;
+    }
+
+    .ydm-superchat-layer.ydm-sc-bottom .ydm-superchat-item.ydm-sc-slide {
+      animation-name: ydm-sc-slide-up;
+    }
+
+    .ydm-superchat-item.ydm-sc-pop {
+      animation-name: ydm-sc-pop;
+    }
+
+    .ydm-superchat-item.ydm-sc-shine::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 28%, rgba(255, 255, 255, 0.55) 50%, transparent 72%);
+      transform: translateX(-130%);
+      animation: ydm-sc-shine-sweep 1.15s ease 0.25s;
+      pointer-events: none;
+    }
+
+    .ydm-superchat-item.ydm-paused,
+    .ydm-superchat-item.ydm-paused.ydm-click-locked {
+      animation-play-state: paused;
+      z-index: 20;
+    }
+
+    @keyframes ydm-sc-fade {
+      0% { opacity: 0; }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes ydm-sc-slide {
+      0% { opacity: 0; transform: translateY(-14px); }
+      14% { opacity: 1; transform: translateY(0); }
+      86% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(10px); }
+    }
+
+    @keyframes ydm-sc-slide-up {
+      0% { opacity: 0; transform: translateY(14px); }
+      14% { opacity: 1; transform: translateY(0); }
+      86% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    @keyframes ydm-sc-pop {
+      0% { opacity: 0; transform: scale(0.7); }
+      16% { opacity: 1; transform: scale(1); }
+      86% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.92); }
+    }
+
+    @keyframes ydm-sc-shine-sweep {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(130%); }
+    }
+
     .ydm-click-lock-backdrop {
       position: absolute;
       inset: 0;
@@ -2794,7 +3536,14 @@ function injectStyles() {
       text-decoration: underline;
     }
 
-    .ydm-danmaku-tooltip-copy {
+    .ydm-danmaku-tooltip-actions {
+      display: flex;
+      flex-shrink: 0;
+      gap: 2px;
+    }
+
+    .ydm-danmaku-tooltip-copy,
+    .ydm-danmaku-tooltip-speak {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -2809,12 +3558,14 @@ function injectStyles() {
       cursor: pointer;
     }
 
-    .ydm-danmaku-tooltip-copy:hover {
+    .ydm-danmaku-tooltip-copy:hover,
+    .ydm-danmaku-tooltip-speak:hover {
       background: rgba(255, 255, 255, 0.12);
       color: #fff;
     }
 
-    .ydm-danmaku-tooltip-copy svg {
+    .ydm-danmaku-tooltip-copy svg,
+    .ydm-danmaku-tooltip-speak svg {
       width: clamp(14px, 3.5vw, 16px);
       height: clamp(14px, 3.5vw, 16px);
       fill: currentColor;
@@ -2906,6 +3657,25 @@ function injectStyles() {
       display: block;
     }
 
+    .ydm-speech-btn .ydm-icon {
+      display: none;
+      line-height: 0;
+    }
+
+    .ydm-speech-btn.ydm-speech-on .ydm-icon-on,
+    .ydm-speech-btn.ydm-speech-mute .ydm-icon-mute,
+    .ydm-speech-btn.ydm-speech-off .ydm-icon-off {
+      display: block;
+    }
+
+    .ydm-speech-btn.ydm-speech-mute {
+      opacity: 0.7;
+    }
+
+    .ydm-speech-btn.ydm-speech-off {
+      opacity: 0.45;
+    }
+
     .ydm-danmaku-btn.ydm-danmaku-disabled {
       opacity: 0.45;
     }
@@ -2953,6 +3723,86 @@ function injectStyles() {
       padding: 4px 0 8px;
       max-height: min(60vh, 420px);
       overflow-y: auto;
+    }
+
+    .ydm-balloon-body--speech {
+      max-height: min(70vh, 520px);
+    }
+
+    .ydm-balloon-section {
+      padding: 6px 12px 0;
+      color: #aaa;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .ydm-speech-modes {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .ydm-speech-mode {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #0f0f0f;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .ydm-speech-mode svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-speech-mode:hover,
+    .ydm-speech-mode.ydm-active {
+      color: #fff;
+      border-color: #ff4e45;
+      background: rgba(255, 78, 69, 0.12);
+    }
+
+    .ydm-speech-test {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ydm-speech-test .ydm-balloon-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ydm-speech-play {
+      flex-shrink: 0;
+      min-width: 36px;
+      border: none;
+      border-radius: 8px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .ydm-speech-play:hover {
+      background: #4a4a4a;
+    }
+
+    .ydm-speech-note {
+      margin: 0;
+      padding: 0 12px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
     .ydm-balloon-row {
@@ -3132,6 +3982,12 @@ const ICON_DANMAKU_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2
 const ICON_SETTINGS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m15.645 4.881 1.06-1.473a.998.998 0 1 0-1.622-1.166L13.22 4.835a110.67 110.67 0 0 0-1.1-.007h-.131c-.47 0-.975.004-1.515.012L8.783 2.3A.998.998 0 0 0 7.12 3.408l.988 1.484c-.688.019-1.418.042-2.188.069a4.013 4.013 0 0 0-3.83 3.44c-.165 1.15-.245 2.545-.245 4.185 0 1.965.115 3.67.35 5.116a4.012 4.012 0 0 0 3.763 3.363c1.903.094 3.317.141 5.513.141a.988.988 0 0 0 0-1.975 97.58 97.58 0 0 1-5.416-.139 2.037 2.037 0 0 1-1.91-1.708c-.216-1.324-.325-2.924-.325-4.798 0-1.563.076-2.864.225-3.904.14-.977.96-1.713 1.945-1.747 2.444-.087 4.465-.13 6.063-.131 1.598 0 3.62.044 6.064.13.96.034 1.71.81 1.855 1.814.075.524.113 1.962.141 3.065v.002c.005.183.01.07.014-.038.004-.096.008-.189.011-.081a.987.987 0 1 0 1.974-.069c-.004-.105-.007-.009-.011.09-.002.056-.004.112-.007.135l-.002.01a.574.574 0 0 1-.005-.091v-.027c-.03-1.118-.073-2.663-.16-3.276-.273-1.906-1.783-3.438-3.74-3.507-.905-.032-1.752-.058-2.543-.079Zm-3.113 4.703h-1.307v4.643h2.2v.04l.651-1.234c.113-.215.281-.389.482-.509v-.11h.235c.137-.049.283-.074.433-.074h1.553V9.584h-1.264a8.5 8.5 0 0 0 .741-1.405l-1.078-.381c-.24.631-.501 1.23-.806 1.786h-1.503l.686-.305c-.228-.501-.5-.959-.806-1.394l-1.034.348c.294.392.566.839.817 1.35Zm-1.7 5.502h2.16l-.564 1.068h-1.595v-1.068Zm-2.498-1.863.152-1.561h1.96V8.289H7.277v.969h2.048v1.435h-1.84l-.306 3.51h2.254c0 1.155-.043 1.906-.12 2.255-.076.348-.38.523-.925.523-.305 0-.61-.022-.893-.055l.294 1.056.061.005c.282.02.546.039.81.039.991-.065 1.547-.414 1.677-1.046.11-.631.175-1.883.175-3.757H8.334Zm5.09-.8v.85h-1.188v-.85h1.187Zm-1.188-.955h1.187v-.893h-1.187v.893Zm2.322.007v-.893h1.241v.893h-1.241Zm.528 2.757a1.26 1.26 0 0 1 1.087-.627l4.003-.009a1.26 1.26 0 0 1 1.094.63l1.721 2.982c.226.39.225.872-.001 1.263l-1.743 3a1.26 1.26 0 0 1-1.086.628l-4.003.009a1.26 1.26 0 0 1-1.094-.63l-1.722-2.982a1.26 1.26 0 0 1 .002-1.263l1.742-3Zm1.967.858a1.26 1.26 0 0 0-1.08.614l-.903 1.513a1.26 1.26 0 0 0-.002 1.289l.885 1.492c.227.384.64.62 1.086.618l2.192-.005a1.26 1.26 0 0 0 1.08-.615l.904-1.518a1.26 1.26 0 0 0 .001-1.288l-.884-1.489a1.26 1.26 0 0 0-1.086-.616l-2.193.005Zm2.517 2.76a1.4 1.4 0 1 1-2.8 0 1.4 1.4 0 0 1 2.8 0Z" clip-rule="evenodd"/></svg>`;
 
 const ICON_COPY = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`;
+
+const ICON_SPEECH_ON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+
+const ICON_SPEECH_MUTE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>`;
+
+const ICON_SPEECH_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;
 
 class SettingsPanel {
   constructor({ settings, onChange, onClose }) {
@@ -3342,6 +4198,11 @@ class SettingsPanel {
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),
+      this.createToggle(t('superchatPinned'), 'superchatPinned'),
+      this.createSelect(t('superchatPosition'), 'superchatPosition', getSuperchatPositionOptions()),
+      this.createRange(t('superchatDuration'), 'superchatDuration', 2, 15, 1, (v) => `${v} ${t('speechSeconds')}`),
+      this.createSelect(t('superchatAnimation'), 'superchatAnimation', getSuperchatAnimationOptions()),
+      this.createDivider(),
       this.createKeywordBlock(),
       this.createDivider(),
       this.createToggle(t('translateEnable'), 'translateEnabled'),
@@ -3450,14 +4311,361 @@ class SettingsPanel {
   }
 }
 
+class SpeechPanel {
+  constructor({ settings, onChange, onClose }) {
+    this.settings = settings;
+    this.onChange = onChange;
+    this.onClose = onClose;
+    this.balloon = null;
+    this.anchor = null;
+    this.isOpen = false;
+    this.langSelect = null;
+    this.voiceSelect = null;
+    this.boundReposition = () => this.reposition();
+    this.boundOutsideClick = (e) => this.handleOutsideClick(e);
+    this.boundVoices = () => this.fillVoices();
+  }
+
+  toggle(anchor) {
+    if (this.isOpen && this.anchor === anchor) this.close();
+    else this.open(anchor);
+  }
+
+  open(anchor) {
+    this.close();
+    this.anchor = anchor;
+    this.isOpen = true;
+    this.render();
+    this.reposition();
+    requestAnimationFrame(() => this.reposition());
+    window.speechSynthesis?.addEventListener('voiceschanged', this.boundVoices);
+
+    window.addEventListener('resize', this.boundReposition);
+    document.addEventListener('fullscreenchange', this.boundReposition);
+    document.addEventListener('webkitfullscreenchange', this.boundReposition);
+    document.addEventListener('scroll', this.boundReposition, true);
+    setTimeout(() => document.addEventListener('click', this.boundOutsideClick, true), 0);
+  }
+
+  close() {
+    const wasOpen = this.isOpen;
+    this.isOpen = false;
+    this.anchor = null;
+    this.balloon?.remove();
+    this.balloon = null;
+    this.langSelect = null;
+    this.voiceSelect = null;
+    window.speechSynthesis?.removeEventListener('voiceschanged', this.boundVoices);
+    window.removeEventListener('resize', this.boundReposition);
+    document.removeEventListener('fullscreenchange', this.boundReposition);
+    document.removeEventListener('webkitfullscreenchange', this.boundReposition);
+    document.removeEventListener('scroll', this.boundReposition, true);
+    document.removeEventListener('click', this.boundOutsideClick, true);
+    if (wasOpen) this.onClose?.();
+  }
+
+  handleOutsideClick(e) {
+    if (!this.balloon || !this.isOpen) return;
+    if (this.balloon.contains(e.target)) return;
+    if (this.anchor?.contains(e.target)) return;
+    this.close();
+  }
+
+  reposition() {
+    if (!this.balloon || !this.anchor) return;
+
+    const mountTarget = getFullscreenElement() || document.body;
+    if (this.balloon.parentElement !== mountTarget) {
+      mountTarget.appendChild(this.balloon);
+    }
+
+    const rect = this.anchor.getBoundingClientRect();
+    const width = 320;
+    const gap = 8;
+    const height = this.balloon.offsetHeight;
+    let left = rect.right - width;
+    let top = rect.top - height - gap;
+
+    left = clamp(left, 8, window.innerWidth - width - 8);
+    if (top < 8) top = rect.bottom + gap;
+
+    Object.assign(this.balloon.style, {
+      position: 'fixed',
+      left: `${left}px`,
+      top: `${top}px`,
+      width: `${width}px`,
+      zIndex: '100000',
+    });
+  }
+
+  updateSetting(key, value) {
+    this.settings[key] = value;
+    saveSettings(this.settings);
+    this.onChange(this.settings);
+    if ((key === 'speechEnabled' && !value) || (key === 'speechVolume' && Number(value) <= 0)) {
+      cancelSpeech();
+    }
+  }
+
+  createToggle(label, key) {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--toggle';
+
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = label;
+
+    const switchWrap = document.createElement('label');
+    switchWrap.className = 'ydm-switch';
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = !!this.settings[key];
+
+    const slider = document.createElement('span');
+    slider.className = 'ydm-switch-slider';
+
+    input.addEventListener('change', () => {
+      this.updateSetting(key, input.checked);
+    });
+
+    switchWrap.append(input, slider);
+    row.append(labelEl, switchWrap);
+    return row;
+  }
+
+  render() {
+    this.balloon = document.createElement('div');
+    this.balloon.className = 'ydm-balloon ydm-speech-panel';
+
+    const header = document.createElement('div');
+    header.className = 'ydm-balloon-header';
+
+    const title = document.createElement('div');
+    title.className = 'ydm-balloon-title';
+    title.textContent = t('speechPanelTitle');
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-balloon-close';
+    closeBtn.textContent = t('panelClose');
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.close();
+    });
+    header.append(title, closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'ydm-balloon-body ydm-balloon-body--speech';
+
+    if (!speechSupported()) {
+      const note = document.createElement('p');
+      note.className = 'ydm-speech-note';
+      note.textContent = t('speechUnsupported');
+      body.appendChild(note);
+      this.balloon.append(header, body);
+      (getFullscreenElement() || document.body).appendChild(this.balloon);
+      return;
+    }
+
+    body.append(
+      this.createToggle(t('speechEnable'), 'speechEnabled'),
+      this.createTest(),
+      this.createDivider(),
+      this.createRange(t('speechVolume'), 'speechVolume', 0, 100, 5, (v) => `${v}%`),
+      this.createRange(t('speechPitch'), 'speechPitch', 0, 200, 10, (v) => `${v}%`),
+      this.createVoices(),
+      this.createDivider(),
+      this.createRange(t('speechRate'), 'speechRate', 50, 200, 10, (v) => `${v}%`),
+      this.createToggle(t('speechPace'), 'speechPace'),
+      this.createRange(t('speechMaxSeconds'), 'speechMaxSeconds', 1, 15, 1, (v) => `${v} ${t('speechSeconds')}`),
+      this.createHint(t('speechPaceHint')),
+      this.createDivider(),
+      this.createRange(t('speechBuffer'), 'speechBuffer', 1, 25, 1, (v) => String(v)),
+      this.createHint(t('speechBufferHint')),
+    );
+
+    this.balloon.append(header, body);
+    this.balloon.addEventListener('click', (e) => e.stopPropagation());
+    this.balloon.addEventListener('pointerdown', (e) => e.stopPropagation());
+    (getFullscreenElement() || document.body).appendChild(this.balloon);
+    this.fillVoices();
+  }
+
+  createTest() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const label = document.createElement('span');
+    label.className = 'ydm-balloon-label';
+    label.textContent = t('speechTest');
+
+    const controls = document.createElement('div');
+    controls.className = 'ydm-speech-test';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'ydm-balloon-input';
+    input.value = t('speechTestText');
+
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'ydm-speech-play';
+    play.textContent = '▶';
+    play.setAttribute('aria-label', t('speechPlay'));
+    play.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      previewSpeech(input.value, false);
+    });
+
+    const fast = document.createElement('button');
+    fast.type = 'button';
+    fast.className = 'ydm-speech-play';
+    fast.textContent = '▶▶';
+    fast.setAttribute('aria-label', t('speechPlayFast'));
+    fast.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      previewSpeech(input.value, true);
+    });
+
+    controls.append(input, play, fast);
+    row.append(label, controls);
+    return row;
+  }
+
+  createVoices() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const langLabel = document.createElement('span');
+    langLabel.className = 'ydm-balloon-label';
+    langLabel.textContent = t('speechVoiceLang');
+
+    this.langSelect = document.createElement('select');
+    this.langSelect.className = 'ydm-balloon-select';
+    this.langSelect.addEventListener('change', () => {
+      const lang = this.langSelect.value;
+      this.updateSetting('speechLang', lang);
+      const voices = this.voicesForLang(lang);
+      const next = voices[0]?.voiceURI || '';
+      this.updateSetting('speechVoice', next);
+      this.fillVoices();
+    });
+
+    const voiceLabel = document.createElement('span');
+    voiceLabel.className = 'ydm-balloon-label';
+    voiceLabel.textContent = t('speechVoice');
+
+    this.voiceSelect = document.createElement('select');
+    this.voiceSelect.className = 'ydm-balloon-select';
+    this.voiceSelect.addEventListener('change', () => {
+      this.updateSetting('speechVoice', this.voiceSelect.value);
+    });
+
+    row.append(langLabel, this.langSelect, voiceLabel, this.voiceSelect);
+    return row;
+  }
+
+  voicesForLang(lang) {
+    const voices = listSpeechVoices();
+    if (!lang) return voices;
+    const wanted = lang.toLowerCase();
+    return voices.filter((voice) => voice.lang.toLowerCase() === wanted);
+  }
+
+  fillVoices() {
+    if (!this.langSelect || !this.voiceSelect) return;
+    const voices = listSpeechVoices();
+    const langs = [];
+    for (const voice of voices) {
+      if (voice.lang && !langs.includes(voice.lang)) langs.push(voice.lang);
+    }
+    langs.sort();
+
+    const lang = this.settings.speechLang || '';
+    this.langSelect.replaceChildren();
+    this.langSelect.appendChild(new Option(t('speechVoiceDefault'), ''));
+    for (const code of langs) {
+      this.langSelect.appendChild(new Option(code, code));
+    }
+    this.langSelect.value = langs.includes(lang) ? lang : '';
+
+    const visible = this.voicesForLang(this.langSelect.value);
+    this.voiceSelect.replaceChildren();
+    this.voiceSelect.appendChild(new Option(t('speechVoiceDefault'), ''));
+    for (const voice of visible) {
+      const option = new Option(`${voice.name} (${voice.lang})`, voice.voiceURI);
+      this.voiceSelect.appendChild(option);
+    }
+    const selected = this.settings.speechVoice || '';
+    this.voiceSelect.value = [...this.voiceSelect.options].some((option) => option.value === selected) ? selected : '';
+  }
+
+  createRange(label, key, min, max, step, format) {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const header = document.createElement('div');
+    header.className = 'ydm-balloon-field-header';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = label;
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'ydm-balloon-value';
+    valueSpan.textContent = format(this.settings[key]);
+    header.append(labelEl, valueSpan);
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.className = 'ydm-balloon-range';
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.value = String(this.settings[key]);
+    input.addEventListener('input', () => {
+      const val = Number(input.value);
+      valueSpan.textContent = format(val);
+      this.updateSetting(key, val);
+    });
+
+    row.append(header, input);
+    return row;
+  }
+
+  createSection(text) {
+    const el = document.createElement('div');
+    el.className = 'ydm-balloon-section';
+    el.textContent = text;
+    return el;
+  }
+
+  createHint(text) {
+    const el = document.createElement('p');
+    el.className = 'ydm-speech-note';
+    el.textContent = text;
+    return el;
+  }
+
+  createDivider() {
+    const el = document.createElement('div');
+    el.className = 'ydm-balloon-divider';
+    return el;
+  }
+}
+
 class ControlButton {
-  constructor({ onToggleDanmaku, onTogglePanel, getSettings, isPanelOpen }) {
+  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, getSettings, isPanelOpen, isSpeechPanelOpen }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
+    this.onToggleSpeech = onToggleSpeech;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
+    this.isSpeechPanelOpen = isSpeechPanelOpen;
     this.wrap = null;
     this.danmakuBtn = null;
+    this.speechBtn = null;
     this.settingsBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
@@ -3501,6 +4709,17 @@ class ControlButton {
         this.onToggleDanmaku();
       });
 
+      this.speechBtn = this.createBtn('ydm-speech-btn', t('speechToggle'), `
+        <span class="ydm-icon ydm-icon-on">${ICON_SPEECH_ON}</span>
+        <span class="ydm-icon ydm-icon-mute">${ICON_SPEECH_MUTE}</span>
+        <span class="ydm-icon ydm-icon-off">${ICON_SPEECH_OFF}</span>
+      `);
+      this.speechBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.onToggleSpeech(this.speechBtn);
+      });
+
       this.settingsBtn = this.createBtn('ydm-settings-btn', t('settingsToggle'), ICON_SETTINGS);
       this.settingsBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -3508,12 +4727,13 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.wrap.append(this.danmakuBtn, this.settingsBtn);
+      this.wrap.append(this.danmakuBtn, this.speechBtn, this.settingsBtn);
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
       else this.controlsGroup.appendChild(this.wrap);
 
       this.updateDanmakuState();
+      this.updateSpeechState();
       this.updatePanelState();
     } finally {
       this.mounting = false;
@@ -3523,14 +4743,18 @@ class ControlButton {
   remount() {
     if (this.wrap?.isConnected) return;
     const existing = document.querySelector('.ydm-controls-wrap');
-    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn')) {
+    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn')) {
       this.wrap = existing;
       this.danmakuBtn = existing.querySelector('.ydm-danmaku-btn');
+      this.speechBtn = existing.querySelector('.ydm-speech-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
+      this.updateSpeechState();
       return;
     }
+    existing?.remove();
     this.wrap = null;
     this.danmakuBtn = null;
+    this.speechBtn = null;
     this.settingsBtn = null;
     this.mount();
   }
@@ -3544,16 +4768,34 @@ class ControlButton {
     this.danmakuBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   }
 
+  updateSpeechState() {
+    if (!this.speechBtn) return;
+    const settings = this.getSettings();
+    const enabled = !!settings.speechEnabled;
+    const muted = enabled && Number(settings.speechVolume) <= 0;
+    const current = !enabled ? 'off' : muted ? 'mute' : 'on';
+    this.speechBtn.classList.toggle('ydm-speech-on', current === 'on');
+    this.speechBtn.classList.toggle('ydm-speech-mute', current === 'mute');
+    this.speechBtn.classList.toggle('ydm-speech-off', current === 'off');
+    this.speechBtn.classList.toggle('ydm-active', !!this.isSpeechPanelOpen?.());
+    const label = current === 'on' ? t('speechOn') : current === 'mute' ? t('speechMute') : t('speechOff');
+    this.speechBtn.title = label;
+    this.speechBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    this.speechBtn.setAttribute('aria-expanded', this.isSpeechPanelOpen?.() ? 'true' : 'false');
+  }
+
   updatePanelState() {
     if (!this.settingsBtn) return;
     this.settingsBtn.classList.toggle('ydm-active', this.isPanelOpen());
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
+    this.updateSpeechState();
   }
 
   destroy() {
     this.wrap?.remove();
     this.wrap = null;
     this.danmakuBtn = null;
+    this.speechBtn = null;
     this.settingsBtn = null;
     this.mounting = false;
   }
@@ -3565,6 +4807,7 @@ let danmakuEmitter = null;
 let translateQueue = null;
 let chatObserver = null;
 let settingsPanel = null;
+let speechPanel = null;
 let controlButton = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
@@ -3586,6 +4829,7 @@ function onSettingsChange(newSettings) {
   settings = newSettings;
   danmaku?.updateLayout();
   controlButton?.updateDanmakuState();
+  controlButton?.updateSpeechState();
   if (!settings.translateEnabled) translateQueue?.clear();
 }
 
@@ -3601,6 +4845,7 @@ function handleVisibilityChange() {
   if (wasActive && !pageActive) {
     danmakuEmitter?.clear();
     translateQueue?.clear();
+    cancelSpeech();
   }
 }
 
@@ -3612,6 +4857,8 @@ function teardown() {
   danmakuEmitter?.clear();
   translateQueue?.clear();
   settingsPanel?.close();
+  speechPanel?.close();
+  cancelSpeech();
   chatObserver = null;
   danmaku = null;
   danmakuEmitter = null;
@@ -3629,6 +4876,8 @@ async function boot() {
     injectStyles();
     stylesInjected = true;
   }
+
+  ensureSpeechSpeaker(getSettings);
 
   const engine = new DanmakuEngine(getSettings);
   const emitter = new DanmakuEmitter(engine, getSettings, isActive);
@@ -3650,14 +4899,31 @@ async function boot() {
     settingsPanel.settings = settings;
   }
 
+  if (!speechPanel) {
+    speechPanel = new SpeechPanel({
+      settings,
+      onChange: onSettingsChange,
+      onClose: () => controlButton?.updateSpeechState(),
+    });
+  } else {
+    speechPanel.settings = settings;
+  }
+
   const controls = new ControlButton({
     onToggleDanmaku: toggleDanmaku,
     onTogglePanel: (anchor) => {
+      speechPanel.close();
       settingsPanel.toggle(anchor);
+      controls.updatePanelState();
+    },
+    onToggleSpeech: (anchor) => {
+      settingsPanel.close();
+      speechPanel.toggle(anchor);
       controls.updatePanelState();
     },
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
+    isSpeechPanelOpen: () => speechPanel.isOpen,
   });
 
   await engine.mount();
