@@ -1,3 +1,5 @@
+**English** · [简体中文](https://greasyfork.org/zh-CN/scripts/599648-youtube-danmaku-bullet-chat) · [繁體中文](https://greasyfork.org/zh-TW/scripts/599648-youtube-danmaku-bullet-chat) · [日本語](https://greasyfork.org/ja/scripts/599648-youtube-danmaku-bullet-chat)
+
 ## Introduction
 
 YouTube Danmaku turns new YouTube live-chat messages into scrolling danmaku over the video — just like on Bilibili.
@@ -9,19 +11,28 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 1. Install the Tampermonkey extension
 2. Install this script, then open a YouTube watch page that has live chat or chat replay (`/watch` or `/live/...`)
 3. Keep the chat docked on the right side of the page. A popped-out chat window is not read
-4. Two new buttons appear at the left of the player's right-hand controls:
+4. Three new buttons appear at the left of the player's right-hand controls:
    - **Danmaku button** — Toggle danmaku on/off
+   - **Read-aloud button** — Open the speech panel
    - **Settings button** — Open the options panel
-5. Customize appearance or enable translation in the settings panel
+5. Customize appearance, turn on read-aloud, or enable translation in the panels
 
-**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself.
+**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself. The speaker button reads that one line.
 
 ### Live Danmaku
 
 - Automatically captures new live-chat and chat-replay messages and displays them on the video
 - Shows message content only — each sender gets a stable color. Owner and moderator colors are kept
 - Hover or click any danmaku to pause it
-- Click to reveal the sender. The copy button in the bubble writes the message into the live chat input
+- Click to reveal the sender. The copy button in the bubble writes the message into the live chat input. The speaker button reads that line
+
+### Read aloud
+
+- The control-bar icon opens the speech panel. Turn reading on there. Volume 0 switches the icon to mute
+- Choose voice, volume, pitch, and reading speed
+- Pace mode raises the speed so one line stays within the max time. With translation on, length uses the translated text
+- Symbols, emotes, or numbers alone are not read. A repeated phrase is read at most three times
+- Busy chat keeps only the latest lines so reading can catch up
 
 ### Customization
 
@@ -50,7 +61,7 @@ Open the demo in your browser. No install or build step is required:
 
 [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/demo/preview.html)
 
-The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, settings panel, and keyword list work on this page.
+The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, read-aloud panel, settings panel, and keyword list work on this page.
 
 ## FAQ
 
