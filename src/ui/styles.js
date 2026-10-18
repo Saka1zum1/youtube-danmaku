@@ -614,22 +614,56 @@ function injectStyles() {
       color: #ff8a80;
     }
 
-    .ydm-history-download {
-      display: block;
-      width: calc(100% - 24px);
+    .ydm-history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       margin: 0 12px 12px;
+    }
+
+    .ydm-history-download,
+    .ydm-history-pause,
+    .ydm-history-resume,
+    .ydm-history-cancel {
       border: none;
       border-radius: 8px;
-      background: #ff4e45;
-      color: #fff;
       padding: 8px 12px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    .ydm-history-download:disabled {
+    .ydm-history-download {
+      flex: 1 1 100%;
+      background: #ff4e45;
+      color: #fff;
+    }
+
+    .ydm-history-pause,
+    .ydm-history-resume {
+      flex: 1 1 auto;
+      background: #3ea6ff;
+      color: #0f0f0f;
+    }
+
+    .ydm-history-cancel {
+      flex: 1 1 auto;
+      background: #272727;
+      color: #fff;
+    }
+
+    .ydm-history-download:disabled,
+    .ydm-history-pause:disabled,
+    .ydm-history-resume:disabled,
+    .ydm-history-cancel:disabled {
       opacity: 0.6;
       cursor: default;
+    }
+
+    .ydm-history-download[hidden],
+    .ydm-history-pause[hidden],
+    .ydm-history-resume[hidden],
+    .ydm-history-cancel[hidden] {
+      display: none;
     }
 
     .ydm-switch {

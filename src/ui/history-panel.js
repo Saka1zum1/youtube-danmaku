@@ -6,6 +6,8 @@ class HistoryPanel {
     this.isOpen = false;
     this.busy = false;
     this.abort = false;
+    this.paused = false;
+    this.progressCount = 0;
     this.keywords = '';
     this.usernames = '';
     this.includeSuperchat = true;
@@ -14,6 +16,9 @@ class HistoryPanel {
     this.endSec = 0;
     this.statusEl = null;
     this.downloadBtn = null;
+    this.pauseBtn = null;
+    this.resumeBtn = null;
+    this.cancelBtn = null;
     this.boundReposition = () => this.reposition();
     this.boundOutsideClick = (e) => this.handleOutsideClick(e);
   }
@@ -42,6 +47,7 @@ class HistoryPanel {
   close() {
     const wasOpen = this.isOpen;
     this.abort = true;
+    this.paused = false;
     this.busy = false;
     this.isOpen = false;
     this.anchor = null;
@@ -49,6 +55,9 @@ class HistoryPanel {
     this.balloon = null;
     this.statusEl = null;
     this.downloadBtn = null;
+    this.pauseBtn = null;
+    this.resumeBtn = null;
+    this.cancelBtn = null;
     window.removeEventListener('resize', this.boundReposition);
     document.removeEventListener('fullscreenchange', this.boundReposition);
     document.removeEventListener('webkitfullscreenchange', this.boundReposition);
@@ -91,6 +100,52 @@ class HistoryPanel {
     this.statusEl.classList.toggle('ydm-history-status--error', !!isError);
   }
 
+  setProgressStatus() {
+    const count = this.progressCount;
+    if (this.paused) {
+      this.setStatus(
+        count > 0 ? `${t('historyPaused')} · ${t('historyProgress')} ${count}` : t('historyPaused'),
+        false,
+      );
+      return;
+    }
+    this.setStatus(
+      count > 0 ? `${t('historyProgress')} ${count}` : t('historyDownloading'),
+      false,
+    );
+  }
+
+  updateActionButtons() {
+    const downloading = this.busy && !this.paused;
+    const paused = this.busy && this.paused;
+    if (this.downloadBtn) this.downloadBtn.hidden = this.busy;
+    if (this.pauseBtn) this.pauseBtn.hidden = !downloading;
+    if (this.resumeBtn) this.resumeBtn.hidden = !paused;
+    if (this.cancelBtn) this.cancelBtn.hidden = !this.busy;
+  }
+
+  pauseDownload() {
+    if (!this.busy || this.paused || this.abort) return;
+    this.paused = true;
+    this.setProgressStatus();
+    this.updateActionButtons();
+  }
+
+  resumeDownload() {
+    if (!this.busy || !this.paused || this.abort) return;
+    this.paused = false;
+    this.setProgressStatus();
+    this.updateActionButtons();
+  }
+
+  cancelDownload() {
+    if (!this.busy || this.abort) return;
+    this.abort = true;
+    this.paused = false;
+    this.setStatus(t('historyCancelled'), false);
+    this.updateActionButtons();
+  }
+
   render() {
     this.balloon = document.createElement('div');
     this.balloon.className = 'ydm-balloon ydm-history-panel';
@@ -127,6 +182,10 @@ class HistoryPanel {
 
     this.statusEl = document.createElement('p');
     this.statusEl.className = 'ydm-history-status';
+
+    const actions = document.createElement('div');
+    actions.className = 'ydm-history-actions';
+
     this.downloadBtn = document.createElement('button');
     this.downloadBtn.type = 'button';
     this.downloadBtn.className = 'ydm-history-download';
@@ -136,7 +195,40 @@ class HistoryPanel {
       e.stopPropagation();
       this.startDownload();
     });
-    body.append(this.statusEl, this.downloadBtn);
+
+    this.pauseBtn = document.createElement('button');
+    this.pauseBtn.type = 'button';
+    this.pauseBtn.className = 'ydm-history-pause';
+    this.pauseBtn.textContent = t('historyPause');
+    this.pauseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.pauseDownload();
+    });
+
+    this.resumeBtn = document.createElement('button');
+    this.resumeBtn.type = 'button';
+    this.resumeBtn.className = 'ydm-history-resume';
+    this.resumeBtn.textContent = t('historyResume');
+    this.resumeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.resumeDownload();
+    });
+
+    this.cancelBtn = document.createElement('button');
+    this.cancelBtn.type = 'button';
+    this.cancelBtn.className = 'ydm-history-cancel';
+    this.cancelBtn.textContent = t('historyCancel');
+    this.cancelBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.cancelDownload();
+    });
+
+    actions.append(this.downloadBtn, this.pauseBtn, this.resumeBtn, this.cancelBtn);
+    body.append(this.statusEl, actions);
+    this.updateActionButtons();
 
     this.balloon.append(header, body);
     this.balloon.addEventListener('click', (e) => e.stopPropagation());
@@ -261,7 +353,9 @@ class HistoryPanel {
     if (this.busy) return;
     this.busy = true;
     this.abort = false;
-    if (this.downloadBtn) this.downloadBtn.disabled = true;
+    this.paused = false;
+    this.progressCount = 0;
+    this.updateActionButtons();
     this.setStatus(t('historyDownloading'), false);
     const duration = currentDurationSeconds();
     const startMs = duration ? this.startSec * 1000 : 0;
@@ -271,9 +365,16 @@ class HistoryPanel {
         startMs,
         endMs,
         shouldAbort: () => this.abort || !this.isOpen,
-        onProgress: (count) => this.setStatus(`${t('historyProgress')} ${count}`, false),
+        shouldPause: () => this.paused && this.isOpen && !this.abort,
+        onProgress: (count) => {
+          this.progressCount = count;
+          if (!this.abort && this.isOpen) this.setProgressStatus();
+        },
       });
-      if (this.abort || !this.isOpen) return;
+      if (this.abort || !this.isOpen) {
+        if (this.isOpen && this.abort) this.setStatus(t('historyCancelled'), false);
+        return;
+      }
       const filtered = filterLiveChatHistory(fetched, {
         keywords: this.keywords,
         usernames: this.usernames,
@@ -286,11 +387,16 @@ class HistoryPanel {
       downloadLiveChatFile(filtered, this.format, currentVideoId());
       this.setStatus(`${t('historyDone')} ${filtered.length}`, false);
     } catch (err) {
-      if (this.abort || err?.code === 'aborted') return;
+      if (this.abort || err?.code === 'aborted') {
+        if (this.isOpen) this.setStatus(t('historyCancelled'), false);
+        return;
+      }
       this.setStatus(err?.code === 'no-history' ? t('historyNone') : t('historyFailed'), true);
     } finally {
       this.busy = false;
-      if (this.downloadBtn) this.downloadBtn.disabled = false;
+      this.paused = false;
+      this.abort = false;
+      this.updateActionButtons();
     }
   }
 }

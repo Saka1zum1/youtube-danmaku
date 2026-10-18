@@ -115,7 +115,29 @@ async function postReplayContinuation(token, offsetMs) {
   return response.json();
 }
 
-async function fetchLiveChatHistory({ onProgress, shouldAbort, startMs = 0, endMs = Infinity } = {}) {
+async function waitHistoryControl(shouldPause, shouldAbort) {
+  while (shouldPause?.()) {
+    if (shouldAbort?.()) {
+      const error = new Error('aborted');
+      error.code = 'aborted';
+      throw error;
+    }
+    await delay(120);
+  }
+  if (shouldAbort?.()) {
+    const error = new Error('aborted');
+    error.code = 'aborted';
+    throw error;
+  }
+}
+
+async function fetchLiveChatHistory({
+  onProgress,
+  shouldAbort,
+  shouldPause,
+  startMs = 0,
+  endMs = Infinity,
+} = {}) {
   let token = readReplayContinuation();
   if (!token) {
     await waitForElement('iframe#chatframe', document, 8000);
@@ -134,16 +156,13 @@ async function fetchLiveChatHistory({ onProgress, shouldAbort, startMs = 0, endM
   let pages = 0;
 
   while (token && pages < HISTORY_PAGE_LIMIT) {
-    if (shouldAbort?.()) {
-      const error = new Error('aborted');
-      error.code = 'aborted';
-      throw error;
-    }
+    await waitHistoryControl(shouldPause, shouldAbort);
     if (seenTokens.has(token)) break;
     seenTokens.add(token);
     pages += 1;
 
     const data = await postReplayContinuation(token, offset);
+    await waitHistoryControl(shouldPause, shouldAbort);
     const live = data?.continuationContents?.liveChatContinuation;
     if (!live) break;
 
