@@ -5,6 +5,7 @@ let translateQueue = null;
 let chatObserver = null;
 let settingsPanel = null;
 let speechPanel = null;
+let historyPanel = null;
 let controlButton = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
@@ -55,6 +56,7 @@ function teardown() {
   translateQueue?.clear();
   settingsPanel?.close();
   speechPanel?.close();
+  historyPanel?.close();
   cancelSpeech();
   chatObserver = null;
   danmaku = null;
@@ -106,21 +108,36 @@ async function boot() {
     speechPanel.settings = settings;
   }
 
+  if (!historyPanel) {
+    historyPanel = new HistoryPanel({
+      onClose: () => controlButton?.updateHistoryState(),
+    });
+  }
+
   const controls = new ControlButton({
     onToggleDanmaku: toggleDanmaku,
     onTogglePanel: (anchor) => {
       speechPanel.close();
+      historyPanel.close();
       settingsPanel.toggle(anchor);
       controls.updatePanelState();
     },
     onToggleSpeech: (anchor) => {
       settingsPanel.close();
+      historyPanel.close();
       speechPanel.toggle(anchor);
+      controls.updatePanelState();
+    },
+    onToggleHistory: (anchor) => {
+      settingsPanel.close();
+      speechPanel.close();
+      historyPanel.toggle(anchor);
       controls.updatePanelState();
     },
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
+    isHistoryPanelOpen: () => historyPanel.isOpen,
   });
 
   await engine.mount();

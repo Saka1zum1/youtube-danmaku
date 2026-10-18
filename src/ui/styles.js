@@ -597,6 +597,41 @@ function injectStyles() {
       background: rgba(255, 255, 255, 0.08);
     }
 
+    .ydm-history-status {
+      margin: 0;
+      padding: 4px 12px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.45;
+      min-height: 1.45em;
+    }
+
+    .ydm-history-status:empty {
+      display: none;
+    }
+
+    .ydm-history-status--error {
+      color: #ff8a80;
+    }
+
+    .ydm-history-download {
+      display: block;
+      width: calc(100% - 24px);
+      margin: 0 12px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ff4e45;
+      color: #fff;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ydm-history-download:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
     .ydm-switch {
       position: relative;
       width: 40px;

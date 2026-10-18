@@ -1,14 +1,17 @@
 class ControlButton {
-  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, getSettings, isPanelOpen, isSpeechPanelOpen }) {
+  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, onToggleHistory, getSettings, isPanelOpen, isSpeechPanelOpen, isHistoryPanelOpen }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
     this.onToggleSpeech = onToggleSpeech;
+    this.onToggleHistory = onToggleHistory;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
     this.isSpeechPanelOpen = isSpeechPanelOpen;
+    this.isHistoryPanelOpen = isHistoryPanelOpen;
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
+    this.historyBtn = null;
     this.settingsBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
@@ -63,6 +66,13 @@ class ControlButton {
         this.onToggleSpeech(this.speechBtn);
       });
 
+      this.historyBtn = this.createBtn('ydm-history-btn', t('historyToggle'), ICON_DOWNLOAD);
+      this.historyBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.onToggleHistory(this.historyBtn);
+      });
+
       this.settingsBtn = this.createBtn('ydm-settings-btn', t('settingsToggle'), ICON_SETTINGS);
       this.settingsBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -70,13 +80,14 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.wrap.append(this.danmakuBtn, this.speechBtn, this.settingsBtn);
+      this.wrap.append(this.danmakuBtn, this.settingsBtn, this.speechBtn, this.historyBtn);
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
       else this.controlsGroup.appendChild(this.wrap);
 
       this.updateDanmakuState();
       this.updateSpeechState();
+      this.updateHistoryState();
       this.updatePanelState();
     } finally {
       this.mounting = false;
@@ -86,18 +97,21 @@ class ControlButton {
   remount() {
     if (this.wrap?.isConnected) return;
     const existing = document.querySelector('.ydm-controls-wrap');
-    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn')) {
+    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn') && existing.querySelector('.ydm-history-btn')) {
       this.wrap = existing;
       this.danmakuBtn = existing.querySelector('.ydm-danmaku-btn');
       this.speechBtn = existing.querySelector('.ydm-speech-btn');
+      this.historyBtn = existing.querySelector('.ydm-history-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
       this.updateSpeechState();
+      this.updateHistoryState();
       return;
     }
     existing?.remove();
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
+    this.historyBtn = null;
     this.settingsBtn = null;
     this.mount();
   }
@@ -127,11 +141,20 @@ class ControlButton {
     this.speechBtn.setAttribute('aria-expanded', this.isSpeechPanelOpen?.() ? 'true' : 'false');
   }
 
+  updateHistoryState() {
+    if (!this.historyBtn) return;
+    const open = !!this.isHistoryPanelOpen?.();
+    this.historyBtn.classList.toggle('ydm-active', open);
+    this.historyBtn.title = t('historyToggle');
+    this.historyBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
   updatePanelState() {
     if (!this.settingsBtn) return;
     this.settingsBtn.classList.toggle('ydm-active', this.isPanelOpen());
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
     this.updateSpeechState();
+    this.updateHistoryState();
   }
 
   destroy() {
@@ -139,6 +162,7 @@ class ControlButton {
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
+    this.historyBtn = null;
     this.settingsBtn = null;
     this.mounting = false;
   }

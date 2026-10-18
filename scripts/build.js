@@ -23,10 +23,12 @@ const MODULES = [
   'chat/dedupe.js',
   'chat/parser.js',
   'chat/observer.js',
+  'chat/history.js',
   'ui/styles.js',
   'ui/icons.js',
   'ui/panel.js',
   'ui/speech-panel.js',
+  'ui/history-panel.js',
   'ui/control-button.js',
   'main.js',
 ];
