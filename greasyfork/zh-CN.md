@@ -1,4 +1,4 @@
-[English](https://greasyfork.org/en/scripts/586579-twitch-danmaku-bullet-chat) · **简体中文** · [繁體中文](https://greasyfork.org/zh-TW/scripts/586579-twitch-danmaku-bullet-chat) · [日本語](https://greasyfork.org/ja/scripts/586579-twitch-danmaku-bullet-chat)
+[English](https://greasyfork.org/en/scripts/599648-youtube-danmaku-bullet-chat) · **简体中文** · [繁體中文](https://greasyfork.org/zh-TW/scripts/599648-youtube-danmaku-bullet-chat) · [日本語](https://greasyfork.org/ja/scripts/599648-youtube-danmaku-bullet-chat)
 
 ## 简介
 
@@ -11,9 +11,10 @@ YouTube 弹幕让你在看 YouTube 直播或聊天回放时，把直播聊天里
 1. 安装 Tampermonkey 扩展
 2. 安装本脚本后，打开带直播聊天或聊天回放的 YouTube 观看页（`/watch` 或 `/live/...`）
 3. 聊天保持嵌在页面右侧。弹出的独立聊天窗口不会被读取
-4. 播放器右侧控制栏最左边会出现三个新按钮：
+4. 播放器右侧控制栏最左边会出现四个新按钮：
    - **弹幕按钮** — 一键开关弹幕
    - **朗读按钮** — 打开朗读面板
+   - **下载按钮** — 导出归档聊天回放
    - **设置按钮** — 打开设置面板
 5. 在面板中调整样式、开启朗读或开启翻译
 
@@ -33,6 +34,13 @@ YouTube 弹幕让你在看 YouTube 直播或聊天回放时，把直播聊天里
 - 变速模式会在单条超出最长朗读时间时自动加快。开启翻译后按译文长度计算
 - 纯符号、纯表情、纯数字不朗读。重复内容最多读 3 遍
 - 聊天太忙时只保留最新的若干条，避免朗读一直追不上
+
+### 聊天记录
+
+- 下载按钮读取已保留的聊天回放，可导出 CSV、JSON 或 TXT
+- 可按关键词和用户名筛选。留空表示不使用该项筛选
+- 可选择是否包含 Super Chat，并用进度条截取时间范围
+- 没有聊天回放，或读取失败时，面板会给出提示
 
 ### 自定义样式
 

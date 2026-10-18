@@ -11,9 +11,10 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 1. Install the Tampermonkey extension
 2. Install this script, then open a YouTube watch page that has live chat or chat replay (`/watch` or `/live/...`)
 3. Keep the chat docked on the right side of the page. A popped-out chat window is not read
-4. Three new buttons appear at the left of the player's right-hand controls:
+4. Four new buttons appear at the left of the player's right-hand controls:
    - **Danmaku button** — Toggle danmaku on/off
    - **Read-aloud button** — Open the speech panel
+   - **Download button** — Export the archived chat replay
    - **Settings button** — Open the options panel
 5. Customize appearance, turn on read-aloud, or enable translation in the panels
 
@@ -33,6 +34,13 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 - Pace mode raises the speed so one line stays within the max time. With translation on, length uses the translated text
 - Symbols, emotes, or numbers alone are not read. A repeated phrase is read at most three times
 - Busy chat keeps only the latest lines so reading can catch up
+
+### Chat history
+
+- The download button reads the saved chat replay and can save CSV, JSON, or TXT
+- Filter by keywords and usernames. Leave them empty to keep every matching line
+- Choose whether Super Chat is included, and clip a time range on the video
+- If the archive has no chat replay, or the request fails, the panel explains that
 
 ### Customization
 

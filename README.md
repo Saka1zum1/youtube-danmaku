@@ -38,9 +38,10 @@ The built script is `dist/youtube-danmaku.user.js`.
 1. Open a YouTube watch page with live chat or chat replay (`/watch` or `/live/...`)
 2. Keep the chat docked on the page. The script reads `ytd-live-chat-frame#chat` (the `iframe#chatframe` inside it). A popped-out chat window is not observed
 3. New messages scroll over `ytd-player #movie_player .html5-video-container`
-4. Three buttons are added at the left of the player's right-hand controls:
+4. Four buttons are added at the left of the player's right-hand controls:
    - **Danmaku** — turn scrolling on or off
    - **Read aloud** — open the speech panel
+   - **Download** — export the archived chat replay
    - **Settings** — open the options panel
 5. Hover a line to pause it. Click it to see who sent it
 6. Click the copy icon to put that text into the live chat box. You still send it yourself. Click the speaker icon to read that one line
@@ -61,6 +62,10 @@ The built script is `dist/youtube-danmaku.user.js`.
 | Translation engine | Auto / Microsoft / Google / Volcengine / Caiyun / Tencent Transmart |
 | Target language | Source language is detected automatically |
 | Translation speed | 1–10 messages per second. Busy chat is merged into fewer requests |
+
+## Chat history
+
+The download button reads the saved chat replay for an archived live (the same `live_chat` data a player such as yt-dlp writes). Keep the chat docked on the page. The panel can filter by keyword and username, include or skip Super Chat, clip a time range, and save CSV, JSON, or TXT. If the video has no chat replay, the panel says so.
 
 Settings are stored locally and kept across visits.
 
