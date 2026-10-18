@@ -91,6 +91,12 @@
       padding: 6px 8px;
     }
     .toolbar { margin: 0 8px 8px; }
+    .speech-hint {
+      margin: 0 8px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.45;
+    }
     button {
       background: #272727;
       color: #fff;
@@ -125,6 +131,7 @@
       <div class="toolbar">
         <button id="add-chat" type="button">Add chat</button>
       </div>
+      <p class="speech-hint">朗读按钮打开设置面板。在面板里开启朗读；音量调到 0 时，图标变为静音。点弹幕上的喇叭可单独朗读。纯数字、纯表情和重复句子会在自动朗读里被跳过或缩短。</p>
     </ytd-live-chat-frame>
   </div>
   <script>
@@ -151,12 +158,16 @@
       if (navigator.clipboard) return navigator.clipboard.writeText(text);
     }
   </script>
-  <script src="../dist/youtube-danmaku.user.js?v=10"></script>
+  <script src="../dist/youtube-danmaku.user.js?v=12"></script>
   <script>
     const samples = [
       ['Alice', '#ff8a80', 'hello from chat'],
       ['小明', '#ffd600', '这是一条中文弹幕'],
       ['Bob', '#82b1ff', 'lol lol lol lol lol'],
+      ['重复', '#ea80fc', '我不知道我不知道我不知道我不知道我不知道'],
+      ['数字', '#b9f6ca', '666'],
+      ['表情', '#ffab91', '😂😂😂'],
+      ['长句', '#80d8ff', '这是一条比较长的弹幕，用来试听变速模式会不会在超过单条最长朗读时间之后自动加快语速。'],
     ];
     let seq = 0;
 
@@ -182,10 +193,32 @@
       addMessage(sample[0], sample[1], sample[2] + ' ' + (seq + 1));
     });
 
+    function addSuperchat(name, amount, text) {
+      const item = document.createElement('yt-live-chat-paid-message-renderer');
+      item.id = 'live-sc-' + (++seq);
+      const header = document.createElement('div');
+      header.id = 'header';
+      header.style.background = '#d32f2f';
+      header.style.color = '#fff';
+      const author = document.createElement('span');
+      author.id = 'author-name';
+      author.textContent = name;
+      const purchase = document.createElement('span');
+      purchase.id = 'purchase-amount';
+      purchase.textContent = amount;
+      header.append(author, document.createTextNode(' '), purchase);
+      const message = document.createElement('span');
+      message.id = 'message';
+      message.textContent = text;
+      item.append(header, message);
+      document.getElementById('items').appendChild(item);
+    }
+
     setTimeout(() => {
       samples.forEach((sample, index) => {
         setTimeout(() => addMessage(sample[0], sample[1], sample[2]), index * 700);
       });
+      setTimeout(() => addSuperchat('Super', '$5.00', 'thanks for the stream'), samples.length * 700);
     }, 4000);
   </script>
 </body>
