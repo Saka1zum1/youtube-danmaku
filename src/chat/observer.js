@@ -143,6 +143,8 @@ class ChatObserver {
       profileUrl: parsed.profileUrl,
       originalMessage: parsed.message,
       parts: parsed.parts,
+      superchat: !!parsed.superchat,
+      superchatStyle: parsed.superchatStyle || null,
     };
 
     if (!settings.translateEnabled) {

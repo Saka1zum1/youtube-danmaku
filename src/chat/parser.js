@@ -148,9 +148,32 @@ function parseChatMessage(msgEl) {
   const username = usernameEl?.textContent?.replace(/\s+/g, ' ').trim() || '';
   const usernameColor = getUsernameColor(msgEl, username);
   const profileUrl = getYouTubeProfileUrl(msgEl);
+  const superchat = msgEl.tagName === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
+    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER';
 
   msgEl.classList.add('ydm-processed');
-  return { message, parts, username, usernameColor, profileUrl };
+  return {
+    message,
+    parts,
+    username,
+    usernameColor,
+    profileUrl,
+    superchat,
+    superchatStyle: superchat ? readSuperchatStyle(msgEl) : null,
+  };
+}
+
+function readSuperchatStyle(msgEl) {
+  const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
+  const headerStyle = header ? getComputedStyle(header) : null;
+  const background = usableCssColor(headerStyle?.backgroundColor) || '#e53935';
+  const color = usableCssColor(headerStyle?.color) || '#ffffff';
+  return { background, color };
+}
+
+function usableCssColor(value) {
+  if (!value || value === 'transparent' || value === 'rgba(0, 0, 0, 0)') return '';
+  return value;
 }
 
 function markExistingMessages(chatRoot) {
