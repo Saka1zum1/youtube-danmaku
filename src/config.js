@@ -12,6 +12,19 @@ const DEFAULT_SETTINGS = {
   translateTargetLang: getDefaultTranslateTargetLang(),
   translateSpeed: 3,
   blockKeywords: [],
+  speechEnabled: false,
+  speechVolume: 80,
+  speechPitch: 100,
+  speechVoice: '',
+  speechLang: '',
+  speechRate: 100,
+  speechPace: true,
+  speechMaxSeconds: 4,
+  speechBuffer: 5,
+  superchatPinned: false,
+  superchatPosition: 'top',
+  superchatDuration: 6,
+  superchatAnimation: 'slide',
 };
 
 const SELECTORS = {

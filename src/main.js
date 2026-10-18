@@ -4,6 +4,7 @@ let danmakuEmitter = null;
 let translateQueue = null;
 let chatObserver = null;
 let settingsPanel = null;
+let speechPanel = null;
 let controlButton = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
@@ -25,6 +26,7 @@ function onSettingsChange(newSettings) {
   settings = newSettings;
   danmaku?.updateLayout();
   controlButton?.updateDanmakuState();
+  controlButton?.updateSpeechState();
   if (!settings.translateEnabled) translateQueue?.clear();
 }
 
@@ -40,6 +42,7 @@ function handleVisibilityChange() {
   if (wasActive && !pageActive) {
     danmakuEmitter?.clear();
     translateQueue?.clear();
+    cancelSpeech();
   }
 }
 
@@ -51,6 +54,8 @@ function teardown() {
   danmakuEmitter?.clear();
   translateQueue?.clear();
   settingsPanel?.close();
+  speechPanel?.close();
+  cancelSpeech();
   chatObserver = null;
   danmaku = null;
   danmakuEmitter = null;
@@ -68,6 +73,8 @@ async function boot() {
     injectStyles();
     stylesInjected = true;
   }
+
+  ensureSpeechSpeaker(getSettings);
 
   const engine = new DanmakuEngine(getSettings);
   const emitter = new DanmakuEmitter(engine, getSettings, isActive);
@@ -89,14 +96,31 @@ async function boot() {
     settingsPanel.settings = settings;
   }
 
+  if (!speechPanel) {
+    speechPanel = new SpeechPanel({
+      settings,
+      onChange: onSettingsChange,
+      onClose: () => controlButton?.updateSpeechState(),
+    });
+  } else {
+    speechPanel.settings = settings;
+  }
+
   const controls = new ControlButton({
     onToggleDanmaku: toggleDanmaku,
     onTogglePanel: (anchor) => {
+      speechPanel.close();
       settingsPanel.toggle(anchor);
+      controls.updatePanelState();
+    },
+    onToggleSpeech: (anchor) => {
+      settingsPanel.close();
+      speechPanel.toggle(anchor);
       controls.updatePanelState();
     },
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
+    isSpeechPanelOpen: () => speechPanel.isOpen,
   });
 
   await engine.mount();

@@ -39,6 +39,9 @@ class DanmakuEngine {
     this.getSettings = getSettings;
     this.laneManager = new LaneManager();
     this.layer = null;
+    this.superchatLayer = null;
+    this.pinnedItem = null;
+    this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
     this.resizeObserver = null;
@@ -50,6 +53,7 @@ class DanmakuEngine {
   insertLayer() {
     const overlay = this.overlayEl || this.playerEl;
     overlay.appendChild(this.layer);
+    if (this.superchatLayer) overlay.appendChild(this.superchatLayer);
   }
 
   async mount() {
@@ -67,6 +71,9 @@ class DanmakuEngine {
     this.layer = document.createElement('div');
     this.layer.className = 'ydm-danmaku-layer';
     this.layer.setAttribute('aria-hidden', 'true');
+    this.superchatLayer = document.createElement('div');
+    this.superchatLayer.className = 'ydm-superchat-layer';
+    this.superchatLayer.setAttribute('aria-hidden', 'true');
     this.insertLayer();
 
     this.resizeObserver = new ResizeObserver(this.boundUpdate);
@@ -92,7 +99,11 @@ class DanmakuEngine {
     this.controlsObserver?.disconnect();
     hideDanmakuTooltip();
     this.layer?.remove();
+    this.superchatLayer?.remove();
     this.layer = null;
+    this.superchatLayer = null;
+    this.pinnedItem = null;
+    this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
   }
@@ -116,18 +127,48 @@ class DanmakuEngine {
     return this.controlsHeight;
   }
 
+  getPinnedBandHeight() {
+    return this.getLaneHeight() + 18;
+  }
+
+  getPinnedBandRect(playerHeight) {
+    if (!this.pinnedItem || !this.getSettings().superchatPinned) return null;
+    const band = this.getPinnedBandHeight();
+    const pos = this.getSettings().superchatPosition === 'bottom' ? 'bottom' : 'top';
+    const top = pos === 'bottom'
+      ? Math.max(0, playerHeight - this.getBottomReserve() - band)
+      : 8;
+    return { pos, top, height: band };
+  }
+
   getScrollAreaRect(playerRect) {
     const laneHeight = this.getLaneHeight();
     const h = playerRect.height;
+    let area;
 
     switch (this.getSettings().scrollArea) {
       case 'top-half':
-        return { top: 0, height: Math.max(laneHeight, h * 0.5) };
+        area = { top: 0, height: Math.max(laneHeight, h * 0.5) };
+        break;
       case 'top-quarter':
-        return { top: 0, height: Math.max(laneHeight, h * 0.25) };
+        area = { top: 0, height: Math.max(laneHeight, h * 0.25) };
+        break;
       default:
-        return { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+        area = { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+        break;
     }
+
+    const band = this.getPinnedBandRect(h);
+    if (!band) return area;
+    const areaBottom = area.top + area.height;
+    const bandBottom = band.top + band.height;
+    if (bandBottom <= area.top || band.top >= areaBottom) return area;
+    if (band.pos === 'top') {
+      const nextTop = Math.max(area.top, bandBottom + 4);
+      return { top: nextTop, height: Math.max(laneHeight, areaBottom - nextTop) };
+    }
+    const nextBottom = Math.min(areaBottom, band.top - 4);
+    return { top: area.top, height: Math.max(laneHeight, nextBottom - area.top) };
   }
 
   migrateDanmakuItems(items, oldRect, newWidth, newHeight) {
@@ -170,6 +211,13 @@ class DanmakuEngine {
   updateLayout() {
     if (!this.layer || !this.playerEl) return;
 
+    const settings = this.getSettings();
+    if (!settings.superchatPinned || !settings.enabled) {
+      this.superchatQueue = [];
+      this.pinnedItem?.remove();
+      this.pinnedItem = null;
+    }
+
     const rect = this.playerEl.getBoundingClientRect();
     const area = this.getScrollAreaRect(rect);
     const oldRect = this.layer.getBoundingClientRect();
@@ -200,6 +248,7 @@ class DanmakuEngine {
     const laneHeight = this.getLaneHeight();
     this.laneManager.reset(Math.floor(newHeight / laneHeight), laneHeight);
     this.layer.style.display = this.getSettings().enabled ? 'block' : 'none';
+    this.layoutSuperchat(rect);
 
     const opacity = this.getItemOpacity();
     for (const item of items) {
@@ -207,7 +256,102 @@ class DanmakuEngine {
     }
   }
 
-  render({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
+  layoutSuperchat(playerRect) {
+    if (!this.superchatLayer) return;
+    const band = this.getPinnedBandRect(playerRect.height);
+    if (!band) {
+      this.superchatLayer.style.display = 'none';
+      return;
+    }
+    this.superchatLayer.classList.toggle('ydm-sc-bottom', band.pos === 'bottom');
+    Object.assign(this.superchatLayer.style, {
+      display: 'flex',
+      position: 'absolute',
+      top: `${band.top}px`,
+      left: '0',
+      width: '100%',
+      height: `${band.height}px`,
+      zIndex: '4',
+    });
+  }
+
+  render(payload) {
+    const settings = this.getSettings();
+    if (payload.superchat && settings.superchatPinned) {
+      this.queueSuperchat(payload);
+      return;
+    }
+    this.renderScrolling(payload);
+  }
+
+  queueSuperchat(payload) {
+    if (!this.superchatLayer || !this.getSettings().enabled) return;
+    if (this.pinnedItem) {
+      this.superchatQueue.push(payload);
+      if (this.superchatQueue.length > 6) this.superchatQueue.shift();
+      return;
+    }
+    this.mountSuperchat(payload);
+  }
+
+  mountSuperchat({ username, message, parts, usernameColor, profileUrl, originalMessage, translated, superchatStyle }) {
+    const settings = this.getSettings();
+    const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
+    if (!this.superchatLayer || (!message && !hasEmote)) return;
+
+    const animation = ['fade', 'slide', 'pop', 'shine'].includes(settings.superchatAnimation)
+      ? settings.superchatAnimation
+      : 'slide';
+    const duration = clamp(Number(settings.superchatDuration) || 6, 2, 15);
+    const item = document.createElement('div');
+    item.className = `ydm-superchat-item ydm-sc-${animation}`;
+    item.style.setProperty('--ydm-sc-duration', `${duration}s`);
+    item.style.background = safeCssColor(superchatStyle?.background || '#e53935');
+    item.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
+    item.style.fontSize = `${settings.fontSize}px`;
+    item.style.fontFamily = settings.fontFamily;
+    appendDanmakuContent(item, message, parts);
+    this.superchatLayer.appendChild(item);
+    this.pinnedItem = item;
+    this.updateLayout();
+    requestSpeech(speechSourceText(message, parts));
+
+    let fallback = null;
+    const armFallback = (ms) => {
+      clearTimeout(fallback);
+      fallback = setTimeout(() => this.finishSuperchat(item), ms);
+    };
+    armFallback((duration + 2) * 1000);
+    item.addEventListener('animationend', (event) => {
+      if (event.target !== item || event.animationName === 'ydm-sc-shine-sweep') return;
+      clearTimeout(fallback);
+      this.finishSuperchat(item);
+    });
+
+    attachDanmakuInteraction(item, {
+      username,
+      usernameColor,
+      profileUrl,
+      originalMessage,
+      translated,
+      onPause: () => clearTimeout(fallback),
+      onResume: () => armFallback(20000),
+    });
+  }
+
+  finishSuperchat(item) {
+    if (!item || (!item.isConnected && this.pinnedItem !== item)) return;
+    if (this.pinnedItem === item) this.pinnedItem = null;
+    item.remove();
+    const next = this.superchatQueue.shift();
+    if (next && this.getSettings().superchatPinned && this.getSettings().enabled) {
+      this.mountSuperchat(next);
+      return;
+    }
+    this.updateLayout();
+  }
+
+  renderScrolling({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
     const settings = this.getSettings();
     const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
     if (!settings.enabled || !this.layer || (!message && !hasEmote)) return;
@@ -269,6 +413,8 @@ class DanmakuEngine {
       }
       scheduleRemove();
     };
+
+    requestSpeech(speechSourceText(message, parts));
 
     attachDanmakuInteraction(item, {
       username,

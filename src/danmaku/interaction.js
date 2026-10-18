@@ -25,7 +25,7 @@ function showClickLockBackdrop(mount) {
   clickLockBackdrop.className = 'ydm-click-lock-backdrop';
   clickLockBackdrop.addEventListener('pointerdown', (e) => {
     const otherDanmaku = document.elementsFromPoint(e.clientX, e.clientY)
-      .find((el) => el.classList?.contains('ydm-danmaku-item') && el !== activeTooltipItem);
+      .find((el) => (el.classList?.contains('ydm-danmaku-item') || el.classList?.contains('ydm-superchat-item')) && el !== activeTooltipItem);
 
     hideDanmakuTooltip();
 
@@ -64,7 +64,7 @@ function ensureTooltipDismissListener() {
   document.addEventListener('pointerdown', (e) => {
     if (!activeTooltip) return;
     if (activeTooltip.contains(e.target)) return;
-    if (e.target.closest?.('.ydm-danmaku-item') === activeTooltipItem) return;
+    if (e.target.closest?.('.ydm-danmaku-item, .ydm-superchat-item') === activeTooltipItem) return;
     if (clickLockBackdrop?.contains(e.target)) return;
     hideDanmakuTooltip();
   }, true);
@@ -274,6 +274,24 @@ function attachDanmakuInteraction(item, {
       header.classList.add('ydm-danmaku-tooltip-header--solo');
     }
 
+    const actions = document.createElement('div');
+    actions.className = 'ydm-danmaku-tooltip-actions';
+
+    const spokenText = (item.textContent || messageText || '').trim();
+    if (spokenText) {
+      const speakBtn = document.createElement('button');
+      speakBtn.type = 'button';
+      speakBtn.className = 'ydm-danmaku-tooltip-speak';
+      speakBtn.setAttribute('aria-label', t('tooltipSpeak'));
+      appendMarkup(speakBtn, ICON_SPEECH_ON);
+      speakBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        speakTextNow(spokenText);
+      });
+      actions.appendChild(speakBtn);
+    }
+
     if (messageText) {
       const copyBtn = document.createElement('button');
       copyBtn.type = 'button';
@@ -289,8 +307,10 @@ function attachDanmakuInteraction(item, {
         ]);
         hideDanmakuTooltip();
       });
-      header.appendChild(copyBtn);
+      actions.appendChild(copyBtn);
     }
+
+    if (actions.childElementCount) header.appendChild(actions);
 
     bubble.appendChild(header);
 

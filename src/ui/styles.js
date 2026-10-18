@@ -51,6 +51,99 @@ function injectStyles() {
       z-index: 30;
     }
 
+    .ydm-superchat-layer {
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .ydm-superchat-item {
+      position: relative;
+      max-width: calc(100% - 24px);
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: auto;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      animation-duration: var(--ydm-sc-duration, 6s);
+      animation-timing-function: ease;
+      animation-fill-mode: forwards;
+    }
+
+    .ydm-superchat-item.ydm-sc-fade,
+    .ydm-superchat-item.ydm-sc-shine {
+      animation-name: ydm-sc-fade;
+    }
+
+    .ydm-superchat-item.ydm-sc-slide {
+      animation-name: ydm-sc-slide;
+    }
+
+    .ydm-superchat-layer.ydm-sc-bottom .ydm-superchat-item.ydm-sc-slide {
+      animation-name: ydm-sc-slide-up;
+    }
+
+    .ydm-superchat-item.ydm-sc-pop {
+      animation-name: ydm-sc-pop;
+    }
+
+    .ydm-superchat-item.ydm-sc-shine::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 28%, rgba(255, 255, 255, 0.55) 50%, transparent 72%);
+      transform: translateX(-130%);
+      animation: ydm-sc-shine-sweep 1.15s ease 0.25s;
+      pointer-events: none;
+    }
+
+    .ydm-superchat-item.ydm-paused,
+    .ydm-superchat-item.ydm-paused.ydm-click-locked {
+      animation-play-state: paused;
+      z-index: 20;
+    }
+
+    @keyframes ydm-sc-fade {
+      0% { opacity: 0; }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes ydm-sc-slide {
+      0% { opacity: 0; transform: translateY(-14px); }
+      14% { opacity: 1; transform: translateY(0); }
+      86% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(10px); }
+    }
+
+    @keyframes ydm-sc-slide-up {
+      0% { opacity: 0; transform: translateY(14px); }
+      14% { opacity: 1; transform: translateY(0); }
+      86% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    @keyframes ydm-sc-pop {
+      0% { opacity: 0; transform: scale(0.7); }
+      16% { opacity: 1; transform: scale(1); }
+      86% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.92); }
+    }
+
+    @keyframes ydm-sc-shine-sweep {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(130%); }
+    }
+
     .ydm-click-lock-backdrop {
       position: absolute;
       inset: 0;
@@ -109,7 +202,14 @@ function injectStyles() {
       text-decoration: underline;
     }
 
-    .ydm-danmaku-tooltip-copy {
+    .ydm-danmaku-tooltip-actions {
+      display: flex;
+      flex-shrink: 0;
+      gap: 2px;
+    }
+
+    .ydm-danmaku-tooltip-copy,
+    .ydm-danmaku-tooltip-speak {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -124,12 +224,14 @@ function injectStyles() {
       cursor: pointer;
     }
 
-    .ydm-danmaku-tooltip-copy:hover {
+    .ydm-danmaku-tooltip-copy:hover,
+    .ydm-danmaku-tooltip-speak:hover {
       background: rgba(255, 255, 255, 0.12);
       color: #fff;
     }
 
-    .ydm-danmaku-tooltip-copy svg {
+    .ydm-danmaku-tooltip-copy svg,
+    .ydm-danmaku-tooltip-speak svg {
       width: clamp(14px, 3.5vw, 16px);
       height: clamp(14px, 3.5vw, 16px);
       fill: currentColor;
@@ -221,6 +323,25 @@ function injectStyles() {
       display: block;
     }
 
+    .ydm-speech-btn .ydm-icon {
+      display: none;
+      line-height: 0;
+    }
+
+    .ydm-speech-btn.ydm-speech-on .ydm-icon-on,
+    .ydm-speech-btn.ydm-speech-mute .ydm-icon-mute,
+    .ydm-speech-btn.ydm-speech-off .ydm-icon-off {
+      display: block;
+    }
+
+    .ydm-speech-btn.ydm-speech-mute {
+      opacity: 0.7;
+    }
+
+    .ydm-speech-btn.ydm-speech-off {
+      opacity: 0.45;
+    }
+
     .ydm-danmaku-btn.ydm-danmaku-disabled {
       opacity: 0.45;
     }
@@ -268,6 +389,86 @@ function injectStyles() {
       padding: 4px 0 8px;
       max-height: min(60vh, 420px);
       overflow-y: auto;
+    }
+
+    .ydm-balloon-body--speech {
+      max-height: min(70vh, 520px);
+    }
+
+    .ydm-balloon-section {
+      padding: 6px 12px 0;
+      color: #aaa;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .ydm-speech-modes {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .ydm-speech-mode {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #0f0f0f;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .ydm-speech-mode svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-speech-mode:hover,
+    .ydm-speech-mode.ydm-active {
+      color: #fff;
+      border-color: #ff4e45;
+      background: rgba(255, 78, 69, 0.12);
+    }
+
+    .ydm-speech-test {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ydm-speech-test .ydm-balloon-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ydm-speech-play {
+      flex-shrink: 0;
+      min-width: 36px;
+      border: none;
+      border-radius: 8px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .ydm-speech-play:hover {
+      background: #4a4a4a;
+    }
+
+    .ydm-speech-note {
+      margin: 0;
+      padding: 0 12px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
     .ydm-balloon-row {

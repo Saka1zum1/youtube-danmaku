@@ -1,11 +1,14 @@
 class ControlButton {
-  constructor({ onToggleDanmaku, onTogglePanel, getSettings, isPanelOpen }) {
+  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, getSettings, isPanelOpen, isSpeechPanelOpen }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
+    this.onToggleSpeech = onToggleSpeech;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
+    this.isSpeechPanelOpen = isSpeechPanelOpen;
     this.wrap = null;
     this.danmakuBtn = null;
+    this.speechBtn = null;
     this.settingsBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
@@ -49,6 +52,17 @@ class ControlButton {
         this.onToggleDanmaku();
       });
 
+      this.speechBtn = this.createBtn('ydm-speech-btn', t('speechToggle'), `
+        <span class="ydm-icon ydm-icon-on">${ICON_SPEECH_ON}</span>
+        <span class="ydm-icon ydm-icon-mute">${ICON_SPEECH_MUTE}</span>
+        <span class="ydm-icon ydm-icon-off">${ICON_SPEECH_OFF}</span>
+      `);
+      this.speechBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.onToggleSpeech(this.speechBtn);
+      });
+
       this.settingsBtn = this.createBtn('ydm-settings-btn', t('settingsToggle'), ICON_SETTINGS);
       this.settingsBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -56,12 +70,13 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.wrap.append(this.danmakuBtn, this.settingsBtn);
+      this.wrap.append(this.danmakuBtn, this.speechBtn, this.settingsBtn);
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
       else this.controlsGroup.appendChild(this.wrap);
 
       this.updateDanmakuState();
+      this.updateSpeechState();
       this.updatePanelState();
     } finally {
       this.mounting = false;
@@ -71,14 +86,18 @@ class ControlButton {
   remount() {
     if (this.wrap?.isConnected) return;
     const existing = document.querySelector('.ydm-controls-wrap');
-    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn')) {
+    if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn')) {
       this.wrap = existing;
       this.danmakuBtn = existing.querySelector('.ydm-danmaku-btn');
+      this.speechBtn = existing.querySelector('.ydm-speech-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
+      this.updateSpeechState();
       return;
     }
+    existing?.remove();
     this.wrap = null;
     this.danmakuBtn = null;
+    this.speechBtn = null;
     this.settingsBtn = null;
     this.mount();
   }
@@ -92,16 +111,34 @@ class ControlButton {
     this.danmakuBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
   }
 
+  updateSpeechState() {
+    if (!this.speechBtn) return;
+    const settings = this.getSettings();
+    const enabled = !!settings.speechEnabled;
+    const muted = enabled && Number(settings.speechVolume) <= 0;
+    const current = !enabled ? 'off' : muted ? 'mute' : 'on';
+    this.speechBtn.classList.toggle('ydm-speech-on', current === 'on');
+    this.speechBtn.classList.toggle('ydm-speech-mute', current === 'mute');
+    this.speechBtn.classList.toggle('ydm-speech-off', current === 'off');
+    this.speechBtn.classList.toggle('ydm-active', !!this.isSpeechPanelOpen?.());
+    const label = current === 'on' ? t('speechOn') : current === 'mute' ? t('speechMute') : t('speechOff');
+    this.speechBtn.title = label;
+    this.speechBtn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    this.speechBtn.setAttribute('aria-expanded', this.isSpeechPanelOpen?.() ? 'true' : 'false');
+  }
+
   updatePanelState() {
     if (!this.settingsBtn) return;
     this.settingsBtn.classList.toggle('ydm-active', this.isPanelOpen());
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
+    this.updateSpeechState();
   }
 
   destroy() {
     this.wrap?.remove();
     this.wrap = null;
     this.danmakuBtn = null;
+    this.speechBtn = null;
     this.settingsBtn = null;
     this.mounting = false;
   }

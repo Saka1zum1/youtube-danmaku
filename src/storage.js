@@ -11,6 +11,24 @@ function loadSettings() {
       }
       merged.blockKeywords = normalizeBlockKeywords(merged.blockKeywords);
       merged.opacity = clamp(Number(merged.opacity) || DEFAULT_SETTINGS.opacity, 10, 100);
+      if (typeof merged.speechEnabled !== 'boolean') {
+        merged.speechEnabled = merged.speechMode === 'on' || merged.speechMode === 'mute';
+        if (merged.speechMode === 'mute') merged.speechVolume = 0;
+      }
+      delete merged.speechMode;
+      delete merged.speechFastest;
+      merged.speechVolume = clamp(finiteNumber(merged.speechVolume, DEFAULT_SETTINGS.speechVolume), 0, 100);
+      merged.speechPitch = clamp(finiteNumber(merged.speechPitch, DEFAULT_SETTINGS.speechPitch), 0, 200);
+      merged.speechRate = clamp(finiteNumber(merged.speechRate, DEFAULT_SETTINGS.speechRate), 50, 200);
+      merged.speechPace = !!merged.speechPace;
+      merged.speechMaxSeconds = clamp(finiteNumber(merged.speechMaxSeconds, DEFAULT_SETTINGS.speechMaxSeconds), 1, 15);
+      merged.speechBuffer = clamp(finiteNumber(merged.speechBuffer, DEFAULT_SETTINGS.speechBuffer), 1, 25);
+      merged.speechVoice = typeof merged.speechVoice === 'string' ? merged.speechVoice : '';
+      merged.speechLang = typeof merged.speechLang === 'string' ? merged.speechLang : '';
+      merged.superchatPinned = !!merged.superchatPinned;
+      if (!['top', 'bottom'].includes(merged.superchatPosition)) merged.superchatPosition = 'top';
+      if (!['fade', 'slide', 'pop', 'shine'].includes(merged.superchatAnimation)) merged.superchatAnimation = 'slide';
+      merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 15);
       return merged;
     }
   } catch (_) {
@@ -51,6 +69,11 @@ function messageMatchesBlock(text, keywords) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function finiteNumber(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function isPageActive() {
