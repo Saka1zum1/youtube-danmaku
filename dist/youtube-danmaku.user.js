@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.2.1
+// @version      1.3.0
 // @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
@@ -47,6 +47,8 @@ const LOCALES = {
     fontFamily: '字体',
     scrollArea: '滚动区域',
     translateEnable: '启用翻译',
+    translateInChat: '在聊天区显示译文',
+    translateInChatBadge: '译',
     translateProvider: '翻译引擎',
     translateProviderAuto: '自动切换',
     translateProviderMicrosoft: 'Microsoft 翻译',
@@ -131,7 +133,7 @@ const LOCALES = {
     superchatShine: '闪光',
     historyToggle: '下载聊天记录',
     historyPanelTitle: '下载聊天记录',
-    historyHint: '读取已保留的聊天回放。聊天需嵌在页面右侧。关键词和用户名留空表示不筛选，多个用逗号分隔。',
+    historyHint: '直播中导出当前聊天框里已显示的消息；回放则读取完整聊天回放。聊天需嵌在页面右侧。关键词和用户名留空表示不筛选，多个用逗号分隔。',
     historyKeywords: '内容关键词',
     historyKeywordsHint: '只保留包含这些词的消息',
     historyUsernames: '用户名',
@@ -144,13 +146,13 @@ const LOCALES = {
     historyPause: '暂停',
     historyResume: '继续',
     historyCancel: '取消',
-    historyDownloading: '正在读取聊天回放…',
+    historyDownloading: '正在读取聊天…',
     historyPaused: '已暂停',
     historyCancelled: '已取消下载。',
     historyProgress: '已读取',
     historyDone: '已导出',
-    historyNone: '没有可下载的聊天回放。请确认这是保留了聊天的直播回放，并且聊天嵌在页面右侧。',
-    historyFailed: '读取聊天回放失败，请稍后重试。',
+    historyNone: '没有可下载的聊天。直播请确认右侧聊天区已有消息；回放请确认保留了聊天且嵌在页面右侧。',
+    historyFailed: '读取聊天失败，请稍后重试。',
     historyEmpty: '筛选后没有消息。',
   },
   en: {
@@ -166,6 +168,8 @@ const LOCALES = {
     fontFamily: 'Font',
     scrollArea: 'Scroll area',
     translateEnable: 'Enable translation',
+    translateInChat: 'Show translation in chat',
+    translateInChatBadge: 'TR',
     translateProvider: 'Translation engine',
     translateProviderAuto: 'Auto',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -250,7 +254,7 @@ const LOCALES = {
     superchatShine: 'Shine',
     historyToggle: 'Download chat history',
     historyPanelTitle: 'Download chat history',
-    historyHint: 'Reads the saved chat replay. Keep chat docked on the page. Leave keywords and usernames empty to skip those filters. Separate multiple values with commas.',
+    historyHint: 'On a live stream, exports messages currently shown in the docked chat. On a replay, reads the full saved chat replay. Keep chat docked. Leave keywords and usernames empty to skip those filters. Separate multiple values with commas.',
     historyKeywords: 'Keywords',
     historyKeywordsHint: 'Keep messages that contain these words',
     historyUsernames: 'Usernames',
@@ -263,13 +267,13 @@ const LOCALES = {
     historyPause: 'Pause',
     historyResume: 'Resume',
     historyCancel: 'Cancel',
-    historyDownloading: 'Reading chat replay…',
+    historyDownloading: 'Reading chat…',
     historyPaused: 'Paused',
     historyCancelled: 'Download cancelled.',
     historyProgress: 'Loaded',
     historyDone: 'Exported',
-    historyNone: 'No chat replay to download. Open an archived live with chat saved, and keep that chat docked on the page.',
-    historyFailed: 'Could not read the chat replay. Try again later.',
+    historyNone: 'No chat to download. On live, wait until messages appear in the docked chat. On a replay, open an archived live with chat saved and keep that chat docked.',
+    historyFailed: 'Could not read the chat. Try again later.',
     historyEmpty: 'No messages match these filters.',
   },
   ja: {
@@ -285,6 +289,8 @@ const LOCALES = {
     fontFamily: 'フォント',
     scrollArea: '表示エリア',
     translateEnable: '翻訳を有効にする',
+    translateInChat: 'チャットに訳文を表示',
+    translateInChatBadge: '訳',
     translateProvider: '翻訳エンジン',
     translateProviderAuto: '自動',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -369,7 +375,7 @@ const LOCALES = {
     superchatShine: 'シャイン',
     historyToggle: 'チャット履歴をダウンロード',
     historyPanelTitle: 'チャット履歴をダウンロード',
-    historyHint: '保存されたチャットリプレイを読み取ります。チャットはページ右側にドックしたままにしてください。キーワードとユーザー名が空なら、その条件では絞り込みません。複数はカンマで区切ります。',
+    historyHint: '配信中はドック中のチャットに表示されているメッセージを書き出します。アーカイブでは保存済みリプレイを読み取ります。チャットはページ右側にドックしたままにしてください。キーワードとユーザー名が空なら、その条件では絞り込みません。複数はカンマで区切ります。',
     historyKeywords: 'キーワード',
     historyKeywordsHint: 'これらの語を含むメッセージだけ残す',
     historyUsernames: 'ユーザー名',
@@ -382,13 +388,13 @@ const LOCALES = {
     historyPause: '一時停止',
     historyResume: '再開',
     historyCancel: 'キャンセル',
-    historyDownloading: 'チャットリプレイを読み取り中…',
+    historyDownloading: 'チャットを読み取り中…',
     historyPaused: '一時停止中',
     historyCancelled: 'ダウンロードをキャンセルしました。',
     historyProgress: '読み取り済み',
     historyDone: '書き出し完了',
-    historyNone: 'ダウンロードできるチャットリプレイがありません。チャットが残っているアーカイブを開き、チャットをページ右側にドックしてください。',
-    historyFailed: 'チャットリプレイを読み取れませんでした。しばらくしてからもう一度試してください。',
+    historyNone: 'ダウンロードできるチャットがありません。配信中は右側のチャットにメッセージが出てから、アーカイブではチャットが残っている配信を開き、チャットをページ右側にドックしてください。',
+    historyFailed: 'チャットを読み取れませんでした。しばらくしてからもう一度試してください。',
     historyEmpty: '条件に合うメッセージがありません。',
   },
 };
@@ -498,6 +504,7 @@ const DEFAULT_SETTINGS = {
   fontFamily: 'system-ui, sans-serif',
   scrollArea: 'full',
   translateEnabled: false,
+  translateInChat: false,
   translateProvider: 'microsoft',
   translateTargetLang: getDefaultTranslateTargetLang(),
   translateSpeed: 3,
@@ -3225,6 +3232,119 @@ function isLiveMessage(msgEl, chatRoot) {
   return false;
 }
 
+const CHAT_TRANSLATE_STYLE_ID = 'ydm-chat-translate-style';
+
+const CHAT_TRANSLATE_CSS = `
+.ydm-chat-translation {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 3px 0 1px;
+  padding: 3px 0 2px 8px;
+  border-left: 2px solid #3ea6ff;
+  color: #9ecbff;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 400;
+  font-style: italic;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.ydm-chat-translation-label {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(62, 166, 255, 0.18);
+  color: #3ea6ff;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.ydm-chat-translation-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #9ecbff;
+}
+`;
+
+function ensureChatTranslateStyles(doc) {
+  if (!doc || doc.getElementById(CHAT_TRANSLATE_STYLE_ID)) return;
+  const style = doc.createElement('style');
+  style.id = CHAT_TRANSLATE_STYLE_ID;
+  style.textContent = CHAT_TRANSLATE_CSS;
+  (doc.head || doc.documentElement).appendChild(style);
+}
+
+function findChatTranslationMount(msgEl) {
+  const messageContainer = msgEl.querySelector('#message-container');
+  if (messageContainer) return { parent: messageContainer.parentElement, after: messageContainer };
+
+  const message = msgEl.querySelector('#message');
+  if (message) return { parent: message.parentElement, after: message };
+
+  const content = msgEl.querySelector('#content');
+  if (content) return { parent: content, after: null };
+
+  return { parent: msgEl, after: null };
+}
+
+function removeChatTranslation(msgEl) {
+  if (!msgEl) return;
+  msgEl.querySelectorAll('.ydm-chat-translation').forEach((node) => node.remove());
+}
+
+function clearAllChatTranslations() {
+  const doc = getChatDocument();
+  if (!doc) return;
+  doc.querySelectorAll('.ydm-chat-translation').forEach((node) => node.remove());
+}
+
+function applyChatTranslation(msgEl, translatedText, originalText) {
+  if (!msgEl?.isConnected) return;
+
+  const translated = String(translatedText || '').replace(/\s+/g, ' ').trim();
+  const original = String(originalText || '').replace(/\s+/g, ' ').trim();
+  if (!translated || translated === original) {
+    removeChatTranslation(msgEl);
+    return;
+  }
+
+  const doc = msgEl.ownerDocument;
+  ensureChatTranslateStyles(doc);
+
+  let el = msgEl.querySelector('.ydm-chat-translation');
+  if (!el) {
+    el = doc.createElement('div');
+    el.className = 'ydm-chat-translation';
+    el.setAttribute('dir', 'auto');
+
+    const label = doc.createElement('span');
+    label.className = 'ydm-chat-translation-label';
+    label.textContent = t('translateInChatBadge');
+
+    const text = doc.createElement('span');
+    text.className = 'ydm-chat-translation-text';
+
+    el.append(label, text);
+
+    const mount = findChatTranslationMount(msgEl);
+    if (!mount.parent) return;
+    if (mount.after?.parentElement === mount.parent) mount.after.after(el);
+    else mount.parent.appendChild(el);
+  }
+
+  const textEl = el.querySelector('.ydm-chat-translation-text');
+  if (textEl) textEl.textContent = translated;
+}
+
 class ChatObserver {
   constructor({ getSettings, danmakuEmitter, translateQueue, isActive }) {
     this.getSettings = getSettings;
@@ -3353,15 +3473,22 @@ class ChatObserver {
       const parsed = parseChatMessage(msgEl);
       if (!parsed) continue;
       this.remember(msgEl);
-      this.emitDanmaku(parsed);
+      this.emitDanmaku(parsed, msgEl);
     }
   }
 
-  emitDanmaku(parsed) {
+  emitDanmaku(parsed, msgEl) {
     const settings = this.getSettings();
-    if (!this.isActive() || !settings.enabled) return;
+    if (!this.isActive()) return;
 
-    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) return;
+    const wantDanmaku = !!settings.enabled;
+    const wantChatTranslate = !!settings.translateEnabled && !!settings.translateInChat;
+    if (!wantDanmaku && !wantChatTranslate) return;
+
+    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) {
+      removeChatTranslation(msgEl);
+      return;
+    }
 
     const shielded = shieldEmoteParts(parsed.parts);
     const base = {
@@ -3375,11 +3502,14 @@ class ChatObserver {
     };
 
     if (!settings.translateEnabled) {
-      this.danmakuEmitter.enqueue({
-        ...base,
-        message: parsed.message,
-        translated: false,
-      });
+      removeChatTranslation(msgEl);
+      if (wantDanmaku) {
+        this.danmakuEmitter.enqueue({
+          ...base,
+          message: parsed.message,
+          translated: false,
+        });
+      }
       return;
     }
 
@@ -3389,8 +3519,19 @@ class ChatObserver {
       const rendered = translated?.trim() ? translated : original;
       const parts = restoreEmoteParts(rendered, shielded.emotes) || parsed.parts;
       const message = partsToText(parts) || parsed.message;
-      if (messageMatchesBlock(parsed.message, latest.blockKeywords)) return;
-      if (messageMatchesBlock(message, latest.blockKeywords)) return;
+      if (messageMatchesBlock(parsed.message, latest.blockKeywords)
+        || messageMatchesBlock(message, latest.blockKeywords)) {
+        removeChatTranslation(msgEl);
+        return;
+      }
+
+      if (latest.translateEnabled && latest.translateInChat) {
+        applyChatTranslation(msgEl, message, parsed.message);
+      } else {
+        removeChatTranslation(msgEl);
+      }
+
+      if (!latest.enabled) return;
       this.danmakuEmitter.enqueue({
         ...base,
         parts,
@@ -3426,9 +3567,27 @@ function currentDurationSeconds() {
   return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
 }
 
+function chatIframeSrc() {
+  const iframe = document.querySelector(SELECTORS.chatFrame);
+  return iframe?.src || '';
+}
+
+function liveChatRenderer() {
+  return pageWindow().ytInitialData?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer
+    || null;
+}
+
+function isLiveChatMode() {
+  const src = chatIframeSrc();
+  if (src.includes('live_chat_replay')) return false;
+  if (src.includes('live_chat')) return true;
+  const bar = liveChatRenderer();
+  if (bar && typeof bar.isReplay === 'boolean') return bar.isReplay === false;
+  return !!document.querySelector('.ytp-live-badge');
+}
+
 function readReplayContinuation() {
-  const iframe = document.querySelector('iframe#chatframe, ytd-live-chat-frame#chat iframe');
-  const src = iframe?.src || '';
+  const src = chatIframeSrc();
   if (src.includes('live_chat_replay')) {
     try {
       const token = new URL(src, location.origin).searchParams.get('continuation');
@@ -3437,11 +3596,126 @@ function readReplayContinuation() {
       /* ignore */
     }
   }
-  const bar = pageWindow().ytInitialData?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer;
+  const bar = liveChatRenderer();
   const token = bar?.continuations?.[0]?.reloadContinuationData?.continuation;
   if (!token) return '';
   if (bar.isReplay === false) return '';
   return token;
+}
+
+function readChatTimestampText(msgEl) {
+  return msgEl.querySelector('#timestamp')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
+function parseChatTimestamp(text) {
+  const cleaned = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return { time: '', offsetMs: null };
+
+  // Live chat wall clock, e.g. "9:40 PM" / "9:40:12 PM"
+  const wall = cleaned.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)$/i);
+  if (wall) {
+    let hours = Number(wall[1]);
+    const minutes = Number(wall[2]);
+    const seconds = Number(wall[3] || 0);
+    const ampm = wall[4].toUpperCase();
+    if (hours >= 1 && hours <= 12 && minutes <= 59 && seconds <= 59) {
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      return {
+        time: cleaned,
+        offsetMs: ((hours * 3600) + (minutes * 60) + seconds) * 1000,
+      };
+    }
+  }
+
+  // Replay / video offset, e.g. "1:02:03" or "12:34"
+  const video = cleaned.match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
+  if (video) {
+    const hours = Number(video[1] || 0);
+    const minutes = Number(video[2]);
+    const seconds = Number(video[3]);
+    if (minutes <= 59 && seconds <= 59) {
+      return {
+        time: cleaned,
+        offsetMs: ((hours * 3600) + (minutes * 60) + seconds) * 1000,
+      };
+    }
+  }
+
+  return { time: cleaned, offsetMs: null };
+}
+
+function historyTypeFromEl(msgEl) {
+  const tag = msgEl.tagName;
+  if (tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER' || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER') {
+    return 'superchat';
+  }
+  if (tag === 'YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER') return 'member';
+  return 'message';
+}
+
+function parseDomHistoryItem(msgEl, index) {
+  if (!msgEl || msgEl.hasAttribute('is-deleted')) return null;
+
+  const author = msgEl.querySelector('#author-name')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+  const amount = msgEl.querySelector('#purchase-amount, #purchase-amount-chip')
+    ?.textContent?.replace(/\s+/g, ' ').trim() || '';
+
+  const messageEl = msgEl.querySelector('#message');
+  let message = '';
+  if (messageEl) {
+    message = partsToText(collectParts(messageEl));
+  } else {
+    const primary = partsToText(collectParts(msgEl.querySelector('#header-primary-text, #primary-text')));
+    const sub = partsToText(collectParts(msgEl.querySelector('#header-subtext')));
+    message = [primary, sub].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  if (!author && !message && !amount) return null;
+
+  const stamp = parseChatTimestamp(readChatTimestampText(msgEl));
+  return {
+    id: msgEl.id || '',
+    offsetMs: stamp.offsetMs == null ? index : stamp.offsetMs,
+    time: stamp.time,
+    author,
+    message,
+    amount,
+    type: historyTypeFromEl(msgEl),
+  };
+}
+
+async function collectLiveChatFromDom({ onProgress, shouldAbort, shouldPause } = {}) {
+  await waitHistoryControl(shouldPause, shouldAbort);
+  let list = getChatDocument()?.querySelector(SELECTORS.chatItems) || null;
+  if (!list) {
+    list = await waitForChatList(() => shouldAbort?.(), 8000);
+  }
+  if (!list) {
+    const error = new Error('no-history');
+    error.code = 'no-history';
+    throw error;
+  }
+
+  const nodes = [...list.querySelectorAll(SELECTORS.chatMessage)];
+  const items = [];
+  const seen = new Set();
+
+  for (let i = 0; i < nodes.length; i += 1) {
+    if (i % 25 === 0) {
+      await waitHistoryControl(shouldPause, shouldAbort);
+      onProgress?.(items.length);
+    }
+    const item = parseDomHistoryItem(nodes[i], i);
+    if (!item) continue;
+    const key = item.id || `${item.offsetMs}:${item.author}:${item.message}:${item.amount}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push(item);
+  }
+
+  onProgress?.(items.length);
+  return items;
 }
 
 function runsToText(node) {
@@ -3541,9 +3815,13 @@ async function fetchLiveChatHistory({
   startMs = 0,
   endMs = Infinity,
 } = {}) {
+  if (isLiveChatMode()) {
+    return collectLiveChatFromDom({ onProgress, shouldAbort, shouldPause });
+  }
+
   let token = readReplayContinuation();
   if (!token) {
-    await waitForElement('iframe#chatframe', document, 8000);
+    await waitForElement(SELECTORS.chatFrame, document, 8000);
     token = readReplayContinuation();
   }
   if (!token) {
@@ -3624,6 +3902,11 @@ function formatHistoryClock(offsetMs) {
   return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
+function historyItemTime(item) {
+  if (item?.time) return item.time;
+  return formatHistoryClock(item?.offsetMs);
+}
+
 function formatHistoryRangeLabel(seconds) {
   return formatHistoryClock(Math.max(0, seconds) * 1000);
 }
@@ -3643,10 +3926,11 @@ function exportLiveChatText(items, format, videoId) {
       count: items.length,
       messages: items.map((item) => ({
         offsetMs: item.offsetMs,
-        time: formatHistoryClock(item.offsetMs),
+        time: historyItemTime(item),
         author: item.author,
         message: item.message,
-        type: item.type
+        type: item.type,
+        amount: item.amount || undefined,
       })),
     }, null, 2);
   }
@@ -3655,17 +3939,18 @@ function exportLiveChatText(items, format, videoId) {
     for (const item of items) {
       rows.push([
         item.offsetMs,
-        formatHistoryClock(item.offsetMs),
+        historyItemTime(item),
         item.author,
         item.message,
         item.type,
+        item.amount || '',
       ].map(csvCell).join(','));
     }
     return `\uFEFF${rows.join('\n')}`;
   }
   return items.map((item) => {
     const amount = item.amount ? ` (${item.amount})` : '';
-    return `[${formatHistoryClock(item.offsetMs)}] ${item.author}${amount}: ${item.message}`;
+    return `[${historyItemTime(item)}] ${item.author}${amount}: ${item.message}`;
   }).join('\n');
 }
 
@@ -4630,6 +4915,7 @@ class SettingsPanel {
       this.createKeywordBlock(),
       this.createDivider(),
       this.createToggle(t('translateEnable'), 'translateEnabled'),
+      this.createToggle(t('translateInChat'), 'translateInChat'),
       this.createSelect(t('translateProvider'), 'translateProvider', getTranslateProviderOptions()),
       this.createSelect(t('translateTarget'), 'translateTargetLang', getTranslateLangOptions()),
       this.createRange(t('translateSpeed'), 'translateSpeed', 1, 10, 1, (v) => `${v} ${t('translateSpeedUnit')}`),
@@ -5682,7 +5968,12 @@ function onSettingsChange(newSettings) {
   danmaku?.updateLayout();
   controlButton?.updateDanmakuState();
   controlButton?.updateSpeechState();
-  if (!settings.translateEnabled) translateQueue?.clear();
+  if (!settings.translateEnabled) {
+    translateQueue?.clear();
+    clearAllChatTranslations();
+  } else if (!settings.translateInChat) {
+    clearAllChatTranslations();
+  }
 }
 
 function toggleDanmaku() {
