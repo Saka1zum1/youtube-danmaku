@@ -28,7 +28,12 @@ function onSettingsChange(newSettings) {
   danmaku?.updateLayout();
   controlButton?.updateDanmakuState();
   controlButton?.updateSpeechState();
-  if (!settings.translateEnabled) translateQueue?.clear();
+  if (!settings.translateEnabled) {
+    translateQueue?.clear();
+    clearAllChatTranslations();
+  } else if (!settings.translateInChat) {
+    clearAllChatTranslations();
+  }
 }
 
 function toggleDanmaku() {

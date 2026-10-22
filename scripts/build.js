@@ -22,6 +22,7 @@ const MODULES = [
   'translate/queue.js',
   'chat/dedupe.js',
   'chat/parser.js',
+  'chat/chat-translate.js',
   'chat/observer.js',
   'chat/history.js',
   'ui/styles.js',

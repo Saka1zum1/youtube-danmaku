@@ -8,6 +8,7 @@ const DEFAULT_SETTINGS = {
   fontFamily: 'system-ui, sans-serif',
   scrollArea: 'full',
   translateEnabled: false,
+  translateInChat: false,
   translateProvider: 'microsoft',
   translateTargetLang: getDefaultTranslateTargetLang(),
   translateSpeed: 3,

@@ -215,6 +215,7 @@ class SettingsPanel {
       this.createKeywordBlock(),
       this.createDivider(),
       this.createToggle(t('translateEnable'), 'translateEnabled'),
+      this.createToggle(t('translateInChat'), 'translateInChat'),
       this.createSelect(t('translateProvider'), 'translateProvider', getTranslateProviderOptions()),
       this.createSelect(t('translateTarget'), 'translateTargetLang', getTranslateLangOptions()),
       this.createRange(t('translateSpeed'), 'translateSpeed', 1, 10, 1, (v) => `${v} ${t('translateSpeedUnit')}`),

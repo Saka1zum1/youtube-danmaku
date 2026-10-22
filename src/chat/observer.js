@@ -126,15 +126,22 @@ class ChatObserver {
       const parsed = parseChatMessage(msgEl);
       if (!parsed) continue;
       this.remember(msgEl);
-      this.emitDanmaku(parsed);
+      this.emitDanmaku(parsed, msgEl);
     }
   }
 
-  emitDanmaku(parsed) {
+  emitDanmaku(parsed, msgEl) {
     const settings = this.getSettings();
-    if (!this.isActive() || !settings.enabled) return;
+    if (!this.isActive()) return;
 
-    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) return;
+    const wantDanmaku = !!settings.enabled;
+    const wantChatTranslate = !!settings.translateEnabled && !!settings.translateInChat;
+    if (!wantDanmaku && !wantChatTranslate) return;
+
+    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) {
+      removeChatTranslation(msgEl);
+      return;
+    }
 
     const shielded = shieldEmoteParts(parsed.parts);
     const base = {
@@ -148,11 +155,14 @@ class ChatObserver {
     };
 
     if (!settings.translateEnabled) {
-      this.danmakuEmitter.enqueue({
-        ...base,
-        message: parsed.message,
-        translated: false,
-      });
+      removeChatTranslation(msgEl);
+      if (wantDanmaku) {
+        this.danmakuEmitter.enqueue({
+          ...base,
+          message: parsed.message,
+          translated: false,
+        });
+      }
       return;
     }
 
@@ -162,8 +172,19 @@ class ChatObserver {
       const rendered = translated?.trim() ? translated : original;
       const parts = restoreEmoteParts(rendered, shielded.emotes) || parsed.parts;
       const message = partsToText(parts) || parsed.message;
-      if (messageMatchesBlock(parsed.message, latest.blockKeywords)) return;
-      if (messageMatchesBlock(message, latest.blockKeywords)) return;
+      if (messageMatchesBlock(parsed.message, latest.blockKeywords)
+        || messageMatchesBlock(message, latest.blockKeywords)) {
+        removeChatTranslation(msgEl);
+        return;
+      }
+
+      if (latest.translateEnabled && latest.translateInChat) {
+        applyChatTranslation(msgEl, message, parsed.message);
+      } else {
+        removeChatTranslation(msgEl);
+      }
+
+      if (!latest.enabled) return;
       this.danmakuEmitter.enqueue({
         ...base,
         parts,
