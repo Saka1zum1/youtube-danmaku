@@ -58,14 +58,15 @@ The built script is `dist/youtube-danmaku.user.js`.
 | Pace mode | Raises speed so one line stays within the max time. With translation on, length uses the translated text |
 | Font | 18 system fonts |
 | Scroll area | Full / top half / top quarter |
-| Translation | Replaces the on-screen text |
+| Translation | Replaces the on-screen danmaku text |
+| Show translation in chat | Optional: keep the original line and add a distinct translation under it in the docked chat |
 | Translation engine | Auto / Microsoft / Google / Volcengine / Caiyun / Tencent Transmart |
 | Target language | Source language is detected automatically |
 | Translation speed | 1–10 messages per second. Busy chat is merged into fewer requests |
 
 ## Chat history
 
-The download button reads the saved chat replay for an archived live (the same `live_chat` data a player such as yt-dlp writes). Keep the chat docked on the page. The panel can filter by keyword and username, include or skip Super Chat, clip a time range, and save CSV, JSON, or TXT. If the video has no chat replay, the panel says so.
+Keep the chat docked on the page. On a **live** stream, download exports messages currently shown in the chat panel (including wall-clock timestamps such as `9:40 PM`). On an **archived** live, it reads the full saved chat replay (the same `live_chat` data a player such as yt-dlp writes). You can pause, resume, or cancel a long replay fetch. The panel can filter by keyword and username, include or skip Super Chat, clip a time range on replays, and save CSV, JSON, or TXT.
 
 Settings are stored locally and kept across visits.
 

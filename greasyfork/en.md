@@ -1,5 +1,7 @@
 **English** · [简体中文](https://greasyfork.org/zh-CN/scripts/599648-youtube-danmaku-bullet-chat) · [繁體中文](https://greasyfork.org/zh-TW/scripts/599648-youtube-danmaku-bullet-chat) · [日本語](https://greasyfork.org/ja/scripts/599648-youtube-danmaku-bullet-chat)
 
+[YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/)
+
 ## Introduction
 
 YouTube Danmaku turns new YouTube live-chat messages into scrolling danmaku over the video — just like on Bilibili.
@@ -37,10 +39,11 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 ### Chat history
 
-- The download button reads the saved chat replay and can save CSV, JSON, or TXT
+- On a live stream, download exports messages currently shown in the docked chat (with wall-clock timestamps)
+- On an archived live, it reads the full saved chat replay and can pause, resume, or cancel
 - Filter by keywords and usernames. Leave them empty to keep every matching line
-- Choose whether Super Chat is included, and clip a time range on the video
-- If the archive has no chat replay, or the request fails, the panel explains that
+- Choose whether Super Chat is included, clip a time range on replays, and save CSV, JSON, or TXT
+- If there is nothing to export, or the request fails, the panel explains that
 
 ### Customization
 
@@ -52,7 +55,8 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 ### Real-Time Translation (Optional)
 
 - Engines: Auto, Microsoft, Google, Volcengine, Caiyun, and Tencent Transmart
-- Source language is detected automatically; the translation replaces the on-screen text
+- Source language is detected automatically; the translation replaces the on-screen danmaku text
+- Optional: also show a distinct translation under each line in the docked chat while keeping the original
 - Choose the target language and translation speed
 - Numbers and symbols are left as-is. Busy chat is merged into fewer requests
 

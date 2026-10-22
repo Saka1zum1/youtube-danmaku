@@ -1,5 +1,7 @@
 [English](https://greasyfork.org/en/scripts/599648-youtube-danmaku-bullet-chat) · **简体中文** · [繁體中文](https://greasyfork.org/zh-TW/scripts/599648-youtube-danmaku-bullet-chat) · [日本語](https://greasyfork.org/ja/scripts/599648-youtube-danmaku-bullet-chat)
 
+[YouTube 弹幕演示](https://saka1zum1.github.io/youtube-danmaku/)
+
 ## 简介
 
 YouTube 弹幕让你在看 YouTube 直播或聊天回放时，把直播聊天里的新消息变成视频上滚动的弹幕——就像 B 站那样。
@@ -37,10 +39,10 @@ YouTube 弹幕让你在看 YouTube 直播或聊天回放时，把直播聊天里
 
 ### 聊天记录
 
-- 下载按钮读取已保留的聊天回放，可导出 CSV、JSON 或 TXT
+- 直播中导出当前聊天框里已显示的消息（含墙钟时间戳）；回放则读取完整聊天回放，可暂停/继续/取消
 - 可按关键词和用户名筛选。留空表示不使用该项筛选
-- 可选择是否包含 Super Chat，并用进度条截取时间范围
-- 没有聊天回放，或读取失败时，面板会给出提示
+- 可选择是否包含 Super Chat，回放可用进度条截取时间范围，并导出 CSV、JSON 或 TXT
+- 没有可导出内容，或读取失败时，面板会给出提示
 
 ### 自定义样式
 
@@ -53,6 +55,7 @@ YouTube 弹幕让你在看 YouTube 直播或聊天回放时，把直播聊天里
 
 - 引擎可选自动切换、Microsoft、Google、火山翻译、彩云小译、腾讯交互翻译
 - 源语言自动检测，译文直接替换弹幕内容
+- 可选：在聊天区保留原文，并在下方用区分样式显示译文
 - 可自选目标语言与翻译速度
 - 纯数字和符号不翻译；聊天高峰时会合并请求
 

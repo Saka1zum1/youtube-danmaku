@@ -1,5 +1,7 @@
 [English](https://greasyfork.org/en/scripts/599648-youtube-danmaku-bullet-chat) · [简体中文](https://greasyfork.org/zh-CN/scripts/599648-youtube-danmaku-bullet-chat) · [繁體中文](https://greasyfork.org/zh-TW/scripts/599648-youtube-danmaku-bullet-chat) · **日本語**
 
+[YouTube 弾幕デモ](https://saka1zum1.github.io/youtube-danmaku/)
+
 ## 概要
 
 YouTube Danmaku は、YouTube のライブチャットやチャットリプレイの新着メッセージを、動画上を流れる弾幕（コメント）として表示します。Bilibili のような体験です。
@@ -37,10 +39,10 @@ YouTube Danmaku は、YouTube のライブチャットやチャットリプレ�
 
 ### チャット履歴
 
-- ダウンロードボタンは保存されたチャットリプレイを読み、CSV、JSON、TXT で保存できます
+- 配信中はドック中のチャットに表示されているメッセージ（壁時計の時刻付き）を書き出します。アーカイブでは完全なリプレイを読み、一時停止／再開／キャンセルできます
 - キーワードとユーザー名で絞り込めます。空ならその条件は使いません
-- Super Chat を含めるか選べ、動画の時間範囲も指定できます
-- チャットリプレイがない、または読み取りに失敗したときはパネルに表示します
+- Super Chat を含めるか選べ、アーカイブでは時間範囲も指定でき、CSV、JSON、TXT で保存できます
+- 書き出せる内容がない、または読み取りに失敗したときはパネルに表示します
 
 ### カスタマイズ
 
@@ -52,7 +54,8 @@ YouTube Danmaku は、YouTube のライブチャットやチャットリプレ�
 ### リアルタイム翻訳（任意）
 
 - エンジン：自動、Microsoft、Google、Volcengine、彩雲（Caiyun）、腾讯 Transmart
-- ソース言語は自動検出。画面上のテキストは訳文に置き換え
+- ソース言語は自動検出。画面上の弾幕テキストは訳文に置き換え
+- 任意：チャットでは原文を残し、下に区別しやすい訳文を表示
 - 翻訳先言語と翻訳速度を選択可能
 - 数字と記号はそのまま。混雑時はリクエストをまとめます
 
