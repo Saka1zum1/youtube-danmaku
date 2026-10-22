@@ -23,9 +23,27 @@ function currentDurationSeconds() {
   return Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
 }
 
+function chatIframeSrc() {
+  const iframe = document.querySelector(SELECTORS.chatFrame);
+  return iframe?.src || '';
+}
+
+function liveChatRenderer() {
+  return pageWindow().ytInitialData?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer
+    || null;
+}
+
+function isLiveChatMode() {
+  const src = chatIframeSrc();
+  if (src.includes('live_chat_replay')) return false;
+  if (src.includes('live_chat')) return true;
+  const bar = liveChatRenderer();
+  if (bar && typeof bar.isReplay === 'boolean') return bar.isReplay === false;
+  return !!document.querySelector('.ytp-live-badge');
+}
+
 function readReplayContinuation() {
-  const iframe = document.querySelector('iframe#chatframe, ytd-live-chat-frame#chat iframe');
-  const src = iframe?.src || '';
+  const src = chatIframeSrc();
   if (src.includes('live_chat_replay')) {
     try {
       const token = new URL(src, location.origin).searchParams.get('continuation');
@@ -34,11 +52,126 @@ function readReplayContinuation() {
       /* ignore */
     }
   }
-  const bar = pageWindow().ytInitialData?.contents?.twoColumnWatchNextResults?.conversationBar?.liveChatRenderer;
+  const bar = liveChatRenderer();
   const token = bar?.continuations?.[0]?.reloadContinuationData?.continuation;
   if (!token) return '';
   if (bar.isReplay === false) return '';
   return token;
+}
+
+function readChatTimestampText(msgEl) {
+  return msgEl.querySelector('#timestamp')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
+function parseChatTimestamp(text) {
+  const cleaned = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return { time: '', offsetMs: null };
+
+  // Live chat wall clock, e.g. "9:40 PM" / "9:40:12 PM"
+  const wall = cleaned.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)$/i);
+  if (wall) {
+    let hours = Number(wall[1]);
+    const minutes = Number(wall[2]);
+    const seconds = Number(wall[3] || 0);
+    const ampm = wall[4].toUpperCase();
+    if (hours >= 1 && hours <= 12 && minutes <= 59 && seconds <= 59) {
+      if (ampm === 'PM' && hours < 12) hours += 12;
+      if (ampm === 'AM' && hours === 12) hours = 0;
+      return {
+        time: cleaned,
+        offsetMs: ((hours * 3600) + (minutes * 60) + seconds) * 1000,
+      };
+    }
+  }
+
+  // Replay / video offset, e.g. "1:02:03" or "12:34"
+  const video = cleaned.match(/^(?:(\d+):)?(\d{1,2}):(\d{2})$/);
+  if (video) {
+    const hours = Number(video[1] || 0);
+    const minutes = Number(video[2]);
+    const seconds = Number(video[3]);
+    if (minutes <= 59 && seconds <= 59) {
+      return {
+        time: cleaned,
+        offsetMs: ((hours * 3600) + (minutes * 60) + seconds) * 1000,
+      };
+    }
+  }
+
+  return { time: cleaned, offsetMs: null };
+}
+
+function historyTypeFromEl(msgEl) {
+  const tag = msgEl.tagName;
+  if (tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER' || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER') {
+    return 'superchat';
+  }
+  if (tag === 'YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER') return 'member';
+  return 'message';
+}
+
+function parseDomHistoryItem(msgEl, index) {
+  if (!msgEl || msgEl.hasAttribute('is-deleted')) return null;
+
+  const author = msgEl.querySelector('#author-name')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+  const amount = msgEl.querySelector('#purchase-amount, #purchase-amount-chip')
+    ?.textContent?.replace(/\s+/g, ' ').trim() || '';
+
+  const messageEl = msgEl.querySelector('#message');
+  let message = '';
+  if (messageEl) {
+    message = partsToText(collectParts(messageEl));
+  } else {
+    const primary = partsToText(collectParts(msgEl.querySelector('#header-primary-text, #primary-text')));
+    const sub = partsToText(collectParts(msgEl.querySelector('#header-subtext')));
+    message = [primary, sub].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  if (!author && !message && !amount) return null;
+
+  const stamp = parseChatTimestamp(readChatTimestampText(msgEl));
+  return {
+    id: msgEl.id || '',
+    offsetMs: stamp.offsetMs == null ? index : stamp.offsetMs,
+    time: stamp.time,
+    author,
+    message,
+    amount,
+    type: historyTypeFromEl(msgEl),
+  };
+}
+
+async function collectLiveChatFromDom({ onProgress, shouldAbort, shouldPause } = {}) {
+  await waitHistoryControl(shouldPause, shouldAbort);
+  let list = getChatDocument()?.querySelector(SELECTORS.chatItems) || null;
+  if (!list) {
+    list = await waitForChatList(() => shouldAbort?.(), 8000);
+  }
+  if (!list) {
+    const error = new Error('no-history');
+    error.code = 'no-history';
+    throw error;
+  }
+
+  const nodes = [...list.querySelectorAll(SELECTORS.chatMessage)];
+  const items = [];
+  const seen = new Set();
+
+  for (let i = 0; i < nodes.length; i += 1) {
+    if (i % 25 === 0) {
+      await waitHistoryControl(shouldPause, shouldAbort);
+      onProgress?.(items.length);
+    }
+    const item = parseDomHistoryItem(nodes[i], i);
+    if (!item) continue;
+    const key = item.id || `${item.offsetMs}:${item.author}:${item.message}:${item.amount}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push(item);
+  }
+
+  onProgress?.(items.length);
+  return items;
 }
 
 function runsToText(node) {
@@ -138,9 +271,13 @@ async function fetchLiveChatHistory({
   startMs = 0,
   endMs = Infinity,
 } = {}) {
+  if (isLiveChatMode()) {
+    return collectLiveChatFromDom({ onProgress, shouldAbort, shouldPause });
+  }
+
   let token = readReplayContinuation();
   if (!token) {
-    await waitForElement('iframe#chatframe', document, 8000);
+    await waitForElement(SELECTORS.chatFrame, document, 8000);
     token = readReplayContinuation();
   }
   if (!token) {
@@ -221,6 +358,11 @@ function formatHistoryClock(offsetMs) {
   return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
+function historyItemTime(item) {
+  if (item?.time) return item.time;
+  return formatHistoryClock(item?.offsetMs);
+}
+
 function formatHistoryRangeLabel(seconds) {
   return formatHistoryClock(Math.max(0, seconds) * 1000);
 }
@@ -240,10 +382,11 @@ function exportLiveChatText(items, format, videoId) {
       count: items.length,
       messages: items.map((item) => ({
         offsetMs: item.offsetMs,
-        time: formatHistoryClock(item.offsetMs),
+        time: historyItemTime(item),
         author: item.author,
         message: item.message,
-        type: item.type
+        type: item.type,
+        amount: item.amount || undefined,
       })),
     }, null, 2);
   }
@@ -252,17 +395,18 @@ function exportLiveChatText(items, format, videoId) {
     for (const item of items) {
       rows.push([
         item.offsetMs,
-        formatHistoryClock(item.offsetMs),
+        historyItemTime(item),
         item.author,
         item.message,
         item.type,
+        item.amount || '',
       ].map(csvCell).join(','));
     }
     return `\uFEFF${rows.join('\n')}`;
   }
   return items.map((item) => {
     const amount = item.amount ? ` (${item.amount})` : '';
-    return `[${formatHistoryClock(item.offsetMs)}] ${item.author}${amount}: ${item.message}`;
+    return `[${historyItemTime(item)}] ${item.author}${amount}: ${item.message}`;
   }).join('\n');
 }
 
