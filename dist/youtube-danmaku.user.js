@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.3.0
+// @version      1.4.0
 // @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
@@ -131,6 +131,8 @@ const LOCALES = {
     superchatSlide: '滑入',
     superchatPop: '弹出',
     superchatShine: '闪光',
+    liveWatching: '人在看',
+    liveTotalViews: '累计观看',
     historyToggle: '下载聊天记录',
     historyPanelTitle: '下载聊天记录',
     historyHint: '直播中导出当前聊天框里已显示的消息；回放则读取完整聊天回放。聊天需嵌在页面右侧。关键词和用户名留空表示不筛选，多个用逗号分隔。',
@@ -252,6 +254,8 @@ const LOCALES = {
     superchatSlide: 'Slide',
     superchatPop: 'Pop',
     superchatShine: 'Shine',
+    liveWatching: 'watching',
+    liveTotalViews: 'Total views',
     historyToggle: 'Download chat history',
     historyPanelTitle: 'Download chat history',
     historyHint: 'On a live stream, exports messages currently shown in the docked chat. On a replay, reads the full saved chat replay. Keep chat docked. Leave keywords and usernames empty to skip those filters. Separate multiple values with commas.',
@@ -373,6 +377,8 @@ const LOCALES = {
     superchatSlide: 'スライド',
     superchatPop: 'ポップ',
     superchatShine: 'シャイン',
+    liveWatching: '人が視聴中',
+    liveTotalViews: '総再生回数',
     historyToggle: 'チャット履歴をダウンロード',
     historyPanelTitle: 'チャット履歴をダウンロード',
     historyHint: '配信中はドック中のチャットに表示されているメッセージを書き出します。アーカイブでは保存済みリプレイを読み取ります。チャットはページ右側にドックしたままにしてください。キーワードとユーザー名が空なら、その条件では絞り込みません。複数はカンマで区切ります。',
@@ -3970,6 +3976,349 @@ function downloadLiveChatFile(items, format, videoId) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+const VIEWERS_POLL_MS = 15000;
+
+let metadataContinuation = '';
+let metadataVideoId = '';
+
+function livePageWindow() {
+  return typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+}
+
+function liveVideoId() {
+  try {
+    const fromQuery = new URL(location.href).searchParams.get('v');
+    if (fromQuery) return fromQuery;
+  } catch (_) {
+    /* ignore */
+  }
+  const live = location.pathname.match(/^\/live\/([^/]+)/);
+  return live?.[1] || '';
+}
+
+function parseCompactCount(text) {
+  const raw = String(text || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!raw) return null;
+  const match = raw.replace(/,/g, '').match(/(\d+(?:\.\d+)?)\s*([KkMm万萬億bB百千])?/);
+  if (!match) return null;
+  let value = Number(match[1]);
+  if (!Number.isFinite(value)) return null;
+  const unit = match[2] || '';
+  if (/[Kk]/.test(unit)) value *= 1e3;
+  else if (/[Mm]/.test(unit)) value *= 1e6;
+  else if (/[Bb]/.test(unit)) value *= 1e9;
+  else if (unit === '千') value *= 1e3;
+  else if (unit === '万' || unit === '萬') value *= 1e4;
+  else if (unit === '億') value *= 1e8;
+  else if (unit === '百') value *= 1e2;
+  return Math.round(value);
+}
+
+function runsOrText(node) {
+  if (!node) return '';
+  if (typeof node.simpleText === 'string') return node.simpleText;
+  if (typeof node === 'string') return node;
+  if (!Array.isArray(node.runs)) return '';
+  return node.runs.map((run) => run?.text || '').join('');
+}
+
+function walkForVideoViewCount(node, depth = 0) {
+  if (!node || typeof node !== 'object' || depth > 14) return null;
+  if (node.videoViewCountRenderer) return node.videoViewCountRenderer;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = walkForVideoViewCount(item, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+  for (const value of Object.values(node)) {
+    if (value && typeof value === 'object') {
+      const found = walkForVideoViewCount(value, depth + 1);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function readViewCountRendererFromData() {
+  const page = livePageWindow();
+  const roots = [
+    page.ytInitialData,
+    page.ytInitialPlayerResponse,
+  ].filter(Boolean);
+  for (const root of roots) {
+    const renderer = walkForVideoViewCount(root);
+    if (renderer) return renderer;
+  }
+  return null;
+}
+
+function readViewersFromDom() {
+  const nodes = document.querySelectorAll(
+    'ytd-video-view-count-renderer .view-count, ytd-video-view-count-renderer span.yt-formatted-string, #info-container #info span.yt-formatted-string, ytd-watch-metadata #info span.yt-formatted-string',
+  );
+  for (const node of nodes) {
+    const text = node.textContent?.replace(/\s+/g, ' ').trim() || '';
+    if (!text) continue;
+    if (/watching|視聴|在看|watching now/i.test(text)) {
+      const count = parseCompactCount(text);
+      if (count != null) return { concurrent: count, concurrentText: text };
+    }
+  }
+  return { concurrent: null, concurrentText: '' };
+}
+
+function readTotalViewsFromPlayer() {
+  const details = livePageWindow().ytInitialPlayerResponse?.videoDetails;
+  const raw = details?.viewCount;
+  const total = Number(raw);
+  return Number.isFinite(total) && total >= 0 ? total : null;
+}
+
+function isCurrentlyLive() {
+  if (document.querySelector('.ytp-time-display.ytp-live, .ytp-live-badge')) return true;
+  const details = livePageWindow().ytInitialPlayerResponse?.videoDetails;
+  if (details?.isLive) return true;
+  const micro = livePageWindow().ytInitialPlayerResponse?.microformat?.playerMicroformatRenderer;
+  if (micro?.liveBroadcastDetails?.isLiveNow) return true;
+  const renderer = readViewCountRendererFromData();
+  return !!renderer?.isLive;
+}
+
+function readViewersFromPageData() {
+  const renderer = readViewCountRendererFromData();
+  let concurrent = null;
+  let concurrentText = '';
+  if (renderer) {
+    concurrentText = runsOrText(renderer.viewCount) || runsOrText(renderer.shortViewCount) || '';
+    if (renderer.isLive || /watching|視聴|在看/i.test(concurrentText)) {
+      concurrent = parseCompactCount(concurrentText);
+    }
+  }
+  const total = readTotalViewsFromPlayer();
+  return { concurrent, concurrentText, total };
+}
+
+async function postInnertube(path, body) {
+  const page = livePageWindow();
+  const key = page.ytcfg?.get?.('INNERTUBE_API_KEY');
+  const context = page.ytcfg?.get?.('INNERTUBE_CONTEXT');
+  if (!key || !context || typeof page.fetch !== 'function') return null;
+  try {
+    const response = await page.fetch(
+      `https://www.youtube.com/youtubei/v1/${path}?prettyPrint=false&key=${encodeURIComponent(key)}`,
+      {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context, ...body }),
+      },
+    );
+    if (!response.ok) return null;
+    return response.json();
+  } catch (_) {
+    return null;
+  }
+}
+
+function extractViewersFromRenderer(renderer) {
+  if (!renderer) return { concurrent: null, concurrentText: '' };
+  const concurrentText = runsOrText(renderer.viewCount) || runsOrText(renderer.shortViewCount) || '';
+  const concurrent = (renderer.isLive || /watching|視聴|在看/i.test(concurrentText))
+    ? parseCompactCount(concurrentText)
+    : parseCompactCount(concurrentText);
+  return { concurrent, concurrentText };
+}
+
+function extractViewersFromNext(data) {
+  return extractViewersFromRenderer(walkForVideoViewCount(data));
+}
+
+function extractTotalFromPlayer(data) {
+  const total = Number(data?.videoDetails?.viewCount);
+  return Number.isFinite(total) && total >= 0 ? total : null;
+}
+
+function extractContinuation(data) {
+  if (!data || typeof data !== 'object') return '';
+  if (typeof data.continuation === 'string' && data.continuation) return data.continuation;
+  const items = data.continuations || data.actions || [];
+  if (Array.isArray(items)) {
+    for (const item of items) {
+      const token = item?.nextContinuationData?.continuation
+        || item?.reloadContinuationData?.continuation
+        || item?.timedContinuationData?.continuation
+        || item?.continuation;
+      if (typeof token === 'string' && token) return token;
+    }
+  }
+  return '';
+}
+
+function extractFromUpdatedMetadata(data) {
+  let concurrent = null;
+  let concurrentText = '';
+  let total = null;
+
+  const list = Array.isArray(data?.actions) ? data.actions : [];
+
+  for (const action of list) {
+    const viewership = action?.updateViewershipAction?.viewCount
+      || action?.updateViewershipAction
+      || action?.viewCount;
+    const renderer = viewership?.videoViewCountRenderer
+      || walkForVideoViewCount(viewership)
+      || walkForVideoViewCount(action);
+    if (renderer) {
+      const extracted = extractViewersFromRenderer(renderer);
+      if (extracted.concurrent != null) {
+        concurrent = extracted.concurrent;
+        concurrentText = extracted.concurrentText || concurrentText;
+      } else if (extracted.concurrentText) {
+        concurrentText = extracted.concurrentText;
+        concurrent = parseCompactCount(extracted.concurrentText);
+      }
+    }
+
+    const viewCountText = action?.updateViewershipAction?.viewCountText
+      || action?.viewCountText
+      || runsOrText(action?.updateViewershipAction?.viewCount);
+    if (!concurrentText && viewCountText) {
+      concurrentText = String(viewCountText);
+      concurrent = parseCompactCount(concurrentText);
+    }
+  }
+
+  // Some payloads expose top-level view count fields (live = watching now).
+  if (concurrent == null) {
+    const topText = data?.viewCountText || runsOrText(data?.viewCount);
+    if (topText) {
+      concurrentText = String(topText);
+      concurrent = parseCompactCount(concurrentText);
+    } else if (data?.viewCount != null && (typeof data.viewCount === 'string' || typeof data.viewCount === 'number')) {
+      concurrent = parseCompactCount(String(data.viewCount));
+    }
+  }
+
+  if (data?.isLive === false && concurrent != null) {
+    total = concurrent;
+    concurrent = null;
+  }
+
+  return {
+    concurrent,
+    concurrentText,
+    total,
+    continuation: extractContinuation(data),
+  };
+}
+
+async function fetchUpdatedMetadata(videoId) {
+  if (!videoId) return null;
+  if (metadataVideoId !== videoId) {
+    metadataVideoId = videoId;
+    metadataContinuation = '';
+  }
+
+  const body = metadataContinuation
+    ? { continuation: metadataContinuation }
+    : { videoId };
+  const data = await postInnertube('updated_metadata', body);
+  if (!data && metadataContinuation) {
+    metadataContinuation = '';
+    return postInnertube('updated_metadata', { videoId });
+  }
+  return data;
+}
+
+async function fetchLiveViewers(videoId) {
+  const live = isCurrentlyLive();
+  const fallback = readViewersFromPageData();
+  const fromDom = readViewersFromDom();
+
+  let concurrent = null;
+  let concurrentText = '';
+  let total = null;
+
+  if (videoId) {
+    const [metaData, playerData] = await Promise.all([
+      fetchUpdatedMetadata(videoId),
+      postInnertube('player', {
+        videoId,
+        contentCheckOk: true,
+        racyCheckOk: true,
+      }),
+    ]);
+
+    if (metaData) {
+      const meta = extractFromUpdatedMetadata(metaData);
+      if (meta.continuation) metadataContinuation = meta.continuation;
+      if (meta.concurrent != null) {
+        concurrent = meta.concurrent;
+        concurrentText = meta.concurrentText || concurrentText;
+      }
+      if (meta.total != null) total = meta.total;
+    }
+
+    // If metadata didn't yield concurrent, try a fresh next response.
+    if (concurrent == null) {
+      const nextData = await postInnertube('next', { videoId });
+      if (nextData) {
+        const extracted = extractViewersFromNext(nextData);
+        if (extracted.concurrent != null) {
+          concurrent = extracted.concurrent;
+          concurrentText = extracted.concurrentText || concurrentText;
+        }
+      }
+    }
+
+    if (playerData) {
+      const playerTotal = extractTotalFromPlayer(playerData);
+      if (playerTotal != null) total = playerTotal;
+      try {
+        const page = livePageWindow();
+        if (page.ytInitialPlayerResponse?.videoDetails && playerData.videoDetails?.viewCount != null) {
+          page.ytInitialPlayerResponse.videoDetails.viewCount = String(playerData.videoDetails.viewCount);
+        }
+      } catch (_) {
+        /* ignore */
+      }
+    }
+  }
+
+  // Last resort: current DOM / initial page snapshot (may be stale).
+  if (concurrent == null) {
+    concurrent = fromDom.concurrent ?? fallback.concurrent;
+    concurrentText = fromDom.concurrentText || fallback.concurrentText || concurrentText;
+  }
+  if (total == null) total = fallback.total;
+
+  return {
+    live,
+    concurrent,
+    concurrentText,
+    total,
+  };
+}
+
+function formatCountNumber(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n < 0) return '';
+  try {
+    return new Intl.NumberFormat(undefined, { notation: n >= 10000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(n);
+  } catch (_) {
+    if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+    if (n >= 1e4) return `${(n / 1e3).toFixed(1)}K`;
+    return String(Math.round(n));
+  }
+}
+
+function formatLiveConcurrentLabel(count) {
+  if (count == null) return 'Live';
+  return `Live · ${formatCountNumber(count)} ${t('liveWatching')}`;
+}
+
 function injectStyles() {
   GM_addStyle(`
     .ydm-danmaku-layer {
@@ -4255,6 +4604,45 @@ function injectStyles() {
       flex: 0 0 auto !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-time-wrapper {
+      white-space: nowrap;
+      max-width: none;
+      padding-right: 2px;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      max-width: none;
+      margin-left: 2px;
+      vertical-align: top;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper[hidden] {
+      display: none !important;
+    }
+
+    .ydm-live-views-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+    }
+
+    .ydm-live-views-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-live-views-count {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.01em;
     }
 
     .ydm-control-btn {
@@ -4697,6 +5085,8 @@ const ICON_SPEECH_MUTE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2
 const ICON_SPEECH_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;
 
 const ICON_DOWNLOAD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1z"/></svg>`;
+
+const ICON_EYE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
 
 class SettingsPanel {
   constructor({ settings, onChange, onClose }) {
@@ -5938,6 +6328,155 @@ class ControlButton {
   }
 }
 
+class LiveViewersBadge {
+  constructor() {
+    this.timer = null;
+    this.mounting = false;
+    this.wrapper = null;
+    this.display = null;
+    this.viewsWrap = null;
+    this.countEl = null;
+    this.lastVideoId = '';
+    this.originalWrapperText = '';
+    this.boundVisibility = () => {
+      if (!document.hidden) this.refresh().catch(() => {});
+    };
+  }
+
+  async start() {
+    document.addEventListener('visibilitychange', this.boundVisibility);
+    await this.mount();
+    await this.refresh();
+    this.clearTimer();
+    this.timer = setInterval(() => {
+      this.refresh().catch(() => {});
+    }, VIEWERS_POLL_MS);
+  }
+
+  stop() {
+    document.removeEventListener('visibilitychange', this.boundVisibility);
+    this.clearTimer();
+    this.teardownUi();
+  }
+
+  clearTimer() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+  }
+
+  remount() {
+    if (this.viewsWrap?.isConnected && this.wrapper?.isConnected) return;
+    this.teardownUi(false);
+    this.mount().then(() => this.refresh()).catch(() => {});
+  }
+
+  async mount() {
+    if (this.mounting) return;
+    this.mounting = true;
+    try {
+      let display = document.querySelector('#movie_player .ytp-time-display.ytp-live');
+      if (!display && isCurrentlyLive()) {
+        display = await waitForElement('#movie_player .ytp-time-display.ytp-live', document, 8000);
+      }
+      if (!display?.isConnected) return;
+
+      this.display = display;
+      this.wrapper = display.querySelector('.ytp-time-wrapper:not(.ydm-live-views-wrapper)');
+      if (!this.wrapper) return;
+
+      if (!this.originalWrapperText) {
+        this.originalWrapperText = this.wrapper.textContent?.trim() || 'Live';
+      }
+
+      let viewsWrap = display.querySelector('.ydm-live-views-wrapper');
+      if (!viewsWrap) {
+        viewsWrap = this.wrapper.cloneNode(false);
+        viewsWrap.classList.add('ydm-live-views-wrapper');
+        viewsWrap.removeAttribute('id');
+        viewsWrap.setAttribute('aria-label', t('liveTotalViews'));
+        viewsWrap.title = t('liveTotalViews');
+
+        const iconWrap = document.createElement('span');
+        iconWrap.className = 'ydm-live-views-icon';
+        appendMarkup(iconWrap, ICON_EYE);
+
+        const count = document.createElement('span');
+        count.className = 'ydm-live-views-count';
+
+        viewsWrap.append(iconWrap, count);
+        this.wrapper.after(viewsWrap);
+      }
+
+      this.viewsWrap = viewsWrap;
+      this.countEl = viewsWrap.querySelector('.ydm-live-views-count');
+    } finally {
+      this.mounting = false;
+    }
+  }
+
+  teardownUi(restoreText = true) {
+    if (restoreText && this.wrapper?.isConnected && this.originalWrapperText) {
+      this.wrapper.textContent = this.originalWrapperText;
+    }
+    this.viewsWrap?.remove();
+    this.viewsWrap = null;
+    this.countEl = null;
+    this.wrapper = null;
+    this.display = null;
+    this.originalWrapperText = '';
+  }
+
+  applyCounts({ live, concurrent, total }) {
+    if (!live) {
+      this.teardownUi(true);
+      return;
+    }
+
+    if (!this.wrapper?.isConnected || !this.viewsWrap?.isConnected) {
+      this.mount().then(() => {
+        if (this.wrapper?.isConnected) this.applyCounts({ live, concurrent, total });
+      }).catch(() => {});
+      return;
+    }
+
+    this.wrapper.textContent = formatLiveConcurrentLabel(concurrent);
+    this.wrapper.classList.add('ydm-live-time-wrapper');
+
+    if (total == null) {
+      this.viewsWrap.hidden = true;
+      if (this.countEl) this.countEl.textContent = '';
+      return;
+    }
+
+    this.viewsWrap.hidden = false;
+    const formatted = formatCountNumber(total);
+    if (this.countEl) this.countEl.textContent = formatted;
+    this.viewsWrap.title = `${t('liveTotalViews')}: ${formatted}`;
+    this.viewsWrap.setAttribute('aria-label', `${t('liveTotalViews')}: ${formatted}`);
+  }
+
+  async refresh() {
+    if (!isWatchPage()) return;
+    if (!isCurrentlyLive()) {
+      this.applyCounts({ live: false, concurrent: null, total: null });
+      return;
+    }
+
+    if (!this.wrapper?.isConnected || !this.viewsWrap?.isConnected) {
+      await this.mount();
+    }
+
+    const videoId = liveVideoId();
+    if (videoId && videoId !== this.lastVideoId) {
+      this.lastVideoId = videoId;
+      this.originalWrapperText = this.wrapper?.textContent?.trim() || 'Live';
+    }
+
+    const data = await fetchLiveViewers(videoId);
+    this.applyCounts(data);
+  }
+}
+
 let settings = loadSettings();
 let danmaku = null;
 let danmakuEmitter = null;
@@ -5947,6 +6486,7 @@ let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
 let controlButton = null;
+let liveViewersBadge = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
 let generation = 0;
@@ -6002,12 +6542,14 @@ function teardown() {
   settingsPanel?.close();
   speechPanel?.close();
   historyPanel?.close();
+  liveViewersBadge?.stop();
   cancelSpeech();
   chatObserver = null;
   danmaku = null;
   danmakuEmitter = null;
   translateQueue = null;
   controlButton = null;
+  liveViewersBadge = null;
 }
 
 async function boot() {
@@ -6096,10 +6638,13 @@ async function boot() {
   translateQueue = queue;
   chatObserver = observer;
   controlButton = controls;
+  liveViewersBadge = new LiveViewersBadge();
 
   await observer.start();
   if (gen !== generation) return;
   await controls.mount();
+  if (gen !== generation) return;
+  await liveViewersBadge.start();
   if (gen !== generation) return;
 
   console.log('[YDM] YouTube Danmaku initialized');
@@ -6111,6 +6656,7 @@ async function reconcile() {
   if (key === navKey) {
     if (!key) return;
     controlButton?.remount();
+    liveViewersBadge?.remount();
     if (chatObserver && !chatObserver.isConnected()) {
       chatObserver.start().catch((err) => console.warn('[YDM] Chat restart failed:', err));
     }
