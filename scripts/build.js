@@ -25,12 +25,14 @@ const MODULES = [
   'chat/chat-translate.js',
   'chat/observer.js',
   'chat/history.js',
+  'live/viewers.js',
   'ui/styles.js',
   'ui/icons.js',
   'ui/panel.js',
   'ui/speech-panel.js',
   'ui/history-panel.js',
   'ui/control-button.js',
+  'ui/live-viewers.js',
   'main.js',
 ];
 

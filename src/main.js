@@ -7,6 +7,7 @@ let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
 let controlButton = null;
+let liveViewersBadge = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
 let generation = 0;
@@ -62,12 +63,14 @@ function teardown() {
   settingsPanel?.close();
   speechPanel?.close();
   historyPanel?.close();
+  liveViewersBadge?.stop();
   cancelSpeech();
   chatObserver = null;
   danmaku = null;
   danmakuEmitter = null;
   translateQueue = null;
   controlButton = null;
+  liveViewersBadge = null;
 }
 
 async function boot() {
@@ -156,10 +159,13 @@ async function boot() {
   translateQueue = queue;
   chatObserver = observer;
   controlButton = controls;
+  liveViewersBadge = new LiveViewersBadge();
 
   await observer.start();
   if (gen !== generation) return;
   await controls.mount();
+  if (gen !== generation) return;
+  await liveViewersBadge.start();
   if (gen !== generation) return;
 
   console.log('[YDM] YouTube Danmaku initialized');
@@ -171,6 +177,7 @@ async function reconcile() {
   if (key === navKey) {
     if (!key) return;
     controlButton?.remount();
+    liveViewersBadge?.remount();
     if (chatObserver && !chatObserver.isConnected()) {
       chatObserver.start().catch((err) => console.warn('[YDM] Chat restart failed:', err));
     }

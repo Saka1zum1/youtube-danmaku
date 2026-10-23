@@ -285,6 +285,45 @@ function injectStyles() {
       padding: 0 !important;
     }
 
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-time-wrapper {
+      white-space: nowrap;
+      max-width: none;
+      padding-right: 2px;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      max-width: none;
+      margin-left: 2px;
+      vertical-align: top;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper[hidden] {
+      display: none !important;
+    }
+
+    .ydm-live-views-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+    }
+
+    .ydm-live-views-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-live-views-count {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.01em;
+    }
+
     .ydm-control-btn {
       display: inline-flex;
       align-items: center;
