@@ -20,7 +20,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
    - **Settings button** — Open the options panel
 5. Customize appearance, turn on read-aloud, or enable translation in the panels
 
-**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself. The speaker button reads that one line.
+**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself. The speaker button reads that one line. Right-click a docked chat line to translate it. Click a Super Chat for translate / speak / danmaku.
 
 ### Live Danmaku
 
@@ -28,6 +28,18 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 - Shows message content only — each sender gets a stable color. Owner and moderator colors are kept
 - Hover or click any danmaku to pause it
 - Click to reveal the sender. The copy button in the bubble writes the message into the live chat input. The speaker button reads that line
+- Right-click a chat message for Translate / Retranslate. If one engine fails, another is tried
+
+### Super Chat
+
+- Optional pin band at the top or bottom of the player
+- Shows avatar, truncated username, amount badge, and YouTube-like colors
+- Several Super Chats can stay on screen at once without overlapping; long text scrolls inside the pill
+- Click a Super Chat (or its detail card) to translate, read aloud, or send as danmaku
+
+### Live viewers
+
+- When the stream reports them, concurrent and total viewers appear beside the Live badge
 
 ### Read aloud
 
@@ -49,6 +61,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 - Adjust scroll speed, font size, danmaku opacity (10–100%), and choose from 18 system fonts
 - Scroll area: full screen / top half / top quarter
+- Super Chat pin position, duration, and animation
 - Block keywords. A message is hidden when the original text or the translation contains one
 - Auto-adapts to fullscreen, theater mode, and window resize
 
@@ -57,6 +70,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 - Engines: Auto, Microsoft, Google, Volcengine, Caiyun, and Tencent Transmart
 - Source language is detected automatically; the translation replaces the on-screen danmaku text
 - Optional: also show a distinct translation under each line in the docked chat while keeping the original
+- Manual per-message translate from the chat context menu, with engine failover on retry
 - Choose the target language and translation speed
 - Numbers and symbols are left as-is. Busy chat is merged into fewer requests
 
@@ -64,7 +78,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 - No flood of historical messages when you join a stream
 - No burst of queued messages when you return to the tab
-- UI follows the browser language (Chinese / English)
+- UI follows the browser language (Chinese / English / Japanese)
 - Zero external dependencies — lightweight and fast
 
 ## Demo
@@ -73,7 +87,7 @@ Open the demo in your browser. No install or build step is required:
 
 [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/)
 
-The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, read-aloud panel, settings panel, and keyword list work on this page.
+The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, read-aloud panel, settings panel, keyword list, right-click translate, and Super Chat samples work on this page.
 
 ## FAQ
 

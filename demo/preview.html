@@ -78,11 +78,36 @@
       padding: 8px;
       font-size: 13px;
     }
-    #items yt-live-chat-text-message-renderer {
+    #items yt-live-chat-text-message-renderer,
+    #items yt-live-chat-paid-message-renderer {
       display: block;
       margin: 6px 0;
     }
+    yt-live-chat-paid-message-renderer {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    yt-live-chat-paid-message-renderer #header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: #d32f2f;
+      color: #fff;
+    }
+    yt-live-chat-paid-message-renderer #content {
+      padding: 6px 8px 8px;
+      background: #b71c1c;
+      color: #fff;
+    }
+    yt-live-chat-paid-message-renderer #author-photo img {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: block;
+    }
     #author-name { font-weight: 600; margin-right: 6px; }
+    #purchase-amount { font-weight: 700; margin-left: auto; }
     #input {
       margin: 8px;
       min-height: 36px;
@@ -90,7 +115,12 @@
       border-radius: 8px;
       padding: 6px 8px;
     }
-    .toolbar { margin: 0 8px 8px; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 8px 8px;
+    }
     .speech-hint {
       margin: 0 8px 8px;
       color: #aaa;
@@ -130,8 +160,9 @@
       <div id="input" class="yt-live-chat-text-input-field-renderer" contenteditable="true"></div>
       <div class="toolbar">
         <button id="add-chat" type="button">Add chat</button>
+        <button id="add-superchat" type="button">Add Super Chat</button>
       </div>
-      <p class="speech-hint">朗读按钮打开设置面板。在面板里开启朗读；音量调到 0 时，图标变为静音。点弹幕上的喇叭可单独朗读。纯数字、纯表情和重复句子会在自动朗读里被跳过或缩短。</p>
+      <p class="speech-hint">右键聊天消息可翻译；点击 Super Chat 打开翻译 / 朗读 / 弹幕面板。设置里开启「Super Chat 悬停」可同时固定多条。朗读按钮打开设置面板；音量为 0 时图标变为静音。</p>
     </ytd-live-chat-frame>
   </div>
   <script>
@@ -158,7 +189,7 @@
       if (navigator.clipboard) return navigator.clipboard.writeText(text);
     }
   </script>
-  <script src="../dist/youtube-danmaku.user.js?v=12"></script>
+  <script src="../dist/youtube-danmaku.user.js?v=15"></script>
   <script>
     const samples = [
       ['Alice', '#ff8a80', 'hello from chat'],
@@ -169,6 +200,14 @@
       ['表情', '#ffab91', '😂😂😂'],
       ['长句', '#80d8ff', '这是一条比较长的弹幕，用来试听变速模式会不会在超过单条最长朗读时间之后自动加快语速。'],
     ];
+    const scSamples = [
+      ['SuperFan', '$5.00', '#e53935', 'thanks for the stream'],
+      ['PatronLongNameHere', '¥200', '#f9a825', '老板大气！希望下次还能看到这么有趣的直播内容，继续加油。'],
+      ['Gift', '$2.00', '#1e88e5', 'hello'],
+      ['NightOwl', '$10.00', '#8e24aa', 'This is a longer Super Chat so the pinned pill should scroll the message while avatar and amount stay fixed.'],
+    ];
+    // Allowed by the userscript emote host allowlist (ggpht).
+    const avatarUrl = 'https://yt3.ggpht.com/a/default-user=s48-c-k-c0x00ffffff-no-rj';
     let seq = 0;
 
     function addMessage(name, color, text) {
@@ -188,37 +227,58 @@
       document.getElementById('items').appendChild(item);
     }
 
-    document.getElementById('add-chat').addEventListener('click', () => {
-      const sample = samples[seq % samples.length];
-      addMessage(sample[0], sample[1], sample[2] + ' ' + (seq + 1));
-    });
-
-    function addSuperchat(name, amount, text) {
+    function addSuperchat(name, amount, color, text) {
       const item = document.createElement('yt-live-chat-paid-message-renderer');
       item.id = 'live-sc-' + (++seq);
       const header = document.createElement('div');
       header.id = 'header';
-      header.style.background = '#d32f2f';
+      header.style.background = color;
       header.style.color = '#fff';
+      const photo = document.createElement('yt-img-shadow');
+      photo.id = 'author-photo';
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = '';
+      photo.appendChild(img);
       const author = document.createElement('span');
       author.id = 'author-name';
       author.textContent = name;
       const purchase = document.createElement('span');
       purchase.id = 'purchase-amount';
       purchase.textContent = amount;
-      header.append(author, document.createTextNode(' '), purchase);
+      header.append(photo, author, purchase);
+      const content = document.createElement('div');
+      content.id = 'content';
+      content.style.background = color;
+      content.style.color = '#fff';
       const message = document.createElement('span');
       message.id = 'message';
       message.textContent = text;
-      item.append(header, message);
+      content.appendChild(message);
+      item.append(header, content);
       document.getElementById('items').appendChild(item);
     }
+
+    document.getElementById('add-chat').addEventListener('click', () => {
+      const sample = samples[seq % samples.length];
+      addMessage(sample[0], sample[1], sample[2] + ' ' + (seq + 1));
+    });
+
+    document.getElementById('add-superchat').addEventListener('click', () => {
+      const sample = scSamples[seq % scSamples.length];
+      addSuperchat(sample[0], sample[1], sample[2], sample[3] + ' #' + (seq + 1));
+    });
 
     setTimeout(() => {
       samples.forEach((sample, index) => {
         setTimeout(() => addMessage(sample[0], sample[1], sample[2]), index * 700);
       });
-      setTimeout(() => addSuperchat('Super', '$5.00', 'thanks for the stream'), samples.length * 700);
+      scSamples.forEach((sample, index) => {
+        setTimeout(
+          () => addSuperchat(sample[0], sample[1], sample[2], sample[3]),
+          samples.length * 700 + index * 900,
+        );
+      });
     }, 4000);
   </script>
 </body>
