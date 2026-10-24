@@ -54,21 +54,33 @@ function injectStyles() {
     .ydm-superchat-layer {
       pointer-events: none;
       display: none;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      overflow: visible;
+      justify-content: flex-start;
+      gap: 6px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .ydm-superchat-layer.ydm-sc-bottom {
+      justify-content: flex-end;
     }
 
     .ydm-superchat-item {
       position: relative;
-      max-width: calc(100% - 24px);
-      padding: 6px 16px;
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: 6px;
+      box-sizing: border-box;
+      width: fit-content;
+      max-width: min(720px, calc(100% - 24px));
+      padding: 5px 12px 5px 6px;
       border-radius: 999px;
-      font-weight: 700;
-      line-height: 1.2;
+      font-weight: 500;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
       pointer-events: auto;
       cursor: pointer;
       user-select: none;
@@ -76,6 +88,62 @@ function injectStyles() {
       animation-duration: var(--ydm-sc-duration, 6s);
       animation-timing-function: ease;
       animation-fill-mode: forwards;
+    }
+
+    .ydm-sc-avatar {
+      width: 1.45em;
+      height: 1.45em;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .ydm-sc-username {
+      flex: 0 0 auto;
+      max-width: 7.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 0.92;
+      font-size: 0.78em;
+      font-weight: 500;
+    }
+
+    .ydm-sc-amount {
+      flex: 0 0 auto;
+      font-size: 0.78em;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .ydm-sc-message-clip {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    .ydm-sc-message {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 0.92em;
+      font-weight: 500;
+      will-change: transform;
+    }
+
+    .ydm-superchat-item.ydm-sc-marquee .ydm-sc-message {
+      animation: ydm-sc-marquee var(--ydm-sc-marquee-duration, 4s) linear 0.45s infinite alternate;
+    }
+
+    .ydm-superchat-item.ydm-paused .ydm-sc-message {
+      animation-play-state: paused;
+    }
+
+    @keyframes ydm-sc-marquee {
+      0%, 8% { transform: translateX(0); }
+      92%, 100% { transform: translateX(var(--ydm-sc-marquee-distance, 0)); }
     }
 
     .ydm-superchat-item.ydm-sc-fade,

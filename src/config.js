@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS = {
   speechBuffer: 5,
   superchatPinned: false,
   superchatPosition: 'top',
-  superchatDuration: 6,
+  superchatDuration: 15,
   superchatAnimation: 'slide',
 };
 

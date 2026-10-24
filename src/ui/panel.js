@@ -209,7 +209,7 @@ class SettingsPanel {
       this.createDivider(),
       this.createToggle(t('superchatPinned'), 'superchatPinned'),
       this.createSelect(t('superchatPosition'), 'superchatPosition', getSuperchatPositionOptions()),
-      this.createRange(t('superchatDuration'), 'superchatDuration', 2, 15, 1, (v) => `${v} ${t('speechSeconds')}`),
+      this.createRange(t('superchatDuration'), 'superchatDuration', 2, 300, 1, (v) => `${v} ${t('speechSeconds')}`),
       this.createSelect(t('superchatAnimation'), 'superchatAnimation', getSuperchatAnimationOptions()),
       this.createDivider(),
       this.createKeywordBlock(),

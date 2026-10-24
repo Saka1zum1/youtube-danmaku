@@ -126,6 +126,10 @@ function setCachedTranslation(text, targetLang, value) {
   }
 }
 
+function clearCachedTranslation(text, targetLang) {
+  translationCache.delete(translationCacheKey(text, targetLang));
+}
+
 function gmRequest(options) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
@@ -506,22 +510,17 @@ async function translateBatch(texts, targetLang, preferred) {
   const candidates = supported.length ? supported : order;
   const now = Date.now();
 
-  if (preferred && preferred !== 'auto' && candidates[0] === preferred) {
-    const pinned = providerState[preferred];
-    if (pinned.cooldownUntil <= now && pinned.nextAt > now) {
-      return waitForProviders([preferred], false);
-    }
-  }
-
   const usable = candidates.filter((id) => providerState[id].cooldownUntil <= now);
   if (!usable.length) return waitForProviders(candidates, true);
 
   const ready = usable.filter((id) => providerState[id].nextAt <= now);
   if (!ready.length) return waitForProviders(usable, false);
 
+  // Prefer the selected engine first, but always allow failover to other ready engines.
   const sequence = !preferred || preferred === 'auto'
     ? autoSequence(ready)
     : [preferred, ...ready.filter((id) => id !== preferred)].filter((id) => ready.includes(id));
+  if (!sequence.length) return waitForProviders(usable, false);
 
   const flushStarted = Date.now();
   const attemptLimit = Math.min(MAX_PROVIDER_ATTEMPTS, sequence.length);

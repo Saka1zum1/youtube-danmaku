@@ -40,7 +40,7 @@ class DanmakuEngine {
     this.laneManager = new LaneManager();
     this.layer = null;
     this.superchatLayer = null;
-    this.pinnedItem = null;
+    this.pinnedItems = new Set();
     this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
@@ -102,7 +102,7 @@ class DanmakuEngine {
     this.superchatLayer?.remove();
     this.layer = null;
     this.superchatLayer = null;
-    this.pinnedItem = null;
+    this.pinnedItems = new Set();
     this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
@@ -127,18 +127,41 @@ class DanmakuEngine {
     return this.controlsHeight;
   }
 
-  getPinnedBandHeight() {
-    return this.getLaneHeight() + 18;
+  getPinnedRowHeight() {
+    return this.getLaneHeight() + 12;
+  }
+
+  getPinnedRowGap() {
+    return 6;
+  }
+
+  getMaxPinnedSuperchats(playerHeight = this.playerEl?.clientHeight || 480) {
+    const row = this.getPinnedRowHeight() + this.getPinnedRowGap();
+    const budget = Math.max(row, playerHeight * 0.38);
+    return clamp(Math.floor(budget / row), 1, 5);
+  }
+
+  getPinnedBandHeight(count = this.pinnedItems.size) {
+    if (count <= 0) return 0;
+    const row = this.getPinnedRowHeight();
+    const gap = this.getPinnedRowGap();
+    return count * row + Math.max(0, count - 1) * gap + 8;
   }
 
   getPinnedBandRect(playerHeight) {
-    if (!this.pinnedItem || !this.getSettings().superchatPinned) return null;
+    if (!this.pinnedItems.size || !this.getSettings().superchatPinned) return null;
     const band = this.getPinnedBandHeight();
     const pos = this.getSettings().superchatPosition === 'bottom' ? 'bottom' : 'top';
     const top = pos === 'bottom'
       ? Math.max(0, playerHeight - this.getBottomReserve() - band)
       : 8;
     return { pos, top, height: band };
+  }
+
+  clearPinnedSuperchats() {
+    this.superchatQueue = [];
+    for (const item of this.pinnedItems) item.remove();
+    this.pinnedItems.clear();
   }
 
   getScrollAreaRect(playerRect) {
@@ -213,9 +236,7 @@ class DanmakuEngine {
 
     const settings = this.getSettings();
     if (!settings.superchatPinned || !settings.enabled) {
-      this.superchatQueue = [];
-      this.pinnedItem?.remove();
-      this.pinnedItem = null;
+      this.clearPinnedSuperchats();
     }
 
     const rect = this.playerEl.getBoundingClientRect();
@@ -266,12 +287,19 @@ class DanmakuEngine {
     this.superchatLayer.classList.toggle('ydm-sc-bottom', band.pos === 'bottom');
     Object.assign(this.superchatLayer.style, {
       display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: band.pos === 'bottom' ? 'flex-end' : 'flex-start',
+      gap: `${this.getPinnedRowGap()}px`,
       position: 'absolute',
       top: `${band.top}px`,
       left: '0',
       width: '100%',
       height: `${band.height}px`,
       zIndex: '4',
+      overflow: 'hidden',
+      boxSizing: 'border-box',
+      padding: '4px 0',
     });
   }
 
@@ -286,35 +314,117 @@ class DanmakuEngine {
 
   queueSuperchat(payload) {
     if (!this.superchatLayer || !this.getSettings().enabled) return;
-    if (this.pinnedItem) {
+    if (this.pinnedItems.size >= this.getMaxPinnedSuperchats()) {
       this.superchatQueue.push(payload);
-      if (this.superchatQueue.length > 6) this.superchatQueue.shift();
+      const maxQueued = Math.max(6, this.getMaxPinnedSuperchats() * 2);
+      if (this.superchatQueue.length > maxQueued) this.superchatQueue.shift();
       return;
     }
     this.mountSuperchat(payload);
   }
 
-  mountSuperchat({ username, message, parts, usernameColor, profileUrl, originalMessage, translated, superchatStyle }) {
+  drainSuperchatQueue() {
+    if (!this.superchatLayer || !this.getSettings().enabled || !this.getSettings().superchatPinned) {
+      this.superchatQueue = [];
+      return;
+    }
+    while (this.superchatQueue.length && this.pinnedItems.size < this.getMaxPinnedSuperchats()) {
+      const next = this.superchatQueue.shift();
+      if (!next) break;
+      this.mountSuperchat(next, { skipLayout: true });
+    }
+    this.updateLayout();
+  }
+
+  mountSuperchat({
+    username,
+    message,
+    parts,
+    bodyParts,
+    amount,
+    usernameColor,
+    profileUrl,
+    avatarUrl,
+    originalMessage,
+    translated,
+    superchatStyle,
+  }, { skipLayout = false } = {}) {
     const settings = this.getSettings();
-    const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
-    if (!this.superchatLayer || (!message && !hasEmote)) return;
+    const rawParts = Array.isArray(bodyParts) && bodyParts.length
+      ? bodyParts
+      : (Array.isArray(parts) ? parts : []);
+    const displayParts = stripAmountFromParts(rawParts, amount);
+    const hasEmote = displayParts.some((part) => part.type === 'emote' && part.src);
+    const bodyText = stripAmountFromText(
+      displayParts.map((part) => (
+        part?.type === 'emote' ? (part.alt ? ` ${part.alt} ` : ' ') : (part?.text || '')
+      )).join('').replace(/\s+/g, ' ').trim()
+        || String(message || ''),
+      amount,
+    );
+    if (!this.superchatLayer || (!bodyText && !hasEmote && !username && !amount)) return;
 
     const animation = ['fade', 'slide', 'pop', 'shine'].includes(settings.superchatAnimation)
       ? settings.superchatAnimation
       : 'slide';
-    const duration = clamp(Number(settings.superchatDuration) || 6, 2, 15);
+    const duration = clamp(Number(settings.superchatDuration) || 15, 2, 300);
+    // Match YouTube SC card scale: slightly smaller than scrolling danmaku.
+    const baseSize = clamp(Math.round(settings.fontSize * 0.82), 13, 28);
     const item = document.createElement('div');
     item.className = `ydm-superchat-item ydm-sc-${animation}`;
     item.style.setProperty('--ydm-sc-duration', `${duration}s`);
     item.style.background = safeCssColor(superchatStyle?.background || '#e53935');
     item.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
-    item.style.fontSize = `${settings.fontSize}px`;
+    item.style.fontSize = `${baseSize}px`;
     item.style.fontFamily = settings.fontFamily;
-    appendDanmakuContent(item, message, parts);
+    item.style.zIndex = String(10 + this.pinnedItems.size);
+
+    const avatarSrc = safeEmoteSrc(avatarUrl);
+    if (avatarSrc) {
+      const avatar = document.createElement('img');
+      avatar.className = 'ydm-sc-avatar';
+      avatar.src = avatarSrc;
+      avatar.alt = '';
+      avatar.draggable = false;
+      avatar.referrerPolicy = 'no-referrer';
+      item.appendChild(avatar);
+    }
+
+    if (username) {
+      const name = document.createElement('span');
+      name.className = 'ydm-sc-username';
+      name.textContent = username;
+      name.title = username;
+      name.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
+      item.appendChild(name);
+    }
+
+    if (amount) {
+      const amt = document.createElement('span');
+      amt.className = 'ydm-sc-amount';
+      amt.textContent = amount;
+      amt.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
+      item.appendChild(amt);
+    }
+
+    let messageClip = null;
+    let messageTrack = null;
+    if (bodyText || hasEmote) {
+      messageClip = document.createElement('span');
+      messageClip.className = 'ydm-sc-message-clip';
+      messageTrack = document.createElement('span');
+      messageTrack.className = 'ydm-sc-message';
+      messageTrack.style.color = safeCssColor(superchatStyle?.bodyColor || superchatStyle?.color || '#ffffff');
+      appendDanmakuContent(messageTrack, bodyText, displayParts);
+      messageClip.appendChild(messageTrack);
+      item.appendChild(messageClip);
+    }
+
     this.superchatLayer.appendChild(item);
-    this.pinnedItem = item;
-    this.updateLayout();
-    requestSpeech(speechSourceText(message, parts));
+    this.pinnedItems.add(item);
+    if (!skipLayout) this.updateLayout();
+    this.armSuperchatMarquee(item, messageClip, messageTrack, duration);
+    requestSpeech(speechSourceText(bodyText || message, displayParts));
 
     let fallback = null;
     const armFallback = (ms) => {
@@ -323,7 +433,8 @@ class DanmakuEngine {
     };
     armFallback((duration + 2) * 1000);
     item.addEventListener('animationend', (event) => {
-      if (event.target !== item || event.animationName === 'ydm-sc-shine-sweep') return;
+      if (event.target !== item) return;
+      if (event.animationName === 'ydm-sc-shine-sweep' || event.animationName === 'ydm-sc-marquee') return;
       clearTimeout(fallback);
       this.finishSuperchat(item);
     });
@@ -339,13 +450,33 @@ class DanmakuEngine {
     });
   }
 
+  armSuperchatMarquee(item, clip, track, pinDuration) {
+    if (!item || !clip || !track) return;
+    const measure = () => {
+      if (!item.isConnected || !clip.isConnected || !track.isConnected) return;
+      const overflow = track.scrollWidth - clip.clientWidth;
+      if (overflow <= 4) {
+        item.classList.remove('ydm-sc-marquee');
+        track.style.removeProperty('--ydm-sc-marquee-distance');
+        track.style.removeProperty('--ydm-sc-marquee-duration');
+        return;
+      }
+      // Keep avatar/amount fixed; scroll only the message text inside the clip.
+      const scrollSeconds = clamp(overflow / 36, 2.5, Math.max(3, pinDuration - 0.8));
+      item.classList.add('ydm-sc-marquee');
+      track.style.setProperty('--ydm-sc-marquee-distance', `-${Math.ceil(overflow)}px`);
+      track.style.setProperty('--ydm-sc-marquee-duration', `${scrollSeconds}s`);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(measure));
+  }
+
   finishSuperchat(item) {
-    if (!item || (!item.isConnected && this.pinnedItem !== item)) return;
-    if (this.pinnedItem === item) this.pinnedItem = null;
+    if (!item) return;
+    if (!this.pinnedItems.has(item) && !item.isConnected) return;
+    this.pinnedItems.delete(item);
     item.remove();
-    const next = this.superchatQueue.shift();
-    if (next && this.getSettings().superchatPinned && this.getSettings().enabled) {
-      this.mountSuperchat(next);
+    if (this.superchatQueue.length && this.getSettings().superchatPinned && this.getSettings().enabled) {
+      this.drainSuperchatQueue();
       return;
     }
     this.updateLayout();

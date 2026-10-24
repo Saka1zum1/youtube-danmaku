@@ -113,10 +113,47 @@ function restoreEmoteParts(translated, emotes) {
   return parts;
 }
 
-function extractMessageParts(msgEl) {
+function readPurchaseAmount(msgEl) {
+  return msgEl?.querySelector?.('#purchase-amount, #purchase-amount-chip')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function stripAmountFromText(text, amount) {
+  let s = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (amount) {
+    const exact = escapeRegExp(amount.trim());
+    s = s.replace(new RegExp(`^${exact}\\s*`, 'i'), '').trim();
+  }
+  // Fallback: leading currency / number tokens left by translators.
+  s = s.replace(/^[¥$€£₹₩￥]\s*[\d,]+(?:\.\d+)?\s*(?:[A-Z]{3})?\s*/i, '').trim();
+  s = s.replace(/^[\d,]+(?:\.\d+)?\s*(?:USD|CNY|JPY|EUR|GBP|HKD|TWD|KRW|CAD|AUD)?\s*/i, '').trim();
+  return s;
+}
+
+function stripAmountFromParts(parts, amount) {
+  if (!Array.isArray(parts) || !parts.length) return [];
+  const out = [];
+  let strippedLeading = false;
+  for (const part of parts) {
+    if (!strippedLeading && part?.type === 'text') {
+      strippedLeading = true;
+      const cleaned = stripAmountFromText(part.text, amount);
+      if (cleaned) out.push({ type: 'text', text: cleaned });
+      continue;
+    }
+    out.push(part);
+  }
+  return out;
+}
+
+function extractMessageParts(msgEl, { includeAmount = true } = {}) {
   const parts = [];
-  const amount = msgEl.querySelector('#purchase-amount, #purchase-amount-chip')?.textContent?.trim();
-  if (amount) pushTextPart(parts, `${amount} `);
+  const amount = readPurchaseAmount(msgEl);
+  if (includeAmount && amount) pushTextPart(parts, `${amount} `);
 
   const messageEl = msgEl.querySelector('#message');
   if (messageEl) {
@@ -135,11 +172,12 @@ function extractMessageParts(msgEl) {
   return parts;
 }
 
-function parseChatMessage(msgEl) {
-  if (!msgEl || msgEl.classList.contains('ydm-processed')) return null;
-  if (msgEl.hasAttribute('is-deleted')) return null;
+function readChatMessage(msgEl) {
+  if (!msgEl || msgEl.hasAttribute('is-deleted')) return null;
 
-  const parts = extractMessageParts(msgEl);
+  const amount = readPurchaseAmount(msgEl);
+  const parts = extractMessageParts(msgEl, { includeAmount: true });
+  const bodyParts = extractMessageParts(msgEl, { includeAmount: false });
   const rawMessage = partsToText(parts);
   if (!rawMessage && !parts.some((part) => part.type === 'emote')) return null;
 
@@ -148,27 +186,69 @@ function parseChatMessage(msgEl) {
   const username = usernameEl?.textContent?.replace(/\s+/g, ' ').trim() || '';
   const usernameColor = getUsernameColor(msgEl, username);
   const profileUrl = getYouTubeProfileUrl(msgEl);
+  const avatarUrl = safeEmoteSrc(
+    msgEl.querySelector('#author-photo img, yt-img-shadow#author-photo img')?.currentSrc
+      || msgEl.querySelector('#author-photo img, yt-img-shadow#author-photo img')?.getAttribute('src')
+      || '',
+  );
   const superchat = msgEl.tagName === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
-    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER';
+    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
+    || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(msgEl.tagName || '')
+    || !!amount;
 
-  msgEl.classList.add('ydm-processed');
   return {
     message,
     parts,
+    bodyParts,
+    amount,
     username,
     usernameColor,
     profileUrl,
+    avatarUrl,
     superchat,
     superchatStyle: superchat ? readSuperchatStyle(msgEl) : null,
   };
 }
 
+function parseChatMessage(msgEl) {
+  if (!msgEl || msgEl.classList.contains('ydm-processed')) return null;
+  const parsed = readChatMessage(msgEl);
+  if (!parsed) return null;
+  msgEl.classList.add('ydm-processed');
+  return parsed;
+}
+
+function readCssVarColor(el, name) {
+  if (!el) return '';
+  try {
+    return usableCssColor(getComputedStyle(el).getPropertyValue(name)?.trim());
+  } catch (_) {
+    return '';
+  }
+}
+
 function readSuperchatStyle(msgEl) {
   const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
+  const content = msgEl.querySelector('#content');
   const headerStyle = header ? getComputedStyle(header) : null;
-  const background = usableCssColor(headerStyle?.backgroundColor) || '#e53935';
-  const color = usableCssColor(headerStyle?.color) || '#ffffff';
-  return { background, color };
+  const contentStyle = content ? getComputedStyle(content) : null;
+
+  const background = readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
+    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-background-color')
+    || usableCssColor(headerStyle?.backgroundColor)
+    || '#e53935';
+  const bodyBackground = readCssVarColor(msgEl, '--yt-live-chat-paid-message-secondary-container-color')
+    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-background-color')
+    || usableCssColor(contentStyle?.backgroundColor)
+    || background;
+  const color = readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-color')
+    || usableCssColor(headerStyle?.color)
+    || '#ffffff';
+  const bodyColor = readCssVarColor(msgEl, '--yt-live-chat-paid-message-color')
+    || usableCssColor(contentStyle?.color)
+    || color;
+
+  return { background, bodyBackground, color, bodyColor };
 }
 
 function usableCssColor(value) {

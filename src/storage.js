@@ -28,7 +28,7 @@ function loadSettings() {
       merged.superchatPinned = !!merged.superchatPinned;
       if (!['top', 'bottom'].includes(merged.superchatPosition)) merged.superchatPosition = 'top';
       if (!['fade', 'slide', 'pop', 'shine'].includes(merged.superchatAnimation)) merged.superchatAnimation = 'slide';
-      merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 15);
+      merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 300);
       return merged;
     }
   } catch (_) {

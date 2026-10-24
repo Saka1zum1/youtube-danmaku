@@ -11,6 +11,11 @@ class ChatObserver {
     this.starting = false;
     this.nextTryAt = 0;
     this.seenIds = new Set();
+    this.chatActions = new ChatActions({
+      getSettings,
+      danmakuEmitter,
+      isActive,
+    });
   }
 
   isConnected() {
@@ -25,6 +30,7 @@ class ChatObserver {
     this.stopped = false;
     this.observer?.disconnect();
     this.observer = null;
+    this.chatActions?.unbind();
 
     try {
       const chatRoot = await waitForChatList(() => this.stopped);
@@ -38,6 +44,7 @@ class ChatObserver {
       this.chatRoot = chatRoot;
       markExistingMessages(this.chatRoot);
       this.readyAt = Date.now();
+      this.chatActions.bind(this.chatRoot);
 
       this.observer = new MutationObserver((mutations) => {
         if (!this.isActive()) return;
@@ -72,6 +79,7 @@ class ChatObserver {
     this.stopped = true;
     this.observer?.disconnect();
     this.observer = null;
+    this.chatActions?.stop();
     this.chatRoot = null;
     this.seenIds.clear();
   }
@@ -143,13 +151,20 @@ class ChatObserver {
       return;
     }
 
-    const shielded = shieldEmoteParts(parsed.parts);
+    // Super Chat: translate body only so the amount badge is not duplicated.
+    const sourceParts = parsed.superchat
+      ? (parsed.bodyParts || parsed.parts)
+      : parsed.parts;
+    const shielded = shieldEmoteParts(sourceParts);
     const base = {
       username: parsed.username,
       usernameColor: parsed.usernameColor,
       profileUrl: parsed.profileUrl,
+      avatarUrl: parsed.avatarUrl || '',
       originalMessage: parsed.message,
       parts: parsed.parts,
+      bodyParts: parsed.bodyParts || parsed.parts,
+      amount: parsed.amount || '',
       superchat: !!parsed.superchat,
       superchatStyle: parsed.superchatStyle || null,
     };
@@ -170,26 +185,37 @@ class ChatObserver {
       if (!this.isActive()) return;
       const latest = this.getSettings();
       const rendered = translated?.trim() ? translated : original;
-      const parts = restoreEmoteParts(rendered, shielded.emotes) || parsed.parts;
-      const message = partsToText(parts) || parsed.message;
+      const bodyParts = stripAmountFromParts(
+        restoreEmoteParts(rendered, shielded.emotes) || sourceParts,
+        parsed.amount,
+      );
+      const bodyText = partsToText(bodyParts) || stripAmountFromText(rendered, parsed.amount);
+      const message = parsed.amount ? `${parsed.amount} ${bodyText}`.trim() : bodyText;
+      const parts = parsed.amount
+        ? [{ type: 'text', text: `${parsed.amount} ` }, ...bodyParts]
+        : bodyParts;
       if (messageMatchesBlock(parsed.message, latest.blockKeywords)
-        || messageMatchesBlock(message, latest.blockKeywords)) {
+        || messageMatchesBlock(message, latest.blockKeywords)
+        || messageMatchesBlock(bodyText, latest.blockKeywords)) {
         removeChatTranslation(msgEl);
         return;
       }
 
       if (latest.translateEnabled && latest.translateInChat) {
-        applyChatTranslation(msgEl, message, parsed.message);
+        applyChatTranslation(msgEl, bodyText, partsToText(sourceParts) || parsed.message);
       } else {
         removeChatTranslation(msgEl);
       }
 
       if (!latest.enabled) return;
+      const didTranslate = bodyText !== (partsToText(sourceParts) || '');
       this.danmakuEmitter.enqueue({
         ...base,
         parts,
+        bodyParts,
+        amount: parsed.amount || '',
         message,
-        translated: message !== parsed.message,
+        translated: didTranslate,
       });
     });
   }

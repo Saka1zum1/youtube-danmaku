@@ -65,6 +65,7 @@ const TWITCH_DICTIONARY = {
   rip: dictEntry('RIP', 'RIP', 'rip'),
   ez: dictEntry('轻松', '輕鬆', 'ez'),
   diff: dictEntry('差距', '差距', 'diff'),
+  www: dictEntry('笑死', '笑死', 'www'),
 };
 
 const PLACEHOLDER_PREFIX = '⟦T';

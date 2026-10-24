@@ -25,15 +25,19 @@ function preparedGroupKey(preparedText, placeholders) {
   return `${preparedText}\0${placeholders.map((item) => item.replacement).join('\0')}`;
 }
 
-async function translateMessages(texts, targetLang, provider = 'microsoft') {
+async function translateMessages(texts, targetLang, provider = 'microsoft', options = {}) {
   const results = new Array(texts.length);
   const pending = [];
+  const bypassCache = !!options.bypassCache;
 
   texts.forEach((text, index) => {
-    const cached = getCachedTranslation(text, targetLang);
-    if (cached != null) {
-      results[index] = cached;
-      return;
+    if (bypassCache) clearCachedTranslation(text, targetLang);
+    else {
+      const cached = getCachedTranslation(text, targetLang);
+      if (cached != null) {
+        results[index] = cached;
+        return;
+      }
     }
 
     const isolated = isolateEmoteShortcodes(text);
@@ -92,9 +96,46 @@ async function translateMessages(texts, targetLang, provider = 'microsoft') {
         item.kept,
       )?.trim() || item.original;
       results[item.index] = restored;
-      if (cacheable) setCachedTranslation(item.original, targetLang, restored);
+      // Avoid caching no-op / echo results so retranslate can switch engines.
+      if (cacheable && restored !== item.original) {
+        setCachedTranslation(item.original, targetLang, restored);
+      }
     }
   });
 
   return { texts: results };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Manual single-message translate with provider failover.
+ * Retries with `auto` when the preferred engine fails or returns an unchanged echo.
+ */
+async function translateMessagesManual(text, targetLang, preferred = 'microsoft', options = {}) {
+  const source = String(text || '').trim();
+  if (!source) return '';
+
+  const providers = preferred && preferred !== 'auto'
+    ? [preferred, 'auto', 'auto']
+    : ['auto', 'auto'];
+
+  let last = '';
+  for (let i = 0; i < providers.length; i += 1) {
+    const bypassCache = options.bypassCache || i > 0;
+    const outcome = await translateMessages([source], targetLang, providers[i], { bypassCache });
+
+    if (outcome?.retryAfter) {
+      await sleep(Math.min(Math.max(50, outcome.retryAfter), 1200));
+      continue;
+    }
+
+    const rendered = outcome?.texts?.[0]?.trim() || '';
+    if (rendered && rendered !== source) return rendered;
+    last = rendered || last;
+  }
+
+  return last;
 }
