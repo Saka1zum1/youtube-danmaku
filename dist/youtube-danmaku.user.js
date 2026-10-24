@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.4.0
+// @version      1.5.0
 // @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
 // @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
@@ -49,6 +49,12 @@ const LOCALES = {
     translateEnable: '启用翻译',
     translateInChat: '在聊天区显示译文',
     translateInChatBadge: '译',
+    chatActionTranslate: '翻译',
+    chatActionRetranslate: '重新翻译',
+    chatActionSpeak: '朗读',
+    chatActionDanmaku: '发送弹幕',
+    chatActionTranslating: '翻译中…',
+    chatActionTranslateFailed: '翻译失败',
     translateProvider: '翻译引擎',
     translateProviderAuto: '自动切换',
     translateProviderMicrosoft: 'Microsoft 翻译',
@@ -172,6 +178,12 @@ const LOCALES = {
     translateEnable: 'Enable translation',
     translateInChat: 'Show translation in chat',
     translateInChatBadge: 'TR',
+    chatActionTranslate: 'Translate',
+    chatActionRetranslate: 'Retranslate',
+    chatActionSpeak: 'Read aloud',
+    chatActionDanmaku: 'Send as danmaku',
+    chatActionTranslating: 'Translating…',
+    chatActionTranslateFailed: 'Translation failed',
     translateProvider: 'Translation engine',
     translateProviderAuto: 'Auto',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -295,6 +307,12 @@ const LOCALES = {
     translateEnable: '翻訳を有効にする',
     translateInChat: 'チャットに訳文を表示',
     translateInChatBadge: '訳',
+    chatActionTranslate: '翻訳',
+    chatActionRetranslate: '再翻訳',
+    chatActionSpeak: '読み上げ',
+    chatActionDanmaku: '弾幕で表示',
+    chatActionTranslating: '翻訳中…',
+    chatActionTranslateFailed: '翻訳に失敗しました',
     translateProvider: '翻訳エンジン',
     translateProviderAuto: '自動',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -526,7 +544,7 @@ const DEFAULT_SETTINGS = {
   speechBuffer: 5,
   superchatPinned: false,
   superchatPosition: 'top',
-  superchatDuration: 6,
+  superchatDuration: 15,
   superchatAnimation: 'slide',
 };
 
@@ -591,7 +609,7 @@ function loadSettings() {
       merged.superchatPinned = !!merged.superchatPinned;
       if (!['top', 'bottom'].includes(merged.superchatPosition)) merged.superchatPosition = 'top';
       if (!['fade', 'slide', 'pop', 'shine'].includes(merged.superchatAnimation)) merged.superchatAnimation = 'slide';
-      merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 15);
+      merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 300);
       return merged;
     }
   } catch (_) {
@@ -1198,7 +1216,7 @@ class DanmakuEngine {
     this.laneManager = new LaneManager();
     this.layer = null;
     this.superchatLayer = null;
-    this.pinnedItem = null;
+    this.pinnedItems = new Set();
     this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
@@ -1260,7 +1278,7 @@ class DanmakuEngine {
     this.superchatLayer?.remove();
     this.layer = null;
     this.superchatLayer = null;
-    this.pinnedItem = null;
+    this.pinnedItems = new Set();
     this.superchatQueue = [];
     this.playerEl = null;
     this.overlayEl = null;
@@ -1285,18 +1303,41 @@ class DanmakuEngine {
     return this.controlsHeight;
   }
 
-  getPinnedBandHeight() {
-    return this.getLaneHeight() + 18;
+  getPinnedRowHeight() {
+    return this.getLaneHeight() + 12;
+  }
+
+  getPinnedRowGap() {
+    return 6;
+  }
+
+  getMaxPinnedSuperchats(playerHeight = this.playerEl?.clientHeight || 480) {
+    const row = this.getPinnedRowHeight() + this.getPinnedRowGap();
+    const budget = Math.max(row, playerHeight * 0.38);
+    return clamp(Math.floor(budget / row), 1, 5);
+  }
+
+  getPinnedBandHeight(count = this.pinnedItems.size) {
+    if (count <= 0) return 0;
+    const row = this.getPinnedRowHeight();
+    const gap = this.getPinnedRowGap();
+    return count * row + Math.max(0, count - 1) * gap + 8;
   }
 
   getPinnedBandRect(playerHeight) {
-    if (!this.pinnedItem || !this.getSettings().superchatPinned) return null;
+    if (!this.pinnedItems.size || !this.getSettings().superchatPinned) return null;
     const band = this.getPinnedBandHeight();
     const pos = this.getSettings().superchatPosition === 'bottom' ? 'bottom' : 'top';
     const top = pos === 'bottom'
       ? Math.max(0, playerHeight - this.getBottomReserve() - band)
       : 8;
     return { pos, top, height: band };
+  }
+
+  clearPinnedSuperchats() {
+    this.superchatQueue = [];
+    for (const item of this.pinnedItems) item.remove();
+    this.pinnedItems.clear();
   }
 
   getScrollAreaRect(playerRect) {
@@ -1371,9 +1412,7 @@ class DanmakuEngine {
 
     const settings = this.getSettings();
     if (!settings.superchatPinned || !settings.enabled) {
-      this.superchatQueue = [];
-      this.pinnedItem?.remove();
-      this.pinnedItem = null;
+      this.clearPinnedSuperchats();
     }
 
     const rect = this.playerEl.getBoundingClientRect();
@@ -1424,12 +1463,19 @@ class DanmakuEngine {
     this.superchatLayer.classList.toggle('ydm-sc-bottom', band.pos === 'bottom');
     Object.assign(this.superchatLayer.style, {
       display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: band.pos === 'bottom' ? 'flex-end' : 'flex-start',
+      gap: `${this.getPinnedRowGap()}px`,
       position: 'absolute',
       top: `${band.top}px`,
       left: '0',
       width: '100%',
       height: `${band.height}px`,
       zIndex: '4',
+      overflow: 'hidden',
+      boxSizing: 'border-box',
+      padding: '4px 0',
     });
   }
 
@@ -1444,35 +1490,117 @@ class DanmakuEngine {
 
   queueSuperchat(payload) {
     if (!this.superchatLayer || !this.getSettings().enabled) return;
-    if (this.pinnedItem) {
+    if (this.pinnedItems.size >= this.getMaxPinnedSuperchats()) {
       this.superchatQueue.push(payload);
-      if (this.superchatQueue.length > 6) this.superchatQueue.shift();
+      const maxQueued = Math.max(6, this.getMaxPinnedSuperchats() * 2);
+      if (this.superchatQueue.length > maxQueued) this.superchatQueue.shift();
       return;
     }
     this.mountSuperchat(payload);
   }
 
-  mountSuperchat({ username, message, parts, usernameColor, profileUrl, originalMessage, translated, superchatStyle }) {
+  drainSuperchatQueue() {
+    if (!this.superchatLayer || !this.getSettings().enabled || !this.getSettings().superchatPinned) {
+      this.superchatQueue = [];
+      return;
+    }
+    while (this.superchatQueue.length && this.pinnedItems.size < this.getMaxPinnedSuperchats()) {
+      const next = this.superchatQueue.shift();
+      if (!next) break;
+      this.mountSuperchat(next, { skipLayout: true });
+    }
+    this.updateLayout();
+  }
+
+  mountSuperchat({
+    username,
+    message,
+    parts,
+    bodyParts,
+    amount,
+    usernameColor,
+    profileUrl,
+    avatarUrl,
+    originalMessage,
+    translated,
+    superchatStyle,
+  }, { skipLayout = false } = {}) {
     const settings = this.getSettings();
-    const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
-    if (!this.superchatLayer || (!message && !hasEmote)) return;
+    const rawParts = Array.isArray(bodyParts) && bodyParts.length
+      ? bodyParts
+      : (Array.isArray(parts) ? parts : []);
+    const displayParts = stripAmountFromParts(rawParts, amount);
+    const hasEmote = displayParts.some((part) => part.type === 'emote' && part.src);
+    const bodyText = stripAmountFromText(
+      displayParts.map((part) => (
+        part?.type === 'emote' ? (part.alt ? ` ${part.alt} ` : ' ') : (part?.text || '')
+      )).join('').replace(/\s+/g, ' ').trim()
+        || String(message || ''),
+      amount,
+    );
+    if (!this.superchatLayer || (!bodyText && !hasEmote && !username && !amount)) return;
 
     const animation = ['fade', 'slide', 'pop', 'shine'].includes(settings.superchatAnimation)
       ? settings.superchatAnimation
       : 'slide';
-    const duration = clamp(Number(settings.superchatDuration) || 6, 2, 15);
+    const duration = clamp(Number(settings.superchatDuration) || 15, 2, 300);
+    // Match YouTube SC card scale: slightly smaller than scrolling danmaku.
+    const baseSize = clamp(Math.round(settings.fontSize * 0.82), 13, 28);
     const item = document.createElement('div');
     item.className = `ydm-superchat-item ydm-sc-${animation}`;
     item.style.setProperty('--ydm-sc-duration', `${duration}s`);
     item.style.background = safeCssColor(superchatStyle?.background || '#e53935');
     item.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
-    item.style.fontSize = `${settings.fontSize}px`;
+    item.style.fontSize = `${baseSize}px`;
     item.style.fontFamily = settings.fontFamily;
-    appendDanmakuContent(item, message, parts);
+    item.style.zIndex = String(10 + this.pinnedItems.size);
+
+    const avatarSrc = safeEmoteSrc(avatarUrl);
+    if (avatarSrc) {
+      const avatar = document.createElement('img');
+      avatar.className = 'ydm-sc-avatar';
+      avatar.src = avatarSrc;
+      avatar.alt = '';
+      avatar.draggable = false;
+      avatar.referrerPolicy = 'no-referrer';
+      item.appendChild(avatar);
+    }
+
+    if (username) {
+      const name = document.createElement('span');
+      name.className = 'ydm-sc-username';
+      name.textContent = username;
+      name.title = username;
+      name.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
+      item.appendChild(name);
+    }
+
+    if (amount) {
+      const amt = document.createElement('span');
+      amt.className = 'ydm-sc-amount';
+      amt.textContent = amount;
+      amt.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
+      item.appendChild(amt);
+    }
+
+    let messageClip = null;
+    let messageTrack = null;
+    if (bodyText || hasEmote) {
+      messageClip = document.createElement('span');
+      messageClip.className = 'ydm-sc-message-clip';
+      messageTrack = document.createElement('span');
+      messageTrack.className = 'ydm-sc-message';
+      messageTrack.style.color = safeCssColor(superchatStyle?.bodyColor || superchatStyle?.color || '#ffffff');
+      appendDanmakuContent(messageTrack, bodyText, displayParts);
+      messageClip.appendChild(messageTrack);
+      item.appendChild(messageClip);
+    }
+
     this.superchatLayer.appendChild(item);
-    this.pinnedItem = item;
-    this.updateLayout();
-    requestSpeech(speechSourceText(message, parts));
+    this.pinnedItems.add(item);
+    if (!skipLayout) this.updateLayout();
+    this.armSuperchatMarquee(item, messageClip, messageTrack, duration);
+    requestSpeech(speechSourceText(bodyText || message, displayParts));
 
     let fallback = null;
     const armFallback = (ms) => {
@@ -1481,7 +1609,8 @@ class DanmakuEngine {
     };
     armFallback((duration + 2) * 1000);
     item.addEventListener('animationend', (event) => {
-      if (event.target !== item || event.animationName === 'ydm-sc-shine-sweep') return;
+      if (event.target !== item) return;
+      if (event.animationName === 'ydm-sc-shine-sweep' || event.animationName === 'ydm-sc-marquee') return;
       clearTimeout(fallback);
       this.finishSuperchat(item);
     });
@@ -1497,13 +1626,33 @@ class DanmakuEngine {
     });
   }
 
+  armSuperchatMarquee(item, clip, track, pinDuration) {
+    if (!item || !clip || !track) return;
+    const measure = () => {
+      if (!item.isConnected || !clip.isConnected || !track.isConnected) return;
+      const overflow = track.scrollWidth - clip.clientWidth;
+      if (overflow <= 4) {
+        item.classList.remove('ydm-sc-marquee');
+        track.style.removeProperty('--ydm-sc-marquee-distance');
+        track.style.removeProperty('--ydm-sc-marquee-duration');
+        return;
+      }
+      // Keep avatar/amount fixed; scroll only the message text inside the clip.
+      const scrollSeconds = clamp(overflow / 36, 2.5, Math.max(3, pinDuration - 0.8));
+      item.classList.add('ydm-sc-marquee');
+      track.style.setProperty('--ydm-sc-marquee-distance', `-${Math.ceil(overflow)}px`);
+      track.style.setProperty('--ydm-sc-marquee-duration', `${scrollSeconds}s`);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(measure));
+  }
+
   finishSuperchat(item) {
-    if (!item || (!item.isConnected && this.pinnedItem !== item)) return;
-    if (this.pinnedItem === item) this.pinnedItem = null;
+    if (!item) return;
+    if (!this.pinnedItems.has(item) && !item.isConnected) return;
+    this.pinnedItems.delete(item);
     item.remove();
-    const next = this.superchatQueue.shift();
-    if (next && this.getSettings().superchatPinned && this.getSettings().enabled) {
-      this.mountSuperchat(next);
+    if (this.superchatQueue.length && this.getSettings().superchatPinned && this.getSettings().enabled) {
+      this.drainSuperchatQueue();
       return;
     }
     this.updateLayout();
@@ -2067,6 +2216,7 @@ const TWITCH_DICTIONARY = {
   rip: dictEntry('RIP', 'RIP', 'rip'),
   ez: dictEntry('轻松', '輕鬆', 'ez'),
   diff: dictEntry('差距', '差距', 'diff'),
+  www: dictEntry('笑死', '笑死', 'www'),
 };
 
 const PLACEHOLDER_PREFIX = '⟦T';
@@ -2290,6 +2440,10 @@ function setCachedTranslation(text, targetLang, value) {
     const oldest = translationCache.keys().next().value;
     translationCache.delete(oldest);
   }
+}
+
+function clearCachedTranslation(text, targetLang) {
+  translationCache.delete(translationCacheKey(text, targetLang));
 }
 
 function gmRequest(options) {
@@ -2672,22 +2826,17 @@ async function translateBatch(texts, targetLang, preferred) {
   const candidates = supported.length ? supported : order;
   const now = Date.now();
 
-  if (preferred && preferred !== 'auto' && candidates[0] === preferred) {
-    const pinned = providerState[preferred];
-    if (pinned.cooldownUntil <= now && pinned.nextAt > now) {
-      return waitForProviders([preferred], false);
-    }
-  }
-
   const usable = candidates.filter((id) => providerState[id].cooldownUntil <= now);
   if (!usable.length) return waitForProviders(candidates, true);
 
   const ready = usable.filter((id) => providerState[id].nextAt <= now);
   if (!ready.length) return waitForProviders(usable, false);
 
+  // Prefer the selected engine first, but always allow failover to other ready engines.
   const sequence = !preferred || preferred === 'auto'
     ? autoSequence(ready)
     : [preferred, ...ready.filter((id) => id !== preferred)].filter((id) => ready.includes(id));
+  if (!sequence.length) return waitForProviders(usable, false);
 
   const flushStarted = Date.now();
   const attemptLimit = Math.min(MAX_PROVIDER_ATTEMPTS, sequence.length);
@@ -2745,15 +2894,19 @@ function preparedGroupKey(preparedText, placeholders) {
   return `${preparedText}\0${placeholders.map((item) => item.replacement).join('\0')}`;
 }
 
-async function translateMessages(texts, targetLang, provider = 'microsoft') {
+async function translateMessages(texts, targetLang, provider = 'microsoft', options = {}) {
   const results = new Array(texts.length);
   const pending = [];
+  const bypassCache = !!options.bypassCache;
 
   texts.forEach((text, index) => {
-    const cached = getCachedTranslation(text, targetLang);
-    if (cached != null) {
-      results[index] = cached;
-      return;
+    if (bypassCache) clearCachedTranslation(text, targetLang);
+    else {
+      const cached = getCachedTranslation(text, targetLang);
+      if (cached != null) {
+        results[index] = cached;
+        return;
+      }
     }
 
     const isolated = isolateEmoteShortcodes(text);
@@ -2812,11 +2965,48 @@ async function translateMessages(texts, targetLang, provider = 'microsoft') {
         item.kept,
       )?.trim() || item.original;
       results[item.index] = restored;
-      if (cacheable) setCachedTranslation(item.original, targetLang, restored);
+      // Avoid caching no-op / echo results so retranslate can switch engines.
+      if (cacheable && restored !== item.original) {
+        setCachedTranslation(item.original, targetLang, restored);
+      }
     }
   });
 
   return { texts: results };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Manual single-message translate with provider failover.
+ * Retries with `auto` when the preferred engine fails or returns an unchanged echo.
+ */
+async function translateMessagesManual(text, targetLang, preferred = 'microsoft', options = {}) {
+  const source = String(text || '').trim();
+  if (!source) return '';
+
+  const providers = preferred && preferred !== 'auto'
+    ? [preferred, 'auto', 'auto']
+    : ['auto', 'auto'];
+
+  let last = '';
+  for (let i = 0; i < providers.length; i += 1) {
+    const bypassCache = options.bypassCache || i > 0;
+    const outcome = await translateMessages([source], targetLang, providers[i], { bypassCache });
+
+    if (outcome?.retryAfter) {
+      await sleep(Math.min(Math.max(50, outcome.retryAfter), 1200));
+      continue;
+    }
+
+    const rendered = outcome?.texts?.[0]?.trim() || '';
+    if (rendered && rendered !== source) return rendered;
+    last = rendered || last;
+  }
+
+  return last;
 }
 
 const TRANSLATE_SINGLE_GRACE_MS = 220;
@@ -3157,10 +3347,47 @@ function restoreEmoteParts(translated, emotes) {
   return parts;
 }
 
-function extractMessageParts(msgEl) {
+function readPurchaseAmount(msgEl) {
+  return msgEl?.querySelector?.('#purchase-amount, #purchase-amount-chip')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
+function escapeRegExp(value) {
+  return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function stripAmountFromText(text, amount) {
+  let s = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!s) return '';
+  if (amount) {
+    const exact = escapeRegExp(amount.trim());
+    s = s.replace(new RegExp(`^${exact}\\s*`, 'i'), '').trim();
+  }
+  // Fallback: leading currency / number tokens left by translators.
+  s = s.replace(/^[¥$€£₹₩￥]\s*[\d,]+(?:\.\d+)?\s*(?:[A-Z]{3})?\s*/i, '').trim();
+  s = s.replace(/^[\d,]+(?:\.\d+)?\s*(?:USD|CNY|JPY|EUR|GBP|HKD|TWD|KRW|CAD|AUD)?\s*/i, '').trim();
+  return s;
+}
+
+function stripAmountFromParts(parts, amount) {
+  if (!Array.isArray(parts) || !parts.length) return [];
+  const out = [];
+  let strippedLeading = false;
+  for (const part of parts) {
+    if (!strippedLeading && part?.type === 'text') {
+      strippedLeading = true;
+      const cleaned = stripAmountFromText(part.text, amount);
+      if (cleaned) out.push({ type: 'text', text: cleaned });
+      continue;
+    }
+    out.push(part);
+  }
+  return out;
+}
+
+function extractMessageParts(msgEl, { includeAmount = true } = {}) {
   const parts = [];
-  const amount = msgEl.querySelector('#purchase-amount, #purchase-amount-chip')?.textContent?.trim();
-  if (amount) pushTextPart(parts, `${amount} `);
+  const amount = readPurchaseAmount(msgEl);
+  if (includeAmount && amount) pushTextPart(parts, `${amount} `);
 
   const messageEl = msgEl.querySelector('#message');
   if (messageEl) {
@@ -3179,11 +3406,12 @@ function extractMessageParts(msgEl) {
   return parts;
 }
 
-function parseChatMessage(msgEl) {
-  if (!msgEl || msgEl.classList.contains('ydm-processed')) return null;
-  if (msgEl.hasAttribute('is-deleted')) return null;
+function readChatMessage(msgEl) {
+  if (!msgEl || msgEl.hasAttribute('is-deleted')) return null;
 
-  const parts = extractMessageParts(msgEl);
+  const amount = readPurchaseAmount(msgEl);
+  const parts = extractMessageParts(msgEl, { includeAmount: true });
+  const bodyParts = extractMessageParts(msgEl, { includeAmount: false });
   const rawMessage = partsToText(parts);
   if (!rawMessage && !parts.some((part) => part.type === 'emote')) return null;
 
@@ -3192,27 +3420,69 @@ function parseChatMessage(msgEl) {
   const username = usernameEl?.textContent?.replace(/\s+/g, ' ').trim() || '';
   const usernameColor = getUsernameColor(msgEl, username);
   const profileUrl = getYouTubeProfileUrl(msgEl);
+  const avatarUrl = safeEmoteSrc(
+    msgEl.querySelector('#author-photo img, yt-img-shadow#author-photo img')?.currentSrc
+      || msgEl.querySelector('#author-photo img, yt-img-shadow#author-photo img')?.getAttribute('src')
+      || '',
+  );
   const superchat = msgEl.tagName === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
-    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER';
+    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
+    || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(msgEl.tagName || '')
+    || !!amount;
 
-  msgEl.classList.add('ydm-processed');
   return {
     message,
     parts,
+    bodyParts,
+    amount,
     username,
     usernameColor,
     profileUrl,
+    avatarUrl,
     superchat,
     superchatStyle: superchat ? readSuperchatStyle(msgEl) : null,
   };
 }
 
+function parseChatMessage(msgEl) {
+  if (!msgEl || msgEl.classList.contains('ydm-processed')) return null;
+  const parsed = readChatMessage(msgEl);
+  if (!parsed) return null;
+  msgEl.classList.add('ydm-processed');
+  return parsed;
+}
+
+function readCssVarColor(el, name) {
+  if (!el) return '';
+  try {
+    return usableCssColor(getComputedStyle(el).getPropertyValue(name)?.trim());
+  } catch (_) {
+    return '';
+  }
+}
+
 function readSuperchatStyle(msgEl) {
   const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
+  const content = msgEl.querySelector('#content');
   const headerStyle = header ? getComputedStyle(header) : null;
-  const background = usableCssColor(headerStyle?.backgroundColor) || '#e53935';
-  const color = usableCssColor(headerStyle?.color) || '#ffffff';
-  return { background, color };
+  const contentStyle = content ? getComputedStyle(content) : null;
+
+  const background = readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
+    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-background-color')
+    || usableCssColor(headerStyle?.backgroundColor)
+    || '#e53935';
+  const bodyBackground = readCssVarColor(msgEl, '--yt-live-chat-paid-message-secondary-container-color')
+    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-background-color')
+    || usableCssColor(contentStyle?.backgroundColor)
+    || background;
+  const color = readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-color')
+    || usableCssColor(headerStyle?.color)
+    || '#ffffff';
+  const bodyColor = readCssVarColor(msgEl, '--yt-live-chat-paid-message-color')
+    || usableCssColor(contentStyle?.color)
+    || color;
+
+  return { background, bodyBackground, color, bodyColor };
 }
 
 function usableCssColor(value) {
@@ -3249,8 +3519,9 @@ const CHAT_TRANSLATE_CSS = `
   width: 100%;
   margin: 3px 0 1px;
   padding: 3px 0 2px 8px;
-  border-left: 2px solid #3ea6ff;
-  color: #9ecbff;
+  border-left: 2px solid rgba(230, 33, 23, 1);
+  background: rgba(155, 155, 155, 0.4);
+  color: #fff;
   font-size: 12.5px;
   line-height: 1.4;
   font-weight: 400;
@@ -3264,8 +3535,8 @@ const CHAT_TRANSLATE_CSS = `
   margin-top: 1px;
   padding: 0 5px;
   border-radius: 3px;
-  background: rgba(62, 166, 255, 0.18);
-  color: #3ea6ff;
+  background: rgba(230, 33, 23, 1);
+  color: #fff;
   font-size: 10px;
   font-weight: 700;
   font-style: normal;
@@ -3277,7 +3548,98 @@ const CHAT_TRANSLATE_CSS = `
 .ydm-chat-translation-text {
   flex: 1 1 auto;
   min-width: 0;
-  color: #9ecbff;
+  color: #0f0f0f;
+}
+
+.ydm-chat-translation--pending .ydm-chat-translation-text {
+  color: #606060;
+  font-style: italic;
+}
+
+.ydm-chat-translation--error .ydm-chat-translation-text {
+  color: #b71c1c;
+}
+
+.ydm-chat-menu {
+  position: fixed;
+  z-index: 2147483646;
+  min-width: 160px;
+  padding: 6px 0;
+  border-radius: 8px;
+  background: #212121;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 13px;
+}
+
+.ydm-chat-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ydm-chat-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ydm-chat-menu-item svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+.ydm-sc-action-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(15, 15, 15, 0.72);
+}
+
+.ydm-sc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.ydm-sc-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ydm-sc-action-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ydm-sc-action-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex: 0 0 auto;
 }
 `;
 
@@ -3313,6 +3675,48 @@ function clearAllChatTranslations() {
   doc.querySelectorAll('.ydm-chat-translation').forEach((node) => node.remove());
 }
 
+function getChatTranslationText(msgEl) {
+  return msgEl?.querySelector('.ydm-chat-translation-text')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+}
+
+function hasChatTranslation(msgEl) {
+  const el = msgEl?.querySelector?.('.ydm-chat-translation');
+  if (!el) return false;
+  if (el.classList.contains('ydm-chat-translation--pending')) return false;
+  if (el.classList.contains('ydm-chat-translation--error')) return false;
+  return !!getChatTranslationText(msgEl);
+}
+
+function hasChatTranslationError(msgEl) {
+  return !!msgEl?.querySelector?.('.ydm-chat-translation--error');
+}
+
+function ensureChatTranslationEl(msgEl) {
+  const doc = msgEl.ownerDocument;
+  ensureChatTranslateStyles(doc);
+  let el = msgEl.querySelector('.ydm-chat-translation');
+  if (el) return el;
+
+  el = doc.createElement('div');
+  el.className = 'ydm-chat-translation';
+  el.setAttribute('dir', 'auto');
+
+  const label = doc.createElement('span');
+  label.className = 'ydm-chat-translation-label';
+  label.textContent = t('translateInChatBadge');
+
+  const text = doc.createElement('span');
+  text.className = 'ydm-chat-translation-text';
+
+  el.append(label, text);
+
+  const mount = findChatTranslationMount(msgEl);
+  if (!mount.parent) return null;
+  if (mount.after?.parentElement === mount.parent) mount.after.after(el);
+  else mount.parent.appendChild(el);
+  return el;
+}
+
 function applyChatTranslation(msgEl, translatedText, originalText) {
   if (!msgEl?.isConnected) return;
 
@@ -3323,32 +3727,362 @@ function applyChatTranslation(msgEl, translatedText, originalText) {
     return;
   }
 
+  const el = ensureChatTranslationEl(msgEl);
+  if (!el) return;
+  el.classList.remove('ydm-chat-translation--pending', 'ydm-chat-translation--error');
+  const textEl = el.querySelector('.ydm-chat-translation-text');
+  if (textEl) textEl.textContent = translated;
+}
+
+function setChatTranslationStatus(msgEl, status, text) {
+  if (!msgEl?.isConnected) return;
+  const el = ensureChatTranslationEl(msgEl);
+  if (!el) return;
+  el.classList.toggle('ydm-chat-translation--pending', status === 'pending');
+  el.classList.toggle('ydm-chat-translation--error', status === 'error');
+  const textEl = el.querySelector('.ydm-chat-translation-text');
+  if (textEl) textEl.textContent = text || '';
+}
+
+function closeChatOverlayUi(doc) {
+  if (!doc) return;
+  doc.querySelectorAll('.ydm-chat-menu, .ydm-sc-action-panel').forEach((node) => node.remove());
+}
+
+function createChatActionButton(doc, { icon, label, onClick }) {
+  const btn = doc.createElement('button');
+  btn.type = 'button';
+  const iconWrap = doc.createElement('span');
+  appendMarkup(iconWrap, icon);
+  const text = doc.createElement('span');
+  text.textContent = label;
+  btn.append(iconWrap, text);
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClick?.(e);
+  });
+  btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+  return btn;
+}
+
+function showChatContextMenu(doc, clientX, clientY, items) {
+  closeChatOverlayUi(doc);
+  ensureChatTranslateStyles(doc);
+
+  const menu = doc.createElement('div');
+  menu.className = 'ydm-chat-menu';
+  menu.addEventListener('click', (e) => e.stopPropagation());
+  menu.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  for (const item of items) {
+    const btn = createChatActionButton(doc, item);
+    btn.className = 'ydm-chat-menu-item';
+    menu.appendChild(btn);
+  }
+
+  (doc.body || doc.documentElement).appendChild(menu);
+
+  const width = menu.offsetWidth || 160;
+  const height = menu.offsetHeight || 40;
+  const viewW = doc.defaultView?.innerWidth || width;
+  const viewH = doc.defaultView?.innerHeight || height;
+  const left = Math.max(8, Math.min(clientX, viewW - width - 8));
+  const top = Math.max(8, Math.min(clientY, viewH - height - 8));
+  Object.assign(menu.style, { left: `${left}px`, top: `${top}px` });
+  return menu;
+}
+
+function showSuperchatActionPanel(msgEl, items) {
   const doc = msgEl.ownerDocument;
   ensureChatTranslateStyles(doc);
 
-  let el = msgEl.querySelector('.ydm-chat-translation');
-  if (!el) {
-    el = doc.createElement('div');
-    el.className = 'ydm-chat-translation';
-    el.setAttribute('dir', 'auto');
+  msgEl.querySelectorAll('.ydm-sc-action-panel').forEach((node) => node.remove());
 
-    const label = doc.createElement('span');
-    label.className = 'ydm-chat-translation-label';
-    label.textContent = t('translateInChatBadge');
+  const panel = doc.createElement('div');
+  panel.className = 'ydm-sc-action-panel';
+  panel.addEventListener('click', (e) => e.stopPropagation());
 
-    const text = doc.createElement('span');
-    text.className = 'ydm-chat-translation-text';
-
-    el.append(label, text);
-
-    const mount = findChatTranslationMount(msgEl);
-    if (!mount.parent) return;
-    if (mount.after?.parentElement === mount.parent) mount.after.after(el);
-    else mount.parent.appendChild(el);
+  for (const item of items) {
+    const btn = createChatActionButton(doc, item);
+    btn.className = 'ydm-sc-action-btn';
+    panel.appendChild(btn);
   }
 
-  const textEl = el.querySelector('.ydm-chat-translation-text');
-  if (textEl) textEl.textContent = translated;
+  const mount = findChatTranslationMount(msgEl);
+  const translation = msgEl.querySelector('.ydm-chat-translation');
+  if (translation) translation.after(panel);
+  else if (mount.after?.parentElement === mount.parent) mount.after.after(panel);
+  else if (mount.parent) mount.parent.appendChild(panel);
+  else msgEl.appendChild(panel);
+
+  return panel;
+}
+
+class ChatActions {
+  constructor({ getSettings, danmakuEmitter, isActive }) {
+    this.getSettings = getSettings;
+    this.danmakuEmitter = danmakuEmitter;
+    this.isActive = isActive;
+    this.chatRoot = null;
+    this.doc = null;
+    this.panelObserver = null;
+    this.boundContextMenu = (e) => this.handleContextMenu(e);
+    this.boundClick = (e) => this.handleClick(e);
+    this.boundDocClick = (e) => this.handleDocumentClick(e);
+    this.busy = new WeakSet();
+  }
+
+  bind(chatRoot) {
+    this.unbind();
+    if (!chatRoot) return;
+    this.chatRoot = chatRoot;
+    this.doc = chatRoot.ownerDocument;
+    ensureChatTranslateStyles(this.doc);
+    this.chatRoot.addEventListener('contextmenu', this.boundContextMenu, true);
+    this.chatRoot.addEventListener('click', this.boundClick, true);
+    this.doc.addEventListener('click', this.boundDocClick, true);
+
+    this.panelObserver = new MutationObserver(() => this.syncOpenSuperchatPanels());
+    this.panelObserver.observe(this.doc.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['hidden', 'aria-hidden', 'opened', 'open', 'selected'],
+    });
+    this.syncOpenSuperchatPanels();
+  }
+
+  unbind() {
+    this.panelObserver?.disconnect();
+    this.panelObserver = null;
+    if (this.chatRoot) {
+      this.chatRoot.removeEventListener('contextmenu', this.boundContextMenu, true);
+      this.chatRoot.removeEventListener('click', this.boundClick, true);
+    }
+    if (this.doc) {
+      this.doc.removeEventListener('click', this.boundDocClick, true);
+      closeChatOverlayUi(this.doc);
+    }
+    this.chatRoot = null;
+    this.doc = null;
+  }
+
+  stop() {
+    this.unbind();
+  }
+
+  handleDocumentClick(e) {
+    if (!this.doc) return;
+    if (e.target?.closest?.('.ydm-chat-menu, .ydm-sc-action-panel')) return;
+    // Keep panels attached to open Super Chat cards; only close floating menus.
+    this.doc.querySelectorAll('.ydm-chat-menu').forEach((node) => node.remove());
+  }
+
+  findMessage(target) {
+    return target?.closest?.(SELECTORS.chatMessage) || null;
+  }
+
+  isSuperchatElement(msgEl) {
+    if (!msgEl) return false;
+    const tag = msgEl.tagName || '';
+    return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
+      || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
+      || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
+      || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
+  }
+
+  handleContextMenu(e) {
+    if (!this.isActive()) return;
+    const msgEl = this.findMessage(e.target);
+    if (!msgEl || !this.doc) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const translated = hasChatTranslation(msgEl);
+    showChatContextMenu(this.doc, e.clientX, e.clientY, [{
+      icon: ICON_TRANSLATE,
+      label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
+      onClick: () => {
+        closeChatOverlayUi(this.doc);
+        this.translateMessage(msgEl).catch(() => {});
+      },
+    }]);
+  }
+
+  handleClick(e) {
+    if (!this.isActive()) return;
+    if (e.button !== 0) return;
+    if (e.target?.closest?.('.ydm-chat-menu, .ydm-sc-action-panel, .ydm-chat-translation')) return;
+
+    const msgEl = this.findMessage(e.target);
+    if (!msgEl || !this.isSuperchatElement(msgEl)) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    this.openSuperchatPanel(msgEl);
+  }
+
+  openSuperchatPanel(msgEl) {
+    if (!this.doc || !msgEl?.isConnected) return;
+    const translated = hasChatTranslation(msgEl);
+    showSuperchatActionPanel(msgEl, [
+      {
+        icon: ICON_TRANSLATE,
+        label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
+        onClick: () => {
+          this.translateMessage(msgEl).catch(() => {});
+        },
+      },
+      {
+        icon: ICON_SPEECH_ON,
+        label: t('chatActionSpeak'),
+        onClick: () => this.speakMessage(msgEl),
+      },
+      {
+        icon: ICON_DANMAKU_ON,
+        label: t('chatActionDanmaku'),
+        onClick: () => this.sendDanmaku(msgEl),
+      },
+    ]);
+  }
+
+  findOpenSuperchatCards() {
+    if (!this.doc) return [];
+    // History / detail popups (not the regular inline chat list).
+    const selectors = [
+      '#chat-messages yt-live-chat-paid-message-renderer',
+      '#chat-messages yt-live-chat-paid-sticker-renderer',
+      'yt-live-chat-banner-manager yt-live-chat-paid-message-renderer',
+      'yt-live-chat-banner-manager yt-live-chat-paid-sticker-renderer',
+      'tp-yt-paper-dialog yt-live-chat-paid-message-renderer',
+      'tp-yt-paper-dialog yt-live-chat-paid-sticker-renderer',
+      'yt-live-chat-ticker-paid-message-item-renderer[aria-selected="true"] yt-live-chat-paid-message-renderer',
+      'yt-live-chat-ticker-paid-message-item-renderer[selected] yt-live-chat-paid-message-renderer',
+      'yt-live-chat-ticker-paid-message-item-renderer #card:not([hidden]) yt-live-chat-paid-message-renderer',
+    ];
+
+    const found = [];
+    const seen = new Set();
+    for (const selector of selectors) {
+      this.doc.querySelectorAll(selector).forEach((node) => {
+        const msg = node.matches?.(SELECTORS.chatMessage)
+          ? node
+          : node.querySelector?.(SELECTORS.chatMessage) || node;
+        if (!msg || seen.has(msg) || !msg.isConnected) return;
+        if (!this.isSuperchatElement(msg)) return;
+        const style = this.doc.defaultView?.getComputedStyle?.(msg);
+        if (style && (style.display === 'none' || style.visibility === 'hidden')) return;
+        seen.add(msg);
+        found.push(msg);
+      });
+    }
+    return found;
+  }
+
+  syncOpenSuperchatPanels() {
+    if (!this.doc || !this.isActive()) return;
+    for (const msgEl of this.findOpenSuperchatCards()) {
+      if (msgEl.querySelector('.ydm-sc-action-panel')) continue;
+      this.openSuperchatPanel(msgEl);
+    }
+  }
+
+  async translateMessage(msgEl) {
+    if (!msgEl?.isConnected || this.busy.has(msgEl)) return;
+    const parsed = readChatMessage(msgEl);
+    if (!parsed) return;
+
+    const settings = this.getSettings();
+    const sourceParts = parsed.superchat
+      ? (parsed.bodyParts || parsed.parts)
+      : parsed.parts;
+    const sourceText = partsToText(sourceParts) || parsed.message;
+    const shielded = shieldEmoteParts(sourceParts);
+    const retryAfterFailure = hasChatTranslationError(msgEl) || hasChatTranslation(msgEl);
+    this.busy.add(msgEl);
+    setChatTranslationStatus(msgEl, 'pending', t('chatActionTranslating'));
+
+    try {
+      const outcome = await translateMessagesManual(
+        shielded.text,
+        settings.translateTargetLang,
+        settings.translateProvider,
+        { bypassCache: retryAfterFailure },
+      );
+      if (!msgEl.isConnected) return;
+      const rendered = outcome?.trim() ? outcome : '';
+      if (!rendered || rendered === shielded.text || rendered === sourceText) {
+        setChatTranslationStatus(msgEl, 'error', t('chatActionTranslateFailed'));
+        return;
+      }
+      const parts = stripAmountFromParts(
+        restoreEmoteParts(rendered, shielded.emotes) || [{ type: 'text', text: rendered }],
+        parsed.amount,
+      );
+      const message = partsToText(parts) || stripAmountFromText(rendered, parsed.amount);
+      if (!message || message === sourceText) {
+        setChatTranslationStatus(msgEl, 'error', t('chatActionTranslateFailed'));
+        return;
+      }
+      applyChatTranslation(msgEl, message, sourceText);
+      if (msgEl.querySelector('.ydm-sc-action-panel')) this.openSuperchatPanel(msgEl);
+    } catch (_) {
+      if (msgEl.isConnected) {
+        setChatTranslationStatus(msgEl, 'error', t('chatActionTranslateFailed'));
+      }
+    } finally {
+      this.busy.delete(msgEl);
+    }
+  }
+
+  speakMessage(msgEl) {
+    const parsed = readChatMessage(msgEl);
+    if (!parsed) return;
+    const translated = getChatTranslationText(msgEl);
+    speakTextNow(translated || parsed.message);
+  }
+
+  sendDanmaku(msgEl) {
+    if (!this.danmakuEmitter || !this.isActive()) return;
+    const settings = this.getSettings();
+    if (!settings.enabled) return;
+
+    const parsed = readChatMessage(msgEl);
+    if (!parsed) return;
+    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) return;
+
+    const translated = getChatTranslationText(msgEl);
+    const amount = parsed.amount || '';
+    const bodyParts = translated
+      ? stripAmountFromParts([{ type: 'text', text: translated }], amount)
+      : (parsed.bodyParts || parsed.parts);
+    const bodyText = partsToText(bodyParts) || stripAmountFromText(translated || parsed.message, amount);
+    const message = amount ? `${amount} ${bodyText}`.trim() : (translated || parsed.message);
+    if (messageMatchesBlock(parsed.message, settings.blockKeywords)) return;
+    if (messageMatchesBlock(message, settings.blockKeywords)
+      || messageMatchesBlock(bodyText, settings.blockKeywords)) return;
+
+    const textParts = amount
+      ? [{ type: 'text', text: `${amount} ` }, ...bodyParts]
+      : bodyParts;
+
+    this.danmakuEmitter.enqueue({
+      username: parsed.username,
+      usernameColor: parsed.usernameColor,
+      profileUrl: parsed.profileUrl,
+      avatarUrl: parsed.avatarUrl || '',
+      originalMessage: parsed.message,
+      parts: textParts,
+      bodyParts,
+      message,
+      amount,
+      translated: !!translated && translated !== parsed.message,
+      superchat: !!parsed.superchat,
+      superchatStyle: parsed.superchatStyle || null,
+    });
+  }
 }
 
 class ChatObserver {
@@ -3364,6 +4098,11 @@ class ChatObserver {
     this.starting = false;
     this.nextTryAt = 0;
     this.seenIds = new Set();
+    this.chatActions = new ChatActions({
+      getSettings,
+      danmakuEmitter,
+      isActive,
+    });
   }
 
   isConnected() {
@@ -3378,6 +4117,7 @@ class ChatObserver {
     this.stopped = false;
     this.observer?.disconnect();
     this.observer = null;
+    this.chatActions?.unbind();
 
     try {
       const chatRoot = await waitForChatList(() => this.stopped);
@@ -3391,6 +4131,7 @@ class ChatObserver {
       this.chatRoot = chatRoot;
       markExistingMessages(this.chatRoot);
       this.readyAt = Date.now();
+      this.chatActions.bind(this.chatRoot);
 
       this.observer = new MutationObserver((mutations) => {
         if (!this.isActive()) return;
@@ -3425,6 +4166,7 @@ class ChatObserver {
     this.stopped = true;
     this.observer?.disconnect();
     this.observer = null;
+    this.chatActions?.stop();
     this.chatRoot = null;
     this.seenIds.clear();
   }
@@ -3496,13 +4238,20 @@ class ChatObserver {
       return;
     }
 
-    const shielded = shieldEmoteParts(parsed.parts);
+    // Super Chat: translate body only so the amount badge is not duplicated.
+    const sourceParts = parsed.superchat
+      ? (parsed.bodyParts || parsed.parts)
+      : parsed.parts;
+    const shielded = shieldEmoteParts(sourceParts);
     const base = {
       username: parsed.username,
       usernameColor: parsed.usernameColor,
       profileUrl: parsed.profileUrl,
+      avatarUrl: parsed.avatarUrl || '',
       originalMessage: parsed.message,
       parts: parsed.parts,
+      bodyParts: parsed.bodyParts || parsed.parts,
+      amount: parsed.amount || '',
       superchat: !!parsed.superchat,
       superchatStyle: parsed.superchatStyle || null,
     };
@@ -3523,26 +4272,37 @@ class ChatObserver {
       if (!this.isActive()) return;
       const latest = this.getSettings();
       const rendered = translated?.trim() ? translated : original;
-      const parts = restoreEmoteParts(rendered, shielded.emotes) || parsed.parts;
-      const message = partsToText(parts) || parsed.message;
+      const bodyParts = stripAmountFromParts(
+        restoreEmoteParts(rendered, shielded.emotes) || sourceParts,
+        parsed.amount,
+      );
+      const bodyText = partsToText(bodyParts) || stripAmountFromText(rendered, parsed.amount);
+      const message = parsed.amount ? `${parsed.amount} ${bodyText}`.trim() : bodyText;
+      const parts = parsed.amount
+        ? [{ type: 'text', text: `${parsed.amount} ` }, ...bodyParts]
+        : bodyParts;
       if (messageMatchesBlock(parsed.message, latest.blockKeywords)
-        || messageMatchesBlock(message, latest.blockKeywords)) {
+        || messageMatchesBlock(message, latest.blockKeywords)
+        || messageMatchesBlock(bodyText, latest.blockKeywords)) {
         removeChatTranslation(msgEl);
         return;
       }
 
       if (latest.translateEnabled && latest.translateInChat) {
-        applyChatTranslation(msgEl, message, parsed.message);
+        applyChatTranslation(msgEl, bodyText, partsToText(sourceParts) || parsed.message);
       } else {
         removeChatTranslation(msgEl);
       }
 
       if (!latest.enabled) return;
+      const didTranslate = bodyText !== (partsToText(sourceParts) || '');
       this.danmakuEmitter.enqueue({
         ...base,
         parts,
+        bodyParts,
+        amount: parsed.amount || '',
         message,
-        translated: message !== parsed.message,
+        translated: didTranslate,
       });
     });
   }
@@ -4375,21 +5135,33 @@ function injectStyles() {
     .ydm-superchat-layer {
       pointer-events: none;
       display: none;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      overflow: visible;
+      justify-content: flex-start;
+      gap: 6px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .ydm-superchat-layer.ydm-sc-bottom {
+      justify-content: flex-end;
     }
 
     .ydm-superchat-item {
       position: relative;
-      max-width: calc(100% - 24px);
-      padding: 6px 16px;
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: 6px;
+      box-sizing: border-box;
+      width: fit-content;
+      max-width: min(720px, calc(100% - 24px));
+      padding: 5px 12px 5px 6px;
       border-radius: 999px;
-      font-weight: 700;
-      line-height: 1.2;
+      font-weight: 500;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
       pointer-events: auto;
       cursor: pointer;
       user-select: none;
@@ -4397,6 +5169,62 @@ function injectStyles() {
       animation-duration: var(--ydm-sc-duration, 6s);
       animation-timing-function: ease;
       animation-fill-mode: forwards;
+    }
+
+    .ydm-sc-avatar {
+      width: 1.45em;
+      height: 1.45em;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .ydm-sc-username {
+      flex: 0 0 auto;
+      max-width: 7.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 0.92;
+      font-size: 0.78em;
+      font-weight: 500;
+    }
+
+    .ydm-sc-amount {
+      flex: 0 0 auto;
+      font-size: 0.78em;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .ydm-sc-message-clip {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    .ydm-sc-message {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 0.92em;
+      font-weight: 500;
+      will-change: transform;
+    }
+
+    .ydm-superchat-item.ydm-sc-marquee .ydm-sc-message {
+      animation: ydm-sc-marquee var(--ydm-sc-marquee-duration, 4s) linear 0.45s infinite alternate;
+    }
+
+    .ydm-superchat-item.ydm-paused .ydm-sc-message {
+      animation-play-state: paused;
+    }
+
+    @keyframes ydm-sc-marquee {
+      0%, 8% { transform: translateX(0); }
+      92%, 100% { transform: translateX(var(--ydm-sc-marquee-distance, 0)); }
     }
 
     .ydm-superchat-item.ydm-sc-fade,
@@ -5088,6 +5916,8 @@ const ICON_DOWNLOAD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 2
 
 const ICON_EYE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
 
+const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>`;
+
 class SettingsPanel {
   constructor({ settings, onChange, onClose }) {
     this.settings = settings;
@@ -5299,7 +6129,7 @@ class SettingsPanel {
       this.createDivider(),
       this.createToggle(t('superchatPinned'), 'superchatPinned'),
       this.createSelect(t('superchatPosition'), 'superchatPosition', getSuperchatPositionOptions()),
-      this.createRange(t('superchatDuration'), 'superchatDuration', 2, 15, 1, (v) => `${v} ${t('speechSeconds')}`),
+      this.createRange(t('superchatDuration'), 'superchatDuration', 2, 300, 1, (v) => `${v} ${t('speechSeconds')}`),
       this.createSelect(t('superchatAnimation'), 'superchatAnimation', getSuperchatAnimationOptions()),
       this.createDivider(),
       this.createKeywordBlock(),
