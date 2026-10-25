@@ -70,6 +70,34 @@ function getFullscreenElement() {
     || null;
 }
 
+/**
+ * Mount host for fullscreen overlays — mirrors twitch-danmaku:
+ * append to the native Fullscreen API element (or YouTube `#movie_player`
+ * with `ytp-fullscreen`), never `.html5-video-container` (video compositor
+ * can paint over siblings there even with a high z-index).
+ */
+function getFullscreenMount() {
+  const player = getPlayerElement()
+    || document.querySelector('#movie_player, .html5-video-player');
+  const native = getFullscreenElement();
+
+  if (native) {
+    // Prefer the player shell when it is (inside) the FS tree so absolute
+    // bottom/left are relative to the video frame, not a page-sized ancestor.
+    if (player && (native === player || native.contains(player))) return player;
+    return native;
+  }
+
+  if (player?.classList?.contains('ytp-fullscreen') || player?.classList?.contains('ytp-fullscreen-display')) {
+    return player;
+  }
+  return document.querySelector('#movie_player.ytp-fullscreen, .html5-video-player.ytp-fullscreen');
+}
+
+function isWatchFullscreen() {
+  return !!getFullscreenMount();
+}
+
 function getDanmakuMount(item) {
   return item.closest('.ydm-danmaku-layer')?.parentElement || null;
 }
@@ -145,10 +173,64 @@ function getUsernameColor(msgEl, username) {
   return colorFromName(username);
 }
 
+function getAuthorExternalChannelId(msgEl) {
+  if (!msgEl) return '';
+  const readers = [
+    () => msgEl.authorExternalChannelId,
+    () => msgEl.getAttribute?.('author-external-channel-id'),
+    () => msgEl.dataset?.authorExternalChannelId,
+    () => msgEl.data?.authorExternalChannelId,
+    () => msgEl.__data?.authorExternalChannelId,
+    () => msgEl.__data?.data?.authorExternalChannelId,
+    () => msgEl.__dataHost?.data?.authorExternalChannelId,
+  ];
+  for (const read of readers) {
+    try {
+      const value = String(read() || '').trim();
+      if (value) return value;
+    } catch (_) {
+      /* ignore polymer access errors */
+    }
+  }
+  return '';
+}
+
+/** Author label without membership / badge noise inside #author-name. */
+function getAuthorDisplayName(msgEl) {
+  const nameEl = msgEl?.querySelector?.('#author-name');
+  if (!nameEl) return '';
+  const clone = nameEl.cloneNode(true);
+  clone.querySelectorAll?.(
+    '#chip-badges, #chat-badges, yt-live-chat-author-badge-renderer, img, svg',
+  ).forEach((node) => node.remove());
+  return String(clone.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function extractYouTubeHandle(name) {
+  const text = String(name || '').trim();
+  if (!text) return '';
+  const match = text.match(/^@([\w.-]{2,})/) || text.match(/(?:^|\s)@([\w.-]{2,})/);
+  return match ? match[1] : '';
+}
+
+/**
+ * Channel page for a live-chat row. Prefer @handle when the chip shows one,
+ * otherwise /channel/UC… from the renderer. Works for any click target inside
+ * the message — not only the avatar.
+ */
 function getYouTubeProfileUrl(msgEl) {
-  const anchor = msgEl.querySelector('a[href*="/channel/"], a[href*="/@"], a[href*="youtube.com/"]');
-  const href = anchor?.getAttribute('href');
-  if (href && !href.startsWith('javascript:')) {
+  if (!msgEl) return null;
+
+  const name = getAuthorDisplayName(msgEl);
+  const handle = extractYouTubeHandle(name);
+  if (handle) return `https://www.youtube.com/@${encodeURIComponent(handle)}`;
+
+  const anchors = msgEl.querySelectorAll?.(
+    'a[href*="/@"], a[href*="/channel/"], a[href*="/c/"], a[href*="youtube.com/"]',
+  ) || [];
+  for (const anchor of anchors) {
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('javascript:')) continue;
     try {
       const url = new URL(href, 'https://www.youtube.com');
       if (url.protocol === 'https:' && /(^|\.)youtube\.com$/.test(url.hostname)) {
@@ -158,7 +240,29 @@ function getYouTubeProfileUrl(msgEl) {
       /* ignore */
     }
   }
+
+  const channelId = getAuthorExternalChannelId(msgEl);
+  if (channelId) return `https://www.youtube.com/channel/${encodeURIComponent(channelId)}`;
   return null;
+}
+
+/** Remove any avatar/name profile links we previously injected. */
+function stripInjectedAuthorProfileLinks(msgEl) {
+  if (!msgEl) return;
+  msgEl.querySelectorAll('a[data-ydm-author-link="true"], a[data-ydm-author-photo="true"]').forEach((link) => {
+    const parent = link.parentElement;
+    if (!parent) {
+      link.remove();
+      return;
+    }
+    while (link.firstChild) parent.insertBefore(link.firstChild, link);
+    link.remove();
+  });
+}
+
+/** No-op kept for call sites — profile entry is the chat context menu. */
+function ensureAuthorProfileLink(msgEl) {
+  stripInjectedAuthorProfileLinks(msgEl);
 }
 
 function isWatchPage() {

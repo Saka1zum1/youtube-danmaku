@@ -4,12 +4,12 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.5.0
-// @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
-// @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
-// @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
-// @description:ja  YouTube のライブチャットを動画上に流れる弾幕に変換します。一時停止、コピー、読み上げ、リアルタイム翻訳に対応
-// @author       youtube-danmaku
+// @version      1.6.0
+// @description  Turn YouTube live chat into scrolling danmaku — favorites, fullscreen send, hide chat, and more
+// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持收藏、全屏发送、收起聊天等
+// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援收藏、全螢幕發送、收起聊天等
+// @description:ja  YouTube ライブチャットを弾幕化。お気に入り、フルスクリーン送信、チャット非表示などに対応
+// @author       KaKa
 // @license      MIT
 // @match        https://www.youtube.com/*
 // @match        https://m.youtube.com/*

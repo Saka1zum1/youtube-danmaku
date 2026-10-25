@@ -1,146 +1,3 @@
-const CHAT_TRANSLATE_STYLE_ID = 'ydm-chat-translate-style';
-
-const CHAT_TRANSLATE_CSS = `
-.ydm-chat-translation {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  box-sizing: border-box;
-  width: 100%;
-  margin: 3px 0 1px;
-  padding: 3px 0 2px 8px;
-  border-left: 2px solid rgba(230, 33, 23, 1);
-  background: rgba(155, 155, 155, 0.4);
-  color: #fff;
-  font-size: 12.5px;
-  line-height: 1.4;
-  font-weight: 400;
-  font-style: italic;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.ydm-chat-translation-label {
-  flex: 0 0 auto;
-  margin-top: 1px;
-  padding: 0 5px;
-  border-radius: 3px;
-  background: rgba(230, 33, 23, 1);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  font-style: normal;
-  letter-spacing: 0.02em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.ydm-chat-translation-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: #0f0f0f;
-}
-
-.ydm-chat-translation--pending .ydm-chat-translation-text {
-  color: #606060;
-  font-style: italic;
-}
-
-.ydm-chat-translation--error .ydm-chat-translation-text {
-  color: #b71c1c;
-}
-
-.ydm-chat-menu {
-  position: fixed;
-  z-index: 2147483646;
-  min-width: 160px;
-  padding: 6px 0;
-  border-radius: 8px;
-  background: #212121;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 13px;
-}
-
-.ydm-chat-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  margin: 0;
-  padding: 8px 14px;
-  border: none;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.ydm-chat-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.ydm-chat-menu-item svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-  flex: 0 0 auto;
-}
-
-.ydm-sc-action-panel {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  box-sizing: border-box;
-  width: 100%;
-  margin: 6px 0 2px;
-  padding: 6px;
-  border-radius: 8px;
-  background: rgba(15, 15, 15, 0.72);
-}
-
-.ydm-sc-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
-}
-
-.ydm-sc-action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.ydm-sc-action-btn:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.ydm-sc-action-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-  flex: 0 0 auto;
-}
-`;
-
-function ensureChatTranslateStyles(doc) {
-  if (!doc || doc.getElementById(CHAT_TRANSLATE_STYLE_ID)) return;
-  const style = doc.createElement('style');
-  style.id = CHAT_TRANSLATE_STYLE_ID;
-  style.textContent = CHAT_TRANSLATE_CSS;
-  (doc.head || doc.documentElement).appendChild(style);
-}
-
 function findChatTranslationMount(msgEl) {
   const messageContainer = msgEl.querySelector('#message-container');
   if (messageContainer) return { parent: messageContainer.parentElement, after: messageContainer };
@@ -234,6 +91,8 @@ function setChatTranslationStatus(msgEl, status, text) {
   if (textEl) textEl.textContent = text || '';
 }
 
+
+
 function closeChatOverlayUi(doc) {
   if (!doc) return;
   doc.querySelectorAll('.ydm-chat-menu, .ydm-sc-action-panel').forEach((node) => node.remove());
@@ -288,7 +147,6 @@ function showSuperchatActionPanel(msgEl, items) {
   ensureChatTranslateStyles(doc);
 
   msgEl.querySelectorAll('.ydm-sc-action-panel').forEach((node) => node.remove());
-
   const panel = doc.createElement('div');
   panel.className = 'ydm-sc-action-panel';
   panel.addEventListener('click', (e) => e.stopPropagation());
@@ -297,6 +155,21 @@ function showSuperchatActionPanel(msgEl, items) {
     const btn = createChatActionButton(doc, item);
     btn.className = 'ydm-sc-action-btn';
     panel.appendChild(btn);
+  }
+
+  // Paid stickers / message-less SC: `#content` is a tight horizontal flex —
+  // mounting the panel inside squeezes the author name out of view.
+  const isPaidSticker = msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER';
+  const purchaseDesc = msgEl.querySelector('#purchase-description');
+  const hasBodyText = !!(
+    msgEl.querySelector('#message')?.textContent?.trim()
+    || (purchaseDesc && !purchaseDesc.hasAttribute('hidden') && purchaseDesc.textContent?.trim())
+  );
+  const card = msgEl.querySelector('#card');
+
+  if ((isPaidSticker || !hasBodyText) && card?.parentElement) {
+    card.after(panel);
+    return panel;
   }
 
   const mount = findChatTranslationMount(msgEl);

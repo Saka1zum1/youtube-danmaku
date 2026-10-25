@@ -72,6 +72,32 @@
       display: flex;
       flex-direction: column;
     }
+    yt-live-chat-header-renderer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      min-height: 48px;
+      padding: 0 8px;
+      border-bottom: 1px solid #303030;
+      flex-shrink: 0;
+    }
+    #close-button {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+    }
+    #picker-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin: 0 8px;
+      min-height: 40px;
+    }
     #items {
       flex: 1;
       overflow: auto;
@@ -151,18 +177,25 @@
       </div>
     </ytd-watch-flexy>
     <ytd-live-chat-frame id="chat">
-      <div id="items" class="yt-live-chat-item-list-renderer">
-        <yt-live-chat-text-message-renderer id="history-1">
-          <span id="author-name" style="color:#aaaaaa">History</span>
-          <span id="message">already on screen</span>
-        </yt-live-chat-text-message-renderer>
+      <div id="chat-messages">
+        <yt-live-chat-header-renderer>
+          <button id="close-button" type="button" aria-label="Close" title="Close">×</button>
+        </yt-live-chat-header-renderer>
+        <div id="items" class="yt-live-chat-item-list-renderer">
+          <yt-live-chat-text-message-renderer id="history-1">
+            <span id="author-name" style="color:#aaaaaa">History</span>
+            <span id="message">already on screen</span>
+          </yt-live-chat-text-message-renderer>
+        </div>
       </div>
+      <div id="picker-buttons"></div>
       <div id="input" class="yt-live-chat-text-input-field-renderer" contenteditable="true"></div>
       <div class="toolbar">
         <button id="add-chat" type="button">Add chat</button>
         <button id="add-superchat" type="button">Add Super Chat</button>
+        <button id="add-member" type="button">Add Member</button>
       </div>
-      <p class="speech-hint">右键聊天消息可翻译；点击 Super Chat 打开翻译 / 朗读 / 弹幕面板。设置里开启「Super Chat 悬停」可同时固定多条。朗读按钮打开设置面板；音量为 0 时图标变为静音。</p>
+      <p class="speech-hint">右键聊天可翻译 / 朗读 / 发弹幕 / 收藏 / 打开主页；点击 Super Chat / Member 也可操作。标题栏可清空或收起聊天；收起后可用侧边或控制栏展开。星标可收藏句子。设置里开启「Super Chat 悬停」可固定付费卡片。朗读按钮打开面板；音量为 0 时图标变为静音。</p>
     </ytd-live-chat-frame>
   </div>
   <script>
@@ -189,7 +222,7 @@
       if (navigator.clipboard) return navigator.clipboard.writeText(text);
     }
   </script>
-  <script src="../dist/youtube-danmaku.user.js?v=15"></script>
+  <script src="../dist/youtube-danmaku.user.js?v=160"></script>
   <script>
     const samples = [
       ['Alice', '#ff8a80', 'hello from chat'],
@@ -205,6 +238,10 @@
       ['PatronLongNameHere', '¥200', '#f9a825', '老板大气！希望下次还能看到这么有趣的直播内容，继续加油。'],
       ['Gift', '$2.00', '#1e88e5', 'hello'],
       ['NightOwl', '$10.00', '#8e24aa', 'This is a longer Super Chat so the pinned pill should scroll the message while avatar and amount stay fixed.'],
+    ];
+    const memberSamples = [
+      ['@P猫3', 'New member', '#0f9d58', 'Welcome to しらせの楽園'],
+      ['LongMemberNameHere', 'Member', '#0a8043', 'Welcome to the channel!'],
     ];
     // Allowed by the userscript emote host allowlist (ggpht).
     const avatarUrl = 'https://yt3.ggpht.com/a/default-user=s48-c-k-c0x00ffffff-no-rj';
@@ -264,9 +301,51 @@
       addMessage(sample[0], sample[1], sample[2] + ' ' + (seq + 1));
     });
 
+    function addMember(name, badge, color, welcome) {
+      const item = document.createElement('yt-live-chat-membership-item-renderer');
+      item.id = 'live-member-' + (++seq);
+      const card = document.createElement('div');
+      card.id = 'card';
+      const header = document.createElement('div');
+      header.id = 'header';
+      header.style.background = color;
+      header.style.color = '#fff';
+      const photo = document.createElement('yt-img-shadow');
+      photo.id = 'author-photo';
+      const img = document.createElement('img');
+      img.src = avatarUrl;
+      img.alt = '';
+      photo.appendChild(img);
+      const author = document.createElement('span');
+      author.id = 'author-name';
+      author.textContent = name;
+      const badgeEl = document.createElement('yt-live-chat-author-badge-renderer');
+      badgeEl.setAttribute('type', 'member');
+      badgeEl.setAttribute('shared-tooltip-text', badge);
+      badgeEl.setAttribute('aria-label', badge);
+      const sub = document.createElement('div');
+      sub.id = 'header-subtext';
+      sub.textContent = welcome;
+      header.append(photo, author, badgeEl, sub);
+      const content = document.createElement('div');
+      content.id = 'content';
+      content.style.background = color;
+      const message = document.createElement('div');
+      message.id = 'message';
+      content.appendChild(message);
+      card.append(header, content);
+      item.appendChild(card);
+      document.getElementById('items').appendChild(item);
+    }
+
     document.getElementById('add-superchat').addEventListener('click', () => {
       const sample = scSamples[seq % scSamples.length];
       addSuperchat(sample[0], sample[1], sample[2], sample[3] + ' #' + (seq + 1));
+    });
+
+    document.getElementById('add-member').addEventListener('click', () => {
+      const sample = memberSamples[seq % memberSamples.length];
+      addMember(sample[0], sample[1], sample[2], sample[3] + ' #' + (seq + 1));
     });
 
     setTimeout(() => {
@@ -277,6 +356,12 @@
         setTimeout(
           () => addSuperchat(sample[0], sample[1], sample[2], sample[3]),
           samples.length * 700 + index * 900,
+        );
+      });
+      memberSamples.forEach((sample, index) => {
+        setTimeout(
+          () => addMember(sample[0], sample[1], sample[2], sample[3]),
+          samples.length * 700 + scSamples.length * 900 + index * 900,
         );
       });
     }, 4000);

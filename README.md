@@ -15,8 +15,13 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 - **Fullscreen-aware** — Follows player resize, theater mode, and fullscreen
 - **Translation** — Microsoft, Google, Volcengine, Caiyun, and Tencent Transmart. Busy chat is batched, and a rate-limited engine is skipped. Numbers and symbols are left as-is
 - **Manual chat translate** — Right-click a docked chat line for Translate / Retranslate. Failed runs retry with another engine
+- **Chat context menu** — Right-click a line to translate, read aloud, send as danmaku, save to favorites, or open the sender’s channel
+- **Favorites & wheel** — Star beside the chat input to save lines, send with one click or number shortcuts, or run wheel mode on a timer
+- **Clear live chat** — Header button empties the docked chat panel without closing it
+- **Hide / show chat** — Collapse the live chat to free video space; restore from the side tab or the player control bar
+- **Fullscreen chat input** — In live fullscreen, press Enter to compose and send without leaving fullscreen
 - **Super Chat pin** — Optional pinned band with avatar, truncated username, amount badge, and YouTube-like colors. Several Super Chats can stay on screen at once without overlapping; long text scrolls inside the pill
-- **Super Chat actions** — Click a Super Chat (or its detail card) for translate, read aloud, or send as danmaku
+- **Super Chat actions** — Click a Super Chat (or its detail card) for translate, read aloud, send as danmaku, or favorite
 - **Live viewers** — Concurrent and total viewers beside the Live badge when the stream reports them
 - **Anti-flood** — Messages already on screen when you join, and the first 2.5 seconds after that, are not fired as a burst
 - **UI languages** — Follows the browser language (Chinese / English / Japanese)
@@ -42,15 +47,16 @@ The built script is `dist/youtube-danmaku.user.js`.
 1. Open a YouTube watch page with live chat or chat replay (`/watch` or `/live/...`)
 2. Keep the chat docked on the page. The script reads `ytd-live-chat-frame#chat` (the `iframe#chatframe` inside it). A popped-out chat window is not observed
 3. New messages scroll over `ytd-player #movie_player .html5-video-container`
-4. Four buttons are added at the left of the player's right-hand controls:
+4. Buttons are added at the left of the player's right-hand controls:
    - **Danmaku** — turn scrolling on or off
    - **Read aloud** — open the speech panel
    - **Download** — export the archived chat replay
    - **Settings** — open the options panel
+   - **Show chat** — appears after you hide the live chat panel
 5. Hover a line to pause it. Click it to see who sent it
 6. Click the copy icon to put that text into the live chat box. You still send it yourself. Click the speaker icon to read that one line
 7. After a hover, scrolling resumes 0.3 s after the pointer leaves. After a click, click outside the tooltip to resume
-8. Right-click a chat message to translate that line. Click a Super Chat for translate / speak / danmaku
+8. Right-click a chat message for translate / speak / danmaku / favorite / open profile. Click a Super Chat for the same actions. Use the chat header to clear or hide the panel; in fullscreen, press Enter to type
 
 ## Settings
 
@@ -84,7 +90,7 @@ npm run build
 npm run watch
 ```
 
-The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. The read-aloud button, speech panel, right-click translate, and Super Chat samples work on this page. The preview keeps running when its browser tab is in the background.
+The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. Try read-aloud, favorites, clear / hide chat, right-click actions, and Super Chat samples. The preview keeps running when its browser tab is in the background.
 
 ## Notes
 

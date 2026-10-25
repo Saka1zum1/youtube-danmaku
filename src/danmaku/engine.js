@@ -7,8 +7,12 @@ function appendDanmakuContent(item, message, parts) {
   for (const part of parts) {
     if (part?.type === 'emote') {
       const src = safeEmoteSrc(part.src);
+      const fallback = emoteDisplayText(part);
+      const title = fallback
+        || (part.shortcode && !isEmoteShortcode(fallback) ? part.shortcode : '')
+        || String(part.alt || '').trim();
       if (!src) {
-        if (part.alt) item.appendChild(document.createTextNode(part.alt));
+        if (fallback) item.appendChild(document.createTextNode(fallback));
         continue;
       }
       const slot = document.createElement('span');
@@ -17,18 +21,30 @@ function appendDanmakuContent(item, message, parts) {
       slot.style.width = '1.15em';
       slot.style.height = '1.15em';
       const img = document.createElement('img');
-      img.alt = part.alt || '';
+      // Empty alt so a broken/late-loading image does not flash ":clapping_hands:".
+      img.alt = '';
+      if (title && !isEmoteShortcode(title)) img.title = title;
+      else if (fallback) img.title = fallback;
       img.src = src;
       img.draggable = false;
       img.referrerPolicy = 'no-referrer';
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.fontSize = '0';
+      img.addEventListener('error', () => {
+        img.remove();
+        if (fallback) slot.textContent = fallback;
+        else if (!slot.childNodes.length) slot.remove();
+      }, { once: true });
       slot.appendChild(img);
       item.appendChild(slot);
       continue;
     }
-    if (part?.text) item.appendChild(document.createTextNode(part.text));
+    if (part?.text) {
+      // Drop pure shortcode leftovers if any slipped into text parts.
+      if (EMOTE_SHORTCODE_ONLY_RE.test(part.text)) continue;
+      item.appendChild(document.createTextNode(part.text));
+    }
   }
 
   if (!item.childNodes.length) item.textContent = message || '';
@@ -420,6 +436,14 @@ class DanmakuEngine {
       item.appendChild(messageClip);
     }
 
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-sc-close';
+    closeBtn.setAttribute('aria-label', t('superchatClose'));
+    closeBtn.setAttribute('title', t('superchatClose'));
+    appendMarkup(closeBtn, ICON_CLOSE);
+    item.appendChild(closeBtn);
+
     this.superchatLayer.appendChild(item);
     this.pinnedItems.add(item);
     if (!skipLayout) this.updateLayout();
@@ -435,6 +459,13 @@ class DanmakuEngine {
     item.addEventListener('animationend', (event) => {
       if (event.target !== item) return;
       if (event.animationName === 'ydm-sc-shine-sweep' || event.animationName === 'ydm-sc-marquee') return;
+      clearTimeout(fallback);
+      this.finishSuperchat(item);
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       clearTimeout(fallback);
       this.finishSuperchat(item);
     });

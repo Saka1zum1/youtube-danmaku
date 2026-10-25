@@ -13,14 +13,15 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 1. Install the Tampermonkey extension
 2. Install this script, then open a YouTube watch page that has live chat or chat replay (`/watch` or `/live/...`)
 3. Keep the chat docked on the right side of the page. A popped-out chat window is not read
-4. Four new buttons appear at the left of the player's right-hand controls:
+4. New buttons appear at the left of the player's right-hand controls:
    - **Danmaku button** — Toggle danmaku on/off
    - **Read-aloud button** — Open the speech panel
    - **Download button** — Export the archived chat replay
    - **Settings button** — Open the options panel
+   - **Show chat** — Appears after you hide the live chat panel
 5. Customize appearance, turn on read-aloud, or enable translation in the panels
 
-**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself. The speaker button reads that one line. Right-click a docked chat line to translate it. Click a Super Chat for translate / speak / danmaku.
+**Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself. The speaker button reads that one line. Right-click a chat line to translate, read aloud, send as danmaku, favorite, or open the sender’s page. Click a Super Chat for the same actions. Clear or hide chat from the chat header; in fullscreen, press Enter to type.
 
 ### Live Danmaku
 
@@ -28,14 +29,28 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 - Shows message content only — each sender gets a stable color. Owner and moderator colors are kept
 - Hover or click any danmaku to pause it
 - Click to reveal the sender. The copy button in the bubble writes the message into the live chat input. The speaker button reads that line
-- Right-click a chat message for Translate / Retranslate. If one engine fails, another is tried
+- Right-click a chat message for Translate / Retranslate, read aloud, send as danmaku, favorite, or open profile. If one translation engine fails, another is tried
+
+### Favorites & wheel
+
+- Star beside the chat input to save lines you reuse often
+- Send with one click or number shortcuts; optional wheel mode sends favorites on a timer
+
+### Clear & hide chat
+
+- Clear the docked chat list from the header without closing chat
+- Hide the live chat panel so the video can use the full width; restore from the side tab or the player bar
+
+### Fullscreen chat
+
+- On a live stream in fullscreen, press Enter to open a composer and send without exiting fullscreen
 
 ### Super Chat
 
 - Optional pin band at the top or bottom of the player
 - Shows avatar, truncated username, amount badge, and YouTube-like colors
 - Several Super Chats can stay on screen at once without overlapping; long text scrolls inside the pill
-- Click a Super Chat (or its detail card) to translate, read aloud, or send as danmaku
+- Click a Super Chat (or its detail card) to translate, read aloud, send as danmaku, or favorite
 
 ### Live viewers
 
@@ -87,7 +102,7 @@ Open the demo in your browser. No install or build step is required:
 
 [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/)
 
-The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. The danmaku button, read-aloud panel, settings panel, keyword list, right-click translate, and Super Chat samples work on this page.
+The page stands in for a YouTube watch page, with a video player, the control bar, and a live-chat list. Messages already in the list stay put. After a short warm-up, new messages scroll across the video. Try danmaku controls, read-aloud, favorites, clear / hide chat, right-click actions, and Super Chat samples.
 
 ## FAQ
 

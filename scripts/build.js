@@ -11,6 +11,8 @@ const MODULES = [
   'config.js',
   'storage.js',
   'utils/dom.js',
+  'ui/styles.js',
+  'ui/icons.js',
   'danmaku/lanes.js',
   'speech/speaker.js',
   'danmaku/engine.js',
@@ -23,19 +25,25 @@ const MODULES = [
   'chat/dedupe.js',
   'chat/parser.js',
   'chat/chat-translate.js',
+  'chat/channel.js',
+  'chat/send-message.js',
+  'chat/favorites.js',
   'chat/actions.js',
   'chat/observer.js',
   'chat/history.js',
   'live/viewers.js',
-  'ui/styles.js',
-  'ui/icons.js',
   'ui/panel.js',
   'ui/speech-panel.js',
   'ui/history-panel.js',
+  'ui/favorites-panel.js',
+  'ui/chat-clear-button.js',
+  'ui/chat-collapse-button.js',
+  'ui/fullscreen-chat.js',
   'ui/control-button.js',
   'ui/live-viewers.js',
   'main.js',
 ];
+
 
 function build() {
   const headerPath = path.join(SRC, 'userscript-header.js');

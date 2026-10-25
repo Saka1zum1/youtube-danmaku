@@ -118,13 +118,12 @@ function parseDomHistoryItem(msgEl, index) {
     ?.textContent?.replace(/\s+/g, ' ').trim() || '';
 
   const messageEl = msgEl.querySelector('#message');
-  let message = '';
-  if (messageEl) {
-    message = partsToText(collectParts(messageEl));
-  } else {
+  let message = messageEl ? partsToText(collectParts(messageEl)) : '';
+  if (!message || msgEl.tagName === 'YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER') {
     const primary = partsToText(collectParts(msgEl.querySelector('#header-primary-text, #primary-text')));
     const sub = partsToText(collectParts(msgEl.querySelector('#header-subtext')));
-    message = [primary, sub].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    const headerText = [primary, sub].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    message = [headerText, message].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
   }
 
   if (!author && !message && !amount) return null;

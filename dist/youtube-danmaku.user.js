@@ -4,12 +4,12 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.5.0
-// @description  Turn YouTube live chat into scrolling danmaku on the video, with optional read-aloud
-// @description:zh-CN  将 YouTube 直播聊天转换为视频上的滚动弹幕，支持暂停、复制、朗读与实时翻译
-// @description:zh-TW  將 YouTube 直播聊天轉換成影片上的滾動彈幕，支援暫停、複製、朗讀與即時翻譯
-// @description:ja  YouTube のライブチャットを動画上に流れる弾幕に変換します。一時停止、コピー、読み上げ、リアルタイム翻訳に対応
-// @author       youtube-danmaku
+// @version      1.6.0
+// @description  Turn YouTube live chat into scrolling danmaku — favorites, fullscreen send, hide chat, and more
+// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持收藏、全屏发送、收起聊天等
+// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援收藏、全螢幕發送、收起聊天等
+// @description:ja  YouTube ライブチャットを弾幕化。お気に入り、フルスクリーン送信、チャット非表示などに対応
+// @author       KaKa
 // @license      MIT
 // @match        https://www.youtube.com/*
 // @match        https://m.youtube.com/*
@@ -55,6 +55,56 @@ const LOCALES = {
     chatActionDanmaku: '发送弹幕',
     chatActionTranslating: '翻译中…',
     chatActionTranslateFailed: '翻译失败',
+    chatActionFavorite: '收藏',
+    chatActionOpenProfile: '打开主页',
+    favoritesTitle: '收藏弹幕',
+    favoritesAdd: '添加',
+    favoritesAddPlaceholder: '输入要收藏的消息…',
+    favoritesEmpty: '暂无收藏',
+    favoritesEmptyText: '请输入内容',
+    favoritesAdded: '已加入收藏',
+    favoritesExists: '已在收藏中',
+    favoritesFull: '收藏已满（最多 80 条）',
+    favoritesSend: '发送',
+    favoritesRemove: '移除',
+    favoritesSent: '已发送',
+    favoritesShortcutNone: '无快捷键',
+    favoritesScopeGlobal: '全站可用',
+    favoritesScopeChannel: '本频道 · {channel}',
+    favoritesMakeGlobal: '全站',
+    favoritesMakeChannel: '本房',
+    favoritesMakeGlobalHint: '设为所有直播间可用',
+    favoritesMakeChannelHint: '仅当前频道可用',
+    favoritesScopedGlobal: '已设为全站可用',
+    favoritesScopedChannel: '已设为仅本频道',
+    favoritesNeedChannel: '无法识别当前频道',
+    favoritesWheel: '独轮车模式',
+    favoritesWheelStart: '开始',
+    favoritesWheelStop: '停止',
+    favoritesWheelIdle: '未运行',
+    favoritesWheelRunning: '已发送 {sent}/{max} · 剩余 {left}s',
+    favoritesWheelStopped: '独轮车已停止',
+    favoritesWheelMinInterval: '最短间隔（秒）',
+    favoritesWheelMaxInterval: '最长间隔（秒）',
+    favoritesWheelMaxCount: '最多条数',
+    favoritesWheelMaxDuration: '最长持续（秒）',
+    fsChatFavorites: '收藏',
+    fsChatFavoritesEmpty: '暂无收藏',
+    fsChatPlaceholder: '发送聊天消息…',
+    fsChatSend: '发送',
+    fsChatClose: '关闭',
+    fsChatNeedLogin: '请先登录 YouTube',
+    fsChatSlowMode: '慢速模式，请稍后再试',
+    fsChatDuplicate: '不能发送重复消息',
+    fsChatRateLimit: '发送过于频繁，请稍后再试',
+    fsChatForbidden: '当前无法发送消息',
+    fsChatDisabled: '直播聊天已关闭',
+    fsChatPreviewOnly: '预览模式无法发送',
+    fsChatFailed: '发送失败，请稍后重试',
+    fsChatSent: '已发送',
+    chatClear: '清空聊天',
+    chatCollapse: '收起聊天',
+    chatExpand: '展开聊天',
     translateProvider: '翻译引擎',
     translateProviderAuto: '自动切换',
     translateProviderMicrosoft: 'Microsoft 翻译',
@@ -137,6 +187,7 @@ const LOCALES = {
     superchatSlide: '滑入',
     superchatPop: '弹出',
     superchatShine: '闪光',
+    superchatClose: '关闭悬停弹幕',
     liveWatching: '人在看',
     liveTotalViews: '累计观看',
     historyToggle: '下载聊天记录',
@@ -184,6 +235,56 @@ const LOCALES = {
     chatActionDanmaku: 'Send as danmaku',
     chatActionTranslating: 'Translating…',
     chatActionTranslateFailed: 'Translation failed',
+    chatActionFavorite: 'Favorite',
+    chatActionOpenProfile: 'Open profile',
+    favoritesTitle: 'Favorite chats',
+    favoritesAdd: 'Add',
+    favoritesAddPlaceholder: 'Enter a message to save…',
+    favoritesEmpty: 'No favorites yet',
+    favoritesEmptyText: 'Enter some text',
+    favoritesAdded: 'Added to favorites',
+    favoritesExists: 'Already in favorites',
+    favoritesFull: 'Favorites full (max 80)',
+    favoritesSend: 'Send',
+    favoritesRemove: 'Remove',
+    favoritesSent: 'Sent',
+    favoritesShortcutNone: 'No shortcut',
+    favoritesScopeGlobal: 'All channels',
+    favoritesScopeChannel: 'This channel · {channel}',
+    favoritesMakeGlobal: 'Global',
+    favoritesMakeChannel: 'Channel',
+    favoritesMakeGlobalHint: 'Available on every channel',
+    favoritesMakeChannelHint: 'Only on this channel',
+    favoritesScopedGlobal: 'Set to all channels',
+    favoritesScopedChannel: 'Set to this channel only',
+    favoritesNeedChannel: 'Could not detect this channel',
+    favoritesWheel: 'Wheel mode',
+    favoritesWheelStart: 'Start',
+    favoritesWheelStop: 'Stop',
+    favoritesWheelIdle: 'Idle',
+    favoritesWheelRunning: 'Sent {sent}/{max} · {left}s left',
+    favoritesWheelStopped: 'Wheel mode stopped',
+    favoritesWheelMinInterval: 'Min interval (sec)',
+    favoritesWheelMaxInterval: 'Max interval (sec)',
+    favoritesWheelMaxCount: 'Max messages',
+    favoritesWheelMaxDuration: 'Max duration (sec)',
+    fsChatFavorites: 'Favorites',
+    fsChatFavoritesEmpty: 'No favorites',
+    fsChatPlaceholder: 'Send a message…',
+    fsChatSend: 'Send',
+    fsChatClose: 'Close',
+    fsChatNeedLogin: 'Sign in to YouTube first',
+    fsChatSlowMode: 'Slow mode — try again shortly',
+    fsChatDuplicate: 'Duplicate message blocked',
+    fsChatRateLimit: 'Sending too fast — slow down',
+    fsChatForbidden: 'You cannot send messages right now',
+    fsChatDisabled: 'Live chat is disabled',
+    fsChatPreviewOnly: 'Preview mode cannot send',
+    fsChatFailed: 'Failed to send. Try again.',
+    fsChatSent: 'Sent',
+    chatClear: 'Clear chat',
+    chatCollapse: 'Hide chat',
+    chatExpand: 'Show chat',
     translateProvider: 'Translation engine',
     translateProviderAuto: 'Auto',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -266,6 +367,7 @@ const LOCALES = {
     superchatSlide: 'Slide',
     superchatPop: 'Pop',
     superchatShine: 'Shine',
+    superchatClose: 'Dismiss pinned Super Chat',
     liveWatching: 'watching',
     liveTotalViews: 'Total views',
     historyToggle: 'Download chat history',
@@ -313,6 +415,56 @@ const LOCALES = {
     chatActionDanmaku: '弾幕で表示',
     chatActionTranslating: '翻訳中…',
     chatActionTranslateFailed: '翻訳に失敗しました',
+    chatActionFavorite: 'お気に入り',
+    chatActionOpenProfile: 'プロフィールを開く',
+    favoritesTitle: 'お気に入りチャット',
+    favoritesAdd: '追加',
+    favoritesAddPlaceholder: '保存するメッセージを入力…',
+    favoritesEmpty: 'お気に入りはまだありません',
+    favoritesEmptyText: '内容を入力してください',
+    favoritesAdded: 'お気に入りに追加しました',
+    favoritesExists: 'すでに登録済みです',
+    favoritesFull: 'お気に入りがいっぱいです（最大 80）',
+    favoritesSend: '送信',
+    favoritesRemove: '削除',
+    favoritesSent: '送信しました',
+    favoritesShortcutNone: 'ショートカットなし',
+    favoritesScopeGlobal: '全チャンネル',
+    favoritesScopeChannel: 'このチャンネル · {channel}',
+    favoritesMakeGlobal: '全体',
+    favoritesMakeChannel: '部屋',
+    favoritesMakeGlobalHint: 'すべてのチャンネルで使えるようにする',
+    favoritesMakeChannelHint: 'このチャンネルのみ',
+    favoritesScopedGlobal: '全チャンネル向けに設定しました',
+    favoritesScopedChannel: 'このチャンネルのみに設定しました',
+    favoritesNeedChannel: 'チャンネルを特定できません',
+    favoritesWheel: 'ルーレット送信',
+    favoritesWheelStart: '開始',
+    favoritesWheelStop: '停止',
+    favoritesWheelIdle: '停止中',
+    favoritesWheelRunning: '送信 {sent}/{max} · 残り {left}s',
+    favoritesWheelStopped: 'ルーレット送信を停止しました',
+    favoritesWheelMinInterval: '最短間隔（秒）',
+    favoritesWheelMaxInterval: '最長間隔（秒）',
+    favoritesWheelMaxCount: '最大件数',
+    favoritesWheelMaxDuration: '最大継続（秒）',
+    fsChatFavorites: 'お気に入り',
+    fsChatFavoritesEmpty: 'お気に入りなし',
+    fsChatPlaceholder: 'チャットを送信…',
+    fsChatSend: '送信',
+    fsChatClose: '閉じる',
+    fsChatNeedLogin: '先に YouTube にログインしてください',
+    fsChatSlowMode: 'スローモードです。しばらくしてから再試行',
+    fsChatDuplicate: '重複メッセージは送れません',
+    fsChatRateLimit: '送信が速すぎます',
+    fsChatForbidden: '現在メッセージを送れません',
+    fsChatDisabled: 'ライブチャットは無効です',
+    fsChatPreviewOnly: 'プレビューでは送信できません',
+    fsChatFailed: '送信に失敗しました。再試行してください。',
+    fsChatSent: '送信しました',
+    chatClear: 'チャットをクリア',
+    chatCollapse: 'チャットを隠す',
+    chatExpand: 'チャットを表示',
     translateProvider: '翻訳エンジン',
     translateProviderAuto: '自動',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -395,6 +547,7 @@ const LOCALES = {
     superchatSlide: 'スライド',
     superchatPop: 'ポップ',
     superchatShine: 'シャイン',
+    superchatClose: '固定スーパーチャットを閉じる',
     liveWatching: '人が視聴中',
     liveTotalViews: '総再生回数',
     historyToggle: 'チャット履歴をダウンロード',
@@ -733,6 +886,34 @@ function getFullscreenElement() {
     || null;
 }
 
+/**
+ * Mount host for fullscreen overlays — mirrors twitch-danmaku:
+ * append to the native Fullscreen API element (or YouTube `#movie_player`
+ * with `ytp-fullscreen`), never `.html5-video-container` (video compositor
+ * can paint over siblings there even with a high z-index).
+ */
+function getFullscreenMount() {
+  const player = getPlayerElement()
+    || document.querySelector('#movie_player, .html5-video-player');
+  const native = getFullscreenElement();
+
+  if (native) {
+    // Prefer the player shell when it is (inside) the FS tree so absolute
+    // bottom/left are relative to the video frame, not a page-sized ancestor.
+    if (player && (native === player || native.contains(player))) return player;
+    return native;
+  }
+
+  if (player?.classList?.contains('ytp-fullscreen') || player?.classList?.contains('ytp-fullscreen-display')) {
+    return player;
+  }
+  return document.querySelector('#movie_player.ytp-fullscreen, .html5-video-player.ytp-fullscreen');
+}
+
+function isWatchFullscreen() {
+  return !!getFullscreenMount();
+}
+
 function getDanmakuMount(item) {
   return item.closest('.ydm-danmaku-layer')?.parentElement || null;
 }
@@ -808,10 +989,64 @@ function getUsernameColor(msgEl, username) {
   return colorFromName(username);
 }
 
+function getAuthorExternalChannelId(msgEl) {
+  if (!msgEl) return '';
+  const readers = [
+    () => msgEl.authorExternalChannelId,
+    () => msgEl.getAttribute?.('author-external-channel-id'),
+    () => msgEl.dataset?.authorExternalChannelId,
+    () => msgEl.data?.authorExternalChannelId,
+    () => msgEl.__data?.authorExternalChannelId,
+    () => msgEl.__data?.data?.authorExternalChannelId,
+    () => msgEl.__dataHost?.data?.authorExternalChannelId,
+  ];
+  for (const read of readers) {
+    try {
+      const value = String(read() || '').trim();
+      if (value) return value;
+    } catch (_) {
+      /* ignore polymer access errors */
+    }
+  }
+  return '';
+}
+
+/** Author label without membership / badge noise inside #author-name. */
+function getAuthorDisplayName(msgEl) {
+  const nameEl = msgEl?.querySelector?.('#author-name');
+  if (!nameEl) return '';
+  const clone = nameEl.cloneNode(true);
+  clone.querySelectorAll?.(
+    '#chip-badges, #chat-badges, yt-live-chat-author-badge-renderer, img, svg',
+  ).forEach((node) => node.remove());
+  return String(clone.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function extractYouTubeHandle(name) {
+  const text = String(name || '').trim();
+  if (!text) return '';
+  const match = text.match(/^@([\w.-]{2,})/) || text.match(/(?:^|\s)@([\w.-]{2,})/);
+  return match ? match[1] : '';
+}
+
+/**
+ * Channel page for a live-chat row. Prefer @handle when the chip shows one,
+ * otherwise /channel/UC… from the renderer. Works for any click target inside
+ * the message — not only the avatar.
+ */
 function getYouTubeProfileUrl(msgEl) {
-  const anchor = msgEl.querySelector('a[href*="/channel/"], a[href*="/@"], a[href*="youtube.com/"]');
-  const href = anchor?.getAttribute('href');
-  if (href && !href.startsWith('javascript:')) {
+  if (!msgEl) return null;
+
+  const name = getAuthorDisplayName(msgEl);
+  const handle = extractYouTubeHandle(name);
+  if (handle) return `https://www.youtube.com/@${encodeURIComponent(handle)}`;
+
+  const anchors = msgEl.querySelectorAll?.(
+    'a[href*="/@"], a[href*="/channel/"], a[href*="/c/"], a[href*="youtube.com/"]',
+  ) || [];
+  for (const anchor of anchors) {
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('javascript:')) continue;
     try {
       const url = new URL(href, 'https://www.youtube.com');
       if (url.protocol === 'https:' && /(^|\.)youtube\.com$/.test(url.hostname)) {
@@ -821,7 +1056,29 @@ function getYouTubeProfileUrl(msgEl) {
       /* ignore */
     }
   }
+
+  const channelId = getAuthorExternalChannelId(msgEl);
+  if (channelId) return `https://www.youtube.com/channel/${encodeURIComponent(channelId)}`;
   return null;
+}
+
+/** Remove any avatar/name profile links we previously injected. */
+function stripInjectedAuthorProfileLinks(msgEl) {
+  if (!msgEl) return;
+  msgEl.querySelectorAll('a[data-ydm-author-link="true"], a[data-ydm-author-photo="true"]').forEach((link) => {
+    const parent = link.parentElement;
+    if (!parent) {
+      link.remove();
+      return;
+    }
+    while (link.firstChild) parent.insertBefore(link.firstChild, link);
+    link.remove();
+  });
+}
+
+/** No-op kept for call sites — profile entry is the chat context menu. */
+function ensureAuthorProfileLink(msgEl) {
+  stripInjectedAuthorProfileLinks(msgEl);
 }
 
 function isWatchPage() {
@@ -904,6 +1161,1662 @@ async function setChatInputText(text) {
   selection?.addRange(endRange);
   return true;
 }
+
+const YDM_STYLE_ID = 'ydm-style-root';
+const YDM_CHAT_STYLE_ID = 'ydm-style-chat-frame';
+
+const YDM_CSS = `
+    .ydm-danmaku-layer {
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .ydm-danmaku-item {
+      position: absolute;
+      left: 100%;
+      white-space: nowrap;
+      font-weight: 700;
+      line-height: 1.2;
+      pointer-events: auto;
+      cursor: default;
+      user-select: none;
+      text-shadow:
+        1px 1px 2px rgba(0, 0, 0, 0.9),
+        -1px -1px 2px rgba(0, 0, 0, 0.9),
+        0 0 4px rgba(0, 0, 0, 0.8);
+      animation: ydm-scroll var(--ydm-duration, 8s) linear forwards;
+      will-change: transform;
+    }
+
+    .ydm-emote {
+      display: inline-block;
+      width: 1.15em;
+      height: 1.15em;
+      margin: 0 0.08em;
+      vertical-align: -0.2em;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .ydm-emote img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      font-size: 0;
+      pointer-events: none;
+    }
+
+    .ydm-danmaku-item.ydm-paused {
+      animation-play-state: paused;
+      z-index: 20;
+      cursor: pointer;
+    }
+
+    .ydm-danmaku-item.ydm-paused.ydm-click-locked {
+      z-index: 30;
+    }
+
+    .ydm-superchat-layer {
+      pointer-events: none;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .ydm-superchat-layer.ydm-sc-bottom {
+      justify-content: flex-end;
+    }
+
+    .ydm-superchat-item {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: 6px;
+      box-sizing: border-box;
+      width: fit-content;
+      max-width: min(720px, calc(100% - 24px));
+      padding: 5px 28px 5px 6px;
+      border-radius: 999px;
+      font-weight: 500;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      pointer-events: auto;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      animation-duration: var(--ydm-sc-duration, 6s);
+      animation-timing-function: ease;
+      animation-fill-mode: forwards;
+    }
+
+    .ydm-sc-close {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      z-index: 3;
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      color: #ffffff;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease, background-color 0.1s ease, color 0.1s ease;
+    }
+
+    .ydm-superchat-item:hover .ydm-sc-close,
+    .ydm-superchat-item.ydm-paused .ydm-sc-close,
+    .ydm-superchat-item:focus-within .ydm-sc-close {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ydm-sc-close:hover {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+    }
+
+    .ydm-sc-close:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .ydm-sc-close svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      pointer-events: none;
+      fill: currentColor;
+    }
+
+    .ydm-sc-avatar {
+      width: 1.45em;
+      height: 1.45em;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .ydm-sc-username {
+      flex: 0 0 auto;
+      max-width: 7.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      opacity: 0.92;
+      font-size: 0.78em;
+      font-weight: 500;
+    }
+
+    .ydm-sc-amount {
+      flex: 0 0 auto;
+      font-size: 0.78em;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .ydm-sc-message-clip {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+
+    .ydm-sc-message {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 0.92em;
+      font-weight: 500;
+      will-change: transform;
+    }
+
+    .ydm-superchat-item.ydm-sc-marquee .ydm-sc-message {
+      animation: ydm-sc-marquee var(--ydm-sc-marquee-duration, 4s) linear 0.45s infinite alternate;
+    }
+
+    .ydm-superchat-item.ydm-paused .ydm-sc-message {
+      animation-play-state: paused;
+    }
+
+    @keyframes ydm-sc-marquee {
+      0%, 8% { transform: translateX(0); }
+      92%, 100% { transform: translateX(var(--ydm-sc-marquee-distance, 0)); }
+    }
+
+    .ydm-superchat-item.ydm-sc-fade,
+    .ydm-superchat-item.ydm-sc-shine {
+      animation-name: ydm-sc-fade;
+    }
+
+    .ydm-superchat-item.ydm-sc-slide {
+      animation-name: ydm-sc-slide;
+    }
+
+    .ydm-superchat-layer.ydm-sc-bottom .ydm-superchat-item.ydm-sc-slide {
+      animation-name: ydm-sc-slide-up;
+    }
+
+    .ydm-superchat-item.ydm-sc-pop {
+      animation-name: ydm-sc-pop;
+    }
+
+    .ydm-superchat-item.ydm-sc-shine::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 28%, rgba(255, 255, 255, 0.55) 50%, transparent 72%);
+      transform: translateX(-130%);
+      animation: ydm-sc-shine-sweep 1.15s ease 0.25s;
+      pointer-events: none;
+    }
+
+    .ydm-superchat-item.ydm-paused,
+    .ydm-superchat-item.ydm-paused.ydm-click-locked {
+      animation-play-state: paused;
+      z-index: 20;
+    }
+
+    @keyframes ydm-sc-fade {
+      0% { opacity: 0; }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes ydm-sc-slide {
+      0% { opacity: 0; transform: translateY(-14px); }
+      14% { opacity: 1; transform: translateY(0); }
+      86% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(10px); }
+    }
+
+    @keyframes ydm-sc-slide-up {
+      0% { opacity: 0; transform: translateY(14px); }
+      14% { opacity: 1; transform: translateY(0); }
+      86% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+
+    @keyframes ydm-sc-pop {
+      0% { opacity: 0; transform: scale(0.7); }
+      16% { opacity: 1; transform: scale(1); }
+      86% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0.92); }
+    }
+
+    @keyframes ydm-sc-shine-sweep {
+      from { transform: translateX(-130%); }
+      to { transform: translateX(130%); }
+    }
+
+    .ydm-click-lock-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 25;
+      pointer-events: auto;
+      background: transparent;
+    }
+
+    .ydm-danmaku-tooltip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: auto;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
+      max-width: min(280px, calc(100vw - 16px));
+      overflow: hidden;
+    }
+
+    .ydm-danmaku-tooltip-bubble {
+      background: rgba(15, 15, 15, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 6px 8px;
+      max-width: min(280px, 100%);
+      min-height: 0;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    .ydm-danmaku-tooltip-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .ydm-danmaku-tooltip-header--solo {
+      justify-content: flex-end;
+    }
+
+    .ydm-danmaku-tooltip-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.3;
+      word-break: break-word;
+      text-decoration: none;
+    }
+
+    a.ydm-danmaku-tooltip-name {
+      cursor: pointer;
+    }
+
+    a.ydm-danmaku-tooltip-name:hover {
+      text-decoration: underline;
+    }
+
+    .ydm-danmaku-tooltip-actions {
+      display: flex;
+      flex-shrink: 0;
+      gap: 2px;
+    }
+
+    .ydm-danmaku-tooltip-copy,
+    .ydm-danmaku-tooltip-speak {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: clamp(24px, 6vw, 28px);
+      height: clamp(24px, 6vw, 28px);
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: #e5e5e5;
+      cursor: pointer;
+    }
+
+    .ydm-danmaku-tooltip-copy:hover,
+    .ydm-danmaku-tooltip-speak:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .ydm-danmaku-tooltip-copy svg,
+    .ydm-danmaku-tooltip-speak svg {
+      width: clamp(14px, 3.5vw, 16px);
+      height: clamp(14px, 3.5vw, 16px);
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-danmaku-tooltip-original {
+      margin-top: 4px;
+      color: #aaa;
+      font-size: 11px;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .ydm-danmaku-tooltip-tail {
+      width: 6px;
+      height: 6px;
+      flex-shrink: 0;
+      background: rgba(15, 15, 15, 0.96);
+      transform: rotate(45deg);
+    }
+
+    .ydm-danmaku-tooltip--above .ydm-danmaku-tooltip-tail {
+      margin: -3px auto 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .ydm-danmaku-tooltip--below .ydm-danmaku-tooltip-bubble {
+      order: 2;
+    }
+
+    .ydm-danmaku-tooltip--below .ydm-danmaku-tooltip-tail {
+      order: 1;
+      margin: 0 auto -3px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    @keyframes ydm-scroll {
+      from { transform: translateX(var(--ydm-start, 0px)); }
+      to { transform: translateX(calc(-1 * var(--ydm-travel, 100vw))); }
+    }
+
+    .ytp-right-controls > .ydm-controls-wrap {
+      display: inline-flex !important;
+      align-items: center !important;
+      height: 100% !important;
+      flex: 0 0 auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-time-wrapper {
+      white-space: nowrap;
+      max-width: none;
+      padding-right: 2px;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      max-width: none;
+      margin-left: 2px;
+      vertical-align: top;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper[hidden] {
+      display: none !important;
+    }
+
+    .ydm-live-views-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+    }
+
+    .ydm-live-views-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-live-views-count {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.01em;
+    }
+
+    .ydm-control-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 100%;
+      min-height: 36px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    .ydm-control-btn.ydm-chat-expand-control-btn[hidden] {
+      display: none !important;
+    }
+
+    .ydm-control-btn.ydm-chat-expand-control-btn.ydm-visible {
+      display: inline-flex !important;
+    }
+
+    .ydm-control-btn:hover,
+    .ydm-control-btn.ydm-active {
+      opacity: 1;
+    }
+
+    .ydm-control-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-danmaku-btn .ydm-icon {
+      display: none;
+      line-height: 0;
+    }
+
+    .ydm-danmaku-btn.ydm-danmaku-enabled .ydm-icon-on,
+    .ydm-danmaku-btn.ydm-danmaku-disabled .ydm-icon-off {
+      display: block;
+    }
+
+    .ydm-speech-btn .ydm-icon {
+      display: none;
+      line-height: 0;
+    }
+
+    .ydm-speech-btn.ydm-speech-on .ydm-icon-on,
+    .ydm-speech-btn.ydm-speech-mute .ydm-icon-mute,
+    .ydm-speech-btn.ydm-speech-off .ydm-icon-off {
+      display: block;
+    }
+
+    .ydm-speech-btn.ydm-speech-mute {
+      opacity: 0.7;
+    }
+
+    .ydm-speech-btn.ydm-speech-off {
+      opacity: 0.45;
+    }
+
+    .ydm-danmaku-btn.ydm-danmaku-disabled {
+      opacity: 0.45;
+    }
+
+    .ydm-balloon {
+      background: #212121;
+      color: #f1f1f1;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+      font-family: Roboto, Arial, sans-serif;
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    .ydm-balloon-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 12px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .ydm-balloon-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .ydm-balloon-close {
+      background: none;
+      border: none;
+      color: #ff4e45;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+
+    .ydm-balloon-close:hover {
+      background: rgba(255, 78, 69, 0.12);
+    }
+
+    .ydm-balloon-body {
+      padding: 4px 0 8px;
+      max-height: min(60vh, 420px);
+      overflow-y: auto;
+    }
+
+    .ydm-balloon-body--speech {
+      max-height: min(70vh, 520px);
+    }
+
+    .ydm-balloon-section {
+      padding: 6px 12px 0;
+      color: #aaa;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .ydm-speech-modes {
+      display: flex;
+      gap: 8px;
+      padding: 8px 12px;
+    }
+
+    .ydm-speech-mode {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #0f0f0f;
+      color: #aaa;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .ydm-speech-mode svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+      display: block;
+    }
+
+    .ydm-speech-mode:hover,
+    .ydm-speech-mode.ydm-active {
+      color: #fff;
+      border-color: #ff4e45;
+      background: rgba(255, 78, 69, 0.12);
+    }
+
+    .ydm-speech-test {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ydm-speech-test .ydm-balloon-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ydm-speech-play {
+      flex-shrink: 0;
+      min-width: 36px;
+      border: none;
+      border-radius: 8px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .ydm-speech-play:hover {
+      background: #4a4a4a;
+    }
+
+    .ydm-speech-note {
+      margin: 0;
+      padding: 0 12px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .ydm-balloon-row {
+      padding: 8px 12px;
+    }
+
+    .ydm-balloon-row--toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ydm-balloon-row--field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ydm-balloon-field-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ydm-balloon-label {
+      color: #f1f1f1;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .ydm-balloon-value {
+      color: #aaa;
+      font-size: 12px;
+    }
+
+    .ydm-balloon-range {
+      width: 100%;
+      accent-color: #ff4e45;
+      height: 4px;
+    }
+
+    .ydm-balloon-select,
+    .ydm-balloon-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #0f0f0f;
+      color: #f1f1f1;
+      font-size: 13px;
+    }
+
+    .ydm-keyword-hint {
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .ydm-keyword-add {
+      display: flex;
+      gap: 6px;
+    }
+
+    .ydm-keyword-add-btn {
+      flex-shrink: 0;
+      border: none;
+      border-radius: 8px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .ydm-keyword-add-btn:hover {
+      background: #4a4a4a;
+    }
+
+    .ydm-keyword-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .ydm-keyword-list:empty {
+      display: none;
+    }
+
+    .ydm-keyword-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      max-width: 100%;
+      padding: 2px 2px 2px 8px;
+      border-radius: 999px;
+      background: #3a3a3a;
+      color: #f1f1f1;
+      font-size: 12px;
+    }
+
+    .ydm-keyword-chip > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ydm-keyword-remove {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: transparent;
+      color: #aaa;
+      cursor: pointer;
+      line-height: 18px;
+    }
+
+    .ydm-keyword-remove:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .ydm-balloon-divider {
+      height: 1px;
+      margin: 4px 12px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .ydm-history-status {
+      margin: 0;
+      padding: 4px 12px 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.45;
+      min-height: 1.45em;
+    }
+
+    .ydm-history-status:empty {
+      display: none;
+    }
+
+    .ydm-history-status--error {
+      color: #ff8a80;
+    }
+
+    .ydm-history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 12px 12px;
+    }
+
+    .ydm-history-download,
+    .ydm-history-pause,
+    .ydm-history-resume,
+    .ydm-history-cancel {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ydm-history-download {
+      flex: 1 1 100%;
+      background: #ff4e45;
+      color: #fff;
+    }
+
+    .ydm-history-pause,
+    .ydm-history-resume {
+      flex: 1 1 auto;
+      background: #3ea6ff;
+      color: #0f0f0f;
+    }
+
+    .ydm-history-cancel {
+      flex: 1 1 auto;
+      background: #272727;
+      color: #fff;
+    }
+
+    .ydm-history-download:disabled,
+    .ydm-history-pause:disabled,
+    .ydm-history-resume:disabled,
+    .ydm-history-cancel:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .ydm-history-download[hidden],
+    .ydm-history-pause[hidden],
+    .ydm-history-resume[hidden],
+    .ydm-history-cancel[hidden] {
+      display: none;
+    }
+
+    .ydm-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .ydm-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .ydm-switch-slider {
+      position: absolute;
+      inset: 0;
+      background: #3a3a3a;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .ydm-switch-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .ydm-switch input:checked + .ydm-switch-slider {
+      background: #ff4e45;
+    }
+
+    .ydm-switch input:checked + .ydm-switch-slider::before {
+      transform: translateX(18px);
+    }
+
+    .ydm-fav-panel {
+      max-height: min(80vh, 580px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ydm-fav-add-row {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px 0;
+    }
+
+    .ydm-fav-add-input {
+      flex: 1;
+      min-width: 0;
+      height: 32px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: #18181b;
+      color: #efeff1;
+      padding: 0 10px;
+      font-size: 13px;
+    }
+
+    .ydm-fav-add-btn,
+    .ydm-fav-item-send,
+    .ydm-fav-wheel-toggle {
+      border: none;
+      border-radius: 4px;
+      background: #ff4e45;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0 10px;
+      height: 32px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .ydm-fav-add-btn:hover,
+    .ydm-fav-item-send:hover,
+    .ydm-fav-wheel-toggle:hover {
+      background: #e53935;
+    }
+
+    .ydm-fav-wheel-toggle.is-running {
+      background: #eb0400;
+    }
+
+    .ydm-fav-wheel-toggle.is-running:hover {
+      background: #c50300;
+    }
+
+    .ydm-fav-list {
+      margin-top: 10px;
+      padding: 0 12px;
+      overflow: auto;
+      max-height: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ydm-fav-empty {
+      color: #adadb8;
+      font-size: 12px;
+      padding: 12px 0;
+      text-align: center;
+    }
+
+    .ydm-fav-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .ydm-fav-item.is-global {
+      border-color: rgba(255, 78, 69, 0.45);
+    }
+
+    .ydm-fav-item-meta {
+      font-size: 11px;
+      font-weight: 600;
+      color: #adadb8;
+    }
+
+    .ydm-fav-item.is-global .ydm-fav-item-meta {
+      color: #ff8a80;
+    }
+
+    .ydm-fav-item-text {
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+      min-height: 32px;
+      height: 32px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: #18181b;
+      color: #efeff1;
+      padding: 6px 8px;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .ydm-fav-item-tools {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .ydm-fav-item-shortcut {
+      height: 28px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: #18181b;
+      color: #efeff1;
+      font-size: 12px;
+    }
+
+    .ydm-fav-item-scope {
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      background: #3a3a3d;
+      color: #efeff1;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .ydm-fav-item-scope:hover {
+      background: #ff4e45;
+    }
+
+    .ydm-fav-item-remove {
+      margin-left: auto;
+      height: 28px;
+      border: none;
+      border-radius: 4px;
+      background: #3a3a3d;
+      color: #efeff1;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .ydm-fav-item-remove:hover {
+      background: #ad1c1c;
+    }
+
+    .ydm-fav-status {
+      min-height: 16px;
+      margin: 6px 12px 0;
+      color: #ff8280;
+      font-size: 12px;
+    }
+
+    .ydm-fav-status.is-ok {
+      color: #00f593;
+    }
+
+    .ydm-fav-wheel {
+      margin-top: 10px;
+      padding: 10px 12px 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ydm-fav-wheel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ydm-fav-wheel-title {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ydm-fav-wheel-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .ydm-fav-wheel-field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #adadb8;
+      font-size: 12px;
+    }
+
+    .ydm-fav-wheel-field input {
+      width: 88px;
+      height: 28px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: #18181b;
+      color: #efeff1;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    .ydm-fav-wheel-status {
+      color: #adadb8;
+      font-size: 12px;
+    }
+
+    .ydm-fs-chat {
+      position: absolute !important;
+      left: 50% !important;
+      bottom: max(72px, 10%) !important;
+      transform: translateX(-50%) !important;
+      z-index: 100020 !important;
+      width: min(560px, calc(100% - 48px));
+      max-width: calc(100% - 24px);
+      display: flex !important;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: auto !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      font-family: "YouTube Sans", Roboto, Arial, sans-serif;
+    }
+
+    .ydm-fs-chat-row {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(14, 14, 16, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 10px 36px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .ydm-fs-chat-input {
+      flex: 1;
+      min-width: 0;
+      box-sizing: border-box;
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: #18181b;
+      color: #efeff1;
+      font-size: 14px;
+      line-height: 40px;
+      outline: none;
+      caret-color: #ff4e45;
+    }
+
+    .ydm-fs-chat-input::placeholder {
+      color: #adadb8;
+    }
+
+    .ydm-fs-chat-input:focus {
+      border-color: #ff4e45;
+      box-shadow: 0 0 0 1px #ff4e45;
+    }
+
+    .ydm-fs-chat-fav-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .ydm-fs-chat-fav,
+    .ydm-fs-chat-send {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 72px;
+      height: 40px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .ydm-fs-chat-fav {
+      background: #3a3a3d;
+    }
+
+    .ydm-fs-chat-fav:hover,
+    .ydm-fs-chat-fav.is-open {
+      background: #53535f;
+    }
+
+    .ydm-fs-chat-fav svg,
+    .ydm-fs-chat-send svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .ydm-fs-chat-send {
+      background: #ff4e45;
+    }
+
+    .ydm-fs-chat-send:hover:not(:disabled) {
+      background: #e53935;
+    }
+
+    .ydm-fs-chat-send:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .ydm-fs-chat-fav-list {
+      position: absolute;
+      left: 0;
+      bottom: calc(100% + 6px);
+      z-index: 2;
+      box-sizing: border-box;
+      width: max(220px, 100%);
+      max-width: min(360px, 70vw);
+      max-height: 220px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(14, 14, 16, 0.96);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(10px);
+    }
+
+    .ydm-fs-chat-fav-empty {
+      padding: 10px 8px;
+      color: #adadb8;
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .ydm-fs-chat-fav-item {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #efeff1;
+      font-size: 13px;
+      line-height: 1.35;
+      text-align: left;
+      cursor: pointer;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .ydm-fs-chat-fav-item:hover {
+      background: rgba(255, 78, 69, 0.28);
+    }
+
+    .ydm-fs-chat-close {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      min-width: 72px;
+      padding: 0 14px;
+      border: none;
+      border-radius: 6px;
+      background: #eb0400;
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ydm-fs-chat-close:hover {
+      background: #c50300;
+    }
+
+    .ydm-fs-chat-meta {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 4px;
+      min-height: 16px;
+    }
+
+    .ydm-fs-chat-status {
+      flex: 1;
+      min-width: 0;
+      max-width: 60%;
+      color: #ff8280;
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    .ydm-fs-chat-status:empty {
+      display: none;
+    }
+
+    .ydm-fs-chat-status.is-ok {
+      color: #00f593;
+    }
+
+    /* ---- chat frame / overlays (also injected into live chat iframe) ---- */
+.ydm-chat-translation {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 3px 0 1px;
+  padding: 3px 0 2px 8px;
+  border-left: 2px solid rgba(230, 33, 23, 1);
+  background: rgba(155, 155, 155, 0.4);
+  color: #fff;
+  font-size: 12.5px;
+  line-height: 1.4;
+  font-weight: 400;
+  font-style: italic;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.ydm-chat-translation-label {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgba(230, 33, 23, 1);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.ydm-chat-translation-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #0f0f0f;
+}
+
+.ydm-chat-translation--pending .ydm-chat-translation-text {
+  color: #606060;
+  font-style: italic;
+}
+
+.ydm-chat-translation--error .ydm-chat-translation-text {
+  color: #b71c1c;
+}
+
+.ydm-chat-menu {
+  position: fixed;
+  z-index: 2147483646;
+  min-width: 160px;
+  padding: 6px 0;
+  border-radius: 8px;
+  background: #212121;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 13px;
+}
+
+.ydm-chat-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ydm-chat-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ydm-chat-menu-item svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+.ydm-sc-action-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(15, 15, 15, 0.72);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* Paid sticker cards: panel sits after #card so it never steals author-name width. */
+yt-live-chat-paid-sticker-renderer > .ydm-sc-action-panel,
+yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
+  margin: 4px 8px 8px;
+  width: auto;
+}
+
+
+
+
+.ydm-sc-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.ydm-sc-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.ydm-sc-action-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ydm-sc-action-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+.ydm-chat-clear-wrap,
+.ydm-chat-collapse-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0 2px 0 0;
+}
+
+.ydm-chat-clear-btn,
+.ydm-chat-collapse-btn,
+.ydm-fav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 8px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--yt-live-chat-header-button-color, var(--yt-spec-text-secondary, #aaa));
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ydm-chat-clear-btn:hover,
+.ydm-chat-collapse-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--yt-spec-text-primary, #f1f1f1);
+}
+
+/* Hide live chat and let the player reclaim the sidebar width. */
+html.ydm-chat-collapsed ytd-live-chat-frame,
+html.ydm-chat-collapsed #chat.ytd-watch-flexy,
+html.ydm-chat-collapsed #chat-container {
+  display: none !important;
+}
+
+html.ydm-chat-collapsed #secondary,
+html.ydm-chat-collapsed #columns > :not(#primary):has(ytd-live-chat-frame),
+html.ydm-chat-collapsed #columns > :not(#primary):has(#chat) {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  flex: 0 0 0 !important;
+  overflow: hidden !important;
+}
+
+html.ydm-chat-collapsed ytd-watch-flexy,
+html.ydm-chat-collapsed #columns {
+  --ytd-watch-flexy-sidebar-width: 0px !important;
+  --ytd-watch-flexy-sidebar-min-width: 0px !important;
+  --ytd-watch-flexy-chat-max-height: 0px !important;
+}
+
+html.ydm-chat-collapsed #columns.ytd-watch-flexy #primary,
+html.ydm-chat-collapsed ytd-watch-flexy #primary,
+html.ydm-chat-collapsed #primary {
+  max-width: 100% !important;
+  width: 100% !important;
+  flex: 1 1 auto !important;
+}
+
+html.ydm-chat-collapsed #primary-inner,
+html.ydm-chat-collapsed #player,
+html.ydm-chat-collapsed #player-container-outer,
+html.ydm-chat-collapsed #player-container-inner,
+html.ydm-chat-collapsed #player-container,
+html.ydm-chat-collapsed #ytd-player,
+html.ydm-chat-collapsed #ytd-player > #container {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.ydm-chat-expand-btn {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity 1s ease;
+  opacity: 0;
+  z-index: 2200;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 14px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: rgba(15, 15, 15, 0.92);
+  color: #f1f1f1;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: -4px 0 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  font-family: "YouTube Sans", Roboto, Arial, sans-serif;
+}
+
+.ydm-chat-expand-btn:hover {
+  opacity: 1;
+  background: rgba(33, 33, 33, 0.96);
+  color: #fff;
+}
+
+.ydm-chat-expand-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex-shrink: 0;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.ydm-chat-expand-label {
+  max-width: 7em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
+.ydm-fav-btn {
+  color: var(--yt-spec-text-secondary, #aaa);
+}
+
+.ydm-fav-btn:hover {
+  background: var(--yt-spec-badge-chip-background, rgba(255, 255, 255, 0.1));
+  color: #ffca5f;
+}
+
+.ydm-chat-clear-btn svg,
+.ydm-chat-collapse-btn svg,
+.ydm-fav-btn svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+  pointer-events: none;
+  fill: currentColor;
+}
+`;
+
+function injectStyles() {
+  GM_addStyle(YDM_CSS);
+}
+
+/** Inject the same stylesheet into the live chat iframe document (Trusted Types safe). */
+function ensureChatDocStyles(doc) {
+  if (!doc) return;
+  let style = doc.getElementById(YDM_CHAT_STYLE_ID);
+  if (!style) {
+    style = doc.createElement('style');
+    style.id = YDM_CHAT_STYLE_ID;
+    (doc.head || doc.documentElement).appendChild(style);
+  }
+  if (style.textContent !== YDM_CSS) style.textContent = YDM_CSS;
+}
+
+/** @deprecated Use ensureChatDocStyles */
+function ensureChatTranslateStyles(doc) {
+  ensureChatDocStyles(doc);
+}
+
+const ICON_DANMAKU_ON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M11.989 4.828c-.47 0-.975.004-1.515.012l-1.71-2.566a1.008 1.008 0 0 0-1.678 1.118l.999 1.5c-.681.018-1.403.04-2.164.068a4.013 4.013 0 0 0-3.83 3.44c-.165 1.15-.245 2.545-.245 4.185 0 1.965.115 3.67.35 5.116a4.012 4.012 0 0 0 3.763 3.363l.906.046c1.205.063 1.808.095 3.607.095a.988.988 0 0 0 0-1.975c-1.758 0-2.339-.03-3.501-.092l-.915-.047a2.037 2.037 0 0 1-1.91-1.708c-.216-1.324-.325-2.924-.325-4.798 0-1.563.076-2.864.225-3.904.14-.977.96-1.713 1.945-1.747 2.444-.087 4.465-.13 6.063-.131 1.598 0 3.62.044 6.064.13.96.034 1.71.81 1.855 1.814.075.524.113 1.962.141 3.065v.002c.01.342.017.65.025.88a.987.987 0 1 0 1.974-.068c-.008-.226-.016-.523-.025-.856v-.027c-.03-1.118-.073-2.663-.16-3.276-.273-1.906-1.783-3.438-3.74-3.507-.9-.032-1.743-.058-2.531-.078l1.05-1.46a1.008 1.008 0 0 0-1.638-1.177l-1.862 2.59c-.38-.004-.744-.007-1.088-.007h-.13Zm.521 4.775h-1.32v4.631h2.222v.847h-2.618v1.078h2.618l.003.678c.36.026.714.163 1.01.407h.11v-1.085h2.694v-1.078h-2.695v-.847H16.8v-4.63h-1.276a8.59 8.59 0 0 0 .748-1.42L15.183 7.8a14.232 14.232 0 0 1-.814 1.804h-1.518l.693-.308a8.862 8.862 0 0 0-.814-1.408l-1.045.352c.297.396.572.847.825 1.364Zm-4.18 3.564.154-1.485h1.98V8.294h-3.2v.98H9.33v1.43H7.472l-.308 3.453h2.277c0 1.166-.044 1.925-.12 2.277-.078.352-.386.528-.936.528-.308 0-.616-.022-.902-.055l.297 1.067.062.005c.285.02.551.04.818.04 1.001-.067 1.562-.419 1.694-1.057.11-.638.176-1.903.176-3.795h-2.2Zm7.458.11v-.858h-1.254v.858h1.254Zm-2.376-.858v.858h-1.199v-.858h1.2Zm-1.199-.946h1.2v-.902h-1.2v.902Zm2.321 0v-.902h1.254v.902h-1.254Z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M22.846 14.627a1 1 0 0 0-1.412.075l-5.091 5.703-2.216-2.275-.097-.086-.008-.005a1 1 0 0 0-1.322 1.493l2.963 3.041.093.083.007.005c.407.315 1 .27 1.354-.124l5.81-6.505.08-.102.005-.008a1 1 0 0 0-.166-1.295Z" clip-rule="evenodd"/></svg>`;
+
+const ICON_DANMAKU_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m8.085 4.891-.999-1.499a1.008 1.008 0 0 1 1.679-1.118l1.709 2.566c.54-.008 1.045-.012 1.515-.012h.13c.345 0 .707.003 1.088.007l1.862-2.59a1.008 1.008 0 0 1 1.637 1.177l-1.049 1.46c.788.02 1.631.046 2.53.078 1.958.069 3.468 1.6 3.74 3.507.088.613.13 2.158.16 3.276l.001.027c.01.333.017.63.025.856a.987.987 0 0 1-1.974.069c-.008-.23-.016-.539-.025-.881v-.002c-.028-1.103-.066-2.541-.142-3.065-.143-1.004-.895-1.78-1.854-1.813-2.444-.087-4.466-.13-6.064-.131-1.598 0-3.619.044-6.063.13a2.037 2.037 0 0 0-1.945 1.748c-.15 1.04-.225 2.341-.225 3.904 0 1.874.11 3.474.325 4.798.154.949.95 1.66 1.91 1.708a97.58 97.58 0 0 0 5.416.139.988.988 0 0 1 0 1.975c-2.196 0-3.61-.047-5.513-.141A4.012 4.012 0 0 1 2.197 17.7c-.236-1.446-.351-3.151-.351-5.116 0-1.64.08-3.035.245-4.184A4.013 4.013 0 0 1 5.92 4.96c.761-.027 1.483-.05 2.164-.069Zm4.436 4.707h-1.32v4.63h2.222v.848h-2.618v1.078h2.431a5.01 5.01 0 0 1 3.575-3.115V9.598h-1.276a8.59 8.59 0 0 0 .748-1.42l-1.089-.384a14.232 14.232 0 0 1-.814 1.804h-1.518l.693-.308a8.862 8.862 0 0 0-.814-1.408l-1.045.352c.297.396.572.847.825 1.364Zm-4.18 3.564.154-1.485h1.98V8.289h-3.2v.979h2.067v1.43H7.483l-.308 3.454h2.277c0 1.166-.044 1.925-.12 2.277-.078.352-.386.528-.936.528-.308 0-.616-.022-.902-.055l.297 1.067.062.004c.285.02.551.04.818.04 1.001-.066 1.562-.418 1.694-1.056.11-.638.176-1.903.176-3.795h-2.2Zm7.458.11v-.858h-1.254v.858H15.8Zm-2.376-.858v.858h-1.199v-.858h1.2Zm-1.199-.946h1.2v-.902h-1.2v.902Zm2.321 0v-.902H15.8v.902h-1.254Zm3.517 10.594a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-.002-1.502a2.5 2.5 0 0 1-2.217-3.657l3.326 3.398a2.49 2.49 0 0 1-1.109.259Zm2.5-2.5c0 .42-.103.815-.286 1.162l-3.328-3.401a2.5 2.5 0 0 1 3.614 2.239Z" clip-rule="evenodd"/></svg>`;
+
+const ICON_SETTINGS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m15.645 4.881 1.06-1.473a.998.998 0 1 0-1.622-1.166L13.22 4.835a110.67 110.67 0 0 0-1.1-.007h-.131c-.47 0-.975.004-1.515.012L8.783 2.3A.998.998 0 0 0 7.12 3.408l.988 1.484c-.688.019-1.418.042-2.188.069a4.013 4.013 0 0 0-3.83 3.44c-.165 1.15-.245 2.545-.245 4.185 0 1.965.115 3.67.35 5.116a4.012 4.012 0 0 0 3.763 3.363c1.903.094 3.317.141 5.513.141a.988.988 0 0 0 0-1.975 97.58 97.58 0 0 1-5.416-.139 2.037 2.037 0 0 1-1.91-1.708c-.216-1.324-.325-2.924-.325-4.798 0-1.563.076-2.864.225-3.904.14-.977.96-1.713 1.945-1.747 2.444-.087 4.465-.13 6.063-.131 1.598 0 3.62.044 6.064.13.96.034 1.71.81 1.855 1.814.075.524.113 1.962.141 3.065v.002c.005.183.01.07.014-.038.004-.096.008-.189.011-.081a.987.987 0 1 0 1.974-.069c-.004-.105-.007-.009-.011.09-.002.056-.004.112-.007.135l-.002.01a.574.574 0 0 1-.005-.091v-.027c-.03-1.118-.073-2.663-.16-3.276-.273-1.906-1.783-3.438-3.74-3.507-.905-.032-1.752-.058-2.543-.079Zm-3.113 4.703h-1.307v4.643h2.2v.04l.651-1.234c.113-.215.281-.389.482-.509v-.11h.235c.137-.049.283-.074.433-.074h1.553V9.584h-1.264a8.5 8.5 0 0 0 .741-1.405l-1.078-.381c-.24.631-.501 1.23-.806 1.786h-1.503l.686-.305c-.228-.501-.5-.959-.806-1.394l-1.034.348c.294.392.566.839.817 1.35Zm-1.7 5.502h2.16l-.564 1.068h-1.595v-1.068Zm-2.498-1.863.152-1.561h1.96V8.289H7.277v.969h2.048v1.435h-1.84l-.306 3.51h2.254c0 1.155-.043 1.906-.12 2.255-.076.348-.38.523-.925.523-.305 0-.61-.022-.893-.055l.294 1.056.061.005c.282.02.546.039.81.039.991-.065 1.547-.414 1.677-1.046.11-.631.175-1.883.175-3.757H8.334Zm5.09-.8v.85h-1.188v-.85h1.187Zm-1.188-.955h1.187v-.893h-1.187v.893Zm2.322.007v-.893h1.241v.893h-1.241Zm.528 2.757a1.26 1.26 0 0 1 1.087-.627l4.003-.009a1.26 1.26 0 0 1 1.094.63l1.721 2.982c.226.39.225.872-.001 1.263l-1.743 3a1.26 1.26 0 0 1-1.086.628l-4.003.009a1.26 1.26 0 0 1-1.094-.63l-1.722-2.982a1.26 1.26 0 0 1 .002-1.263l1.742-3Zm1.967.858a1.26 1.26 0 0 0-1.08.614l-.903 1.513a1.26 1.26 0 0 0-.002 1.289l.885 1.492c.227.384.64.62 1.086.618l2.192-.005a1.26 1.26 0 0 0 1.08-.615l.904-1.518a1.26 1.26 0 0 0 .001-1.288l-.884-1.489a1.26 1.26 0 0 0-1.086-.616l-2.193.005Zm2.517 2.76a1.4 1.4 0 1 1-2.8 0 1.4 1.4 0 0 1 2.8 0Z" clip-rule="evenodd"/></svg>`;
+
+const ICON_COPY = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`;
+
+const ICON_SPEECH_ON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+
+const ICON_SPEECH_MUTE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>`;
+
+const ICON_SPEECH_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;
+
+const ICON_DOWNLOAD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1z"/></svg>`;
+
+const ICON_EYE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+
+const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>`;
+
+const ICON_CHAT_CLEAR_PATH = 'M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z';
+const ICON_CHAT_CLEAR = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 1024 1024" fill="currentColor" aria-hidden="true"><path d="${ICON_CHAT_CLEAR_PATH}"></path></svg>`;
+
+const ICON_CHAT_SEND = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3.4 20.6 21 12 3.4 3.4l-.1 6.8L15 12 3.3 13.8z"/></svg>`;
+
+const ICON_FAVORITE = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+
+const ICON_CLOSE = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.414 5 5 6.414l5.588 5.588L5 17.59l1.414 1.414 5.588-5.588 5.588 5.588 1.414-1.414-5.588-5.588 5.588-5.588L17.59 5l-5.588 5.588L6.414 5Z"/></svg>`;
+
+const ICON_PROFILE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/></svg>`;
+
+/** Hide live chat (panel collapses toward the right edge). */
+const ICON_CHAT_COLLAPSE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h10v16H4zm12 0h4v16h-4zm-5.5 8 3.5-3.5v7z"/></svg>`;
+
+/** Restore live chat from the docked expand control. */
+const ICON_CHAT_EXPAND = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zm2 2v12h8V6zm10 0v12h2V6zM9.5 12 13 8.5v7z"/></svg>`;
 
 class LaneManager {
   constructor() {
@@ -1183,8 +3096,12 @@ function appendDanmakuContent(item, message, parts) {
   for (const part of parts) {
     if (part?.type === 'emote') {
       const src = safeEmoteSrc(part.src);
+      const fallback = emoteDisplayText(part);
+      const title = fallback
+        || (part.shortcode && !isEmoteShortcode(fallback) ? part.shortcode : '')
+        || String(part.alt || '').trim();
       if (!src) {
-        if (part.alt) item.appendChild(document.createTextNode(part.alt));
+        if (fallback) item.appendChild(document.createTextNode(fallback));
         continue;
       }
       const slot = document.createElement('span');
@@ -1193,18 +3110,30 @@ function appendDanmakuContent(item, message, parts) {
       slot.style.width = '1.15em';
       slot.style.height = '1.15em';
       const img = document.createElement('img');
-      img.alt = part.alt || '';
+      // Empty alt so a broken/late-loading image does not flash ":clapping_hands:".
+      img.alt = '';
+      if (title && !isEmoteShortcode(title)) img.title = title;
+      else if (fallback) img.title = fallback;
       img.src = src;
       img.draggable = false;
       img.referrerPolicy = 'no-referrer';
       img.style.width = '100%';
       img.style.height = '100%';
       img.style.fontSize = '0';
+      img.addEventListener('error', () => {
+        img.remove();
+        if (fallback) slot.textContent = fallback;
+        else if (!slot.childNodes.length) slot.remove();
+      }, { once: true });
       slot.appendChild(img);
       item.appendChild(slot);
       continue;
     }
-    if (part?.text) item.appendChild(document.createTextNode(part.text));
+    if (part?.text) {
+      // Drop pure shortcode leftovers if any slipped into text parts.
+      if (EMOTE_SHORTCODE_ONLY_RE.test(part.text)) continue;
+      item.appendChild(document.createTextNode(part.text));
+    }
   }
 
   if (!item.childNodes.length) item.textContent = message || '';
@@ -1596,6 +3525,14 @@ class DanmakuEngine {
       item.appendChild(messageClip);
     }
 
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-sc-close';
+    closeBtn.setAttribute('aria-label', t('superchatClose'));
+    closeBtn.setAttribute('title', t('superchatClose'));
+    appendMarkup(closeBtn, ICON_CLOSE);
+    item.appendChild(closeBtn);
+
     this.superchatLayer.appendChild(item);
     this.pinnedItems.add(item);
     if (!skipLayout) this.updateLayout();
@@ -1611,6 +3548,13 @@ class DanmakuEngine {
     item.addEventListener('animationend', (event) => {
       if (event.target !== item) return;
       if (event.animationName === 'ydm-sc-shine-sweep' || event.animationName === 'ydm-sc-marquee') return;
+      clearTimeout(fallback);
+      this.finishSuperchat(item);
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       clearTimeout(fallback);
       this.finishSuperchat(item);
     });
@@ -3232,7 +5176,39 @@ function dedupeRepeatedMessage(text) {
   return text;
 }
 
-const EMOTE_HOST = /(^|\.)(ggpht\.com|googleusercontent\.com|ytimg\.com|youtube\.com)$/i;
+const EMOTE_HOST = /(^|\.)(ggpht\.com|googleusercontent\.com|ytimg\.com|youtube\.com|gstatic\.com)$/i;
+const EMOTE_SHORTCODE_RE = /^:[^:\s]+:$/;
+const EMOTE_SHORTCODE_ONLY_RE = /^\s*(:[^:\s]+:\s*)+$/;
+
+function isEmoteShortcode(value) {
+  return EMOTE_SHORTCODE_RE.test(String(value || '').trim());
+}
+
+/** Recover Unicode from YouTube gaming emoji URLs like emoji_u1f44f / emoji_u1f468_200d_1f4bb. */
+function unicodeFromEmoteSrc(src) {
+  const href = String(src || '');
+  const match = href.match(/emoji_u([0-9a-f_]+)\./i);
+  if (!match) return '';
+  try {
+    const cps = match[1].split('_').map((hex) => parseInt(hex, 16)).filter((n) => Number.isFinite(n));
+    if (!cps.length) return '';
+    return String.fromCodePoint(...cps);
+  } catch (_) {
+    return '';
+  }
+}
+
+function readEmoteAlt(node) {
+  const candidates = [
+    node.getAttribute('alt'),
+    node.getAttribute('shared-tooltip-text'),
+    node.getAttribute('title'),
+    node.getAttribute('aria-label'),
+  ].map((value) => String(value || '').trim()).filter(Boolean);
+  // Prefer real Unicode / labels over :shortcode: (other userscripts often overwrite alt).
+  const unicode = candidates.find((value) => !isEmoteShortcode(value));
+  return unicode || candidates[0] || '';
+}
 
 function safeEmoteSrc(src) {
   if (!src) return '';
@@ -3246,15 +5222,53 @@ function safeEmoteSrc(src) {
   }
 }
 
+function readEmoteSrc(node) {
+  if (!node) return '';
+  const direct = safeEmoteSrc(
+    node.currentSrc
+    || node.getAttribute('src')
+    || node.getAttribute('data-src')
+    || node.getAttribute('data-thumb')
+    || '',
+  );
+  if (direct) return direct;
+  const srcset = String(node.getAttribute('srcset') || '');
+  const first = srcset.split(',')[0]?.trim().split(/\s+/)[0] || '';
+  return safeEmoteSrc(first);
+}
+
 function isEmoteImage(node) {
   if (node.tagName !== 'IMG') return false;
-  const src = safeEmoteSrc(node.currentSrc || node.getAttribute('src'));
+  if (node.closest('#author-photo, #author-name, yt-live-chat-author-chip')) return false;
+  const src = readEmoteSrc(node);
   if (!src) return false;
-  if (node.id === 'emoji' || node.classList.contains('emoji') || node.classList.contains('small-emoji')) {
+  if (
+    node.id === 'emoji'
+    || (typeof node.id === 'string' && node.id.startsWith('emoji'))
+    || node.classList.contains('emoji')
+    || node.classList.contains('small-emoji')
+    || node.hasAttribute('data-emoji-id')
+    || node.hasAttribute('shared-tooltip-text')
+  ) {
     return true;
   }
-  if (node.closest('#author-photo, #author-name, yt-live-chat-author-chip')) return false;
-  return !!node.closest('#message, #sticker');
+  return !!node.closest('#message, #sticker, #purchase-description');
+}
+
+function buildEmotePart(node) {
+  const src = readEmoteSrc(node);
+  const rawAlt = readEmoteAlt(node);
+  const emoji = (!isEmoteShortcode(rawAlt) && rawAlt && !/^https?:/i.test(rawAlt))
+    ? rawAlt
+    : unicodeFromEmoteSrc(src);
+  const shortcode = isEmoteShortcode(rawAlt)
+    ? rawAlt
+    : (isEmoteShortcode(node.getAttribute('shared-tooltip-text'))
+      ? String(node.getAttribute('shared-tooltip-text')).trim()
+      : '');
+  // Display label: Unicode when possible; never prefer shortcode for rendering.
+  const alt = emoji || shortcode || rawAlt || '';
+  return { type: 'emote', alt, src, emoji: emoji || '', shortcode };
 }
 
 function pushTextPart(parts, text) {
@@ -3270,7 +5284,10 @@ function collectParts(root) {
 
   const walk = (node) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      pushTextPart(parts, node.textContent);
+      const text = node.textContent || '';
+      // Some clients / copy-fix scripts leave trailing ":shortcode:" text beside imgs.
+      if (EMOTE_SHORTCODE_ONLY_RE.test(text)) return;
+      pushTextPart(parts, text);
       return;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -3282,15 +5299,13 @@ function collectParts(root) {
     if (tag === 'YT-LIVE-CHAT-AUTHOR-CHIP' || tag === 'YT-ICON') return;
 
     if (tag === 'IMG' && isEmoteImage(node)) {
-      const src = safeEmoteSrc(node.currentSrc || node.getAttribute('src'));
-      const alt = (node.getAttribute('alt') || node.getAttribute('shared-tooltip-text') || '').trim();
-      parts.push({ type: 'emote', alt, src });
+      parts.push(buildEmotePart(node));
       return;
     }
 
     if (tag === 'IMG') {
-      const alt = node.getAttribute('alt') || node.getAttribute('shared-tooltip-text') || '';
-      if (alt) pushTextPart(parts, ` ${alt} `);
+      const alt = readEmoteAlt(node);
+      if (alt && !isEmoteShortcode(alt)) pushTextPart(parts, ` ${alt} `);
       return;
     }
 
@@ -3301,11 +5316,29 @@ function collectParts(root) {
   return parts;
 }
 
+function emoteDisplayText(part) {
+  if (!part || part.type !== 'emote') return '';
+  const emoji = String(part.emoji || '').trim() || unicodeFromEmoteSrc(part.src);
+  if (emoji) return emoji;
+  const alt = String(part.alt || '').trim();
+  if (alt && !isEmoteShortcode(alt)) return alt;
+  return '';
+}
+
 function partsToText(parts) {
-  return parts.map((part) => (part.type === 'emote' ? (part.alt ? ` ${part.alt} ` : ' ') : part.text))
-    .join('')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return parts.map((part) => {
+    if (part.type !== 'emote') return part.text;
+    const text = emoteDisplayText(part);
+    return text ? text : '';
+  }).join('').replace(/\s+/g, ' ').trim();
+}
+
+/** Favorites store sendable text: Unicode when possible, else YouTube :shortcode:. */
+function partsToFavoriteText(parts) {
+  return parts.map((part) => {
+    if (part.type !== 'emote') return part.text;
+    return emoteDisplayText(part) || String(part.shortcode || '').trim() || '';
+  }).join('').replace(/\s+/g, ' ').trim();
 }
 
 function shieldEmoteParts(parts) {
@@ -3384,18 +5417,51 @@ function stripAmountFromParts(parts, amount) {
   return out;
 }
 
+function isMembershipElement(msgEl) {
+  const tag = msgEl?.tagName || '';
+  return tag === 'YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER'
+    || /MEMBERSHIP-ITEM/i.test(tag);
+}
+
+function isPinnedChatElement(msgEl) {
+  if (!msgEl) return false;
+  const tag = msgEl.tagName || '';
+  return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
+    || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
+    || isMembershipElement(msgEl)
+    || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
+    || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
+}
+
+function readMembershipBadge(msgEl) {
+  const badge = msgEl?.querySelector?.(
+    'yt-live-chat-author-badge-renderer[type="member"], #chat-badges yt-live-chat-author-badge-renderer',
+  );
+  return (
+    badge?.getAttribute?.('shared-tooltip-text')
+    || badge?.getAttribute?.('aria-label')
+    || badge?.querySelector?.('img')?.getAttribute?.('alt')
+    || ''
+  ).replace(/\s+/g, ' ').trim();
+}
+
 function extractMessageParts(msgEl, { includeAmount = true } = {}) {
   const parts = [];
   const amount = readPurchaseAmount(msgEl);
   if (includeAmount && amount) pushTextPart(parts, `${amount} `);
 
   const messageEl = msgEl.querySelector('#message');
-  if (messageEl) {
-    parts.push(...collectParts(messageEl));
-  } else {
-    const primary = collectParts(msgEl.querySelector('#header-primary-text, #primary-text'));
-    const sub = collectParts(msgEl.querySelector('#header-subtext'));
-    parts.push(...primary, ...sub);
+  const messageParts = messageEl ? collectParts(messageEl) : [];
+  const membership = isMembershipElement(msgEl);
+
+  // Membership cards often put the welcome text in #header-subtext while #message is empty.
+  if (membership || !messageParts.length) {
+    parts.push(...collectParts(msgEl.querySelector('#header-primary-text, #primary-text')));
+    parts.push(...collectParts(msgEl.querySelector('#header-subtext')));
+  }
+  if (messageParts.length) {
+    parts.push(...messageParts);
+  } else if (!membership) {
     const sticker = msgEl.querySelector('#sticker img, img.yt-live-chat-paid-sticker-renderer');
     if (sticker && !parts.some((part) => part.src && part.src === safeEmoteSrc(sticker.getAttribute('src')))) {
       if (isEmoteImage(sticker)) parts.push(...collectParts(sticker));
@@ -3409,11 +5475,17 @@ function extractMessageParts(msgEl, { includeAmount = true } = {}) {
 function readChatMessage(msgEl) {
   if (!msgEl || msgEl.hasAttribute('is-deleted')) return null;
 
-  const amount = readPurchaseAmount(msgEl);
-  const parts = extractMessageParts(msgEl, { includeAmount: true });
+  const membership = isMembershipElement(msgEl);
+  const purchaseAmount = readPurchaseAmount(msgEl);
+  const membershipBadge = membership ? readMembershipBadge(msgEl) : '';
+  // Reuse the amount badge slot for membership labels (e.g. "New member").
+  const amount = purchaseAmount || membershipBadge;
+  const parts = extractMessageParts(msgEl, { includeAmount: !!purchaseAmount });
   const bodyParts = extractMessageParts(msgEl, { includeAmount: false });
   const rawMessage = partsToText(parts);
-  if (!rawMessage && !parts.some((part) => part.type === 'emote')) return null;
+  if (!rawMessage && !parts.some((part) => part.type === 'emote') && !amount && !membership) {
+    return null;
+  }
 
   const message = dedupeRepeatedMessage(rawMessage) || rawMessage;
   const usernameEl = msgEl.querySelector('#author-name');
@@ -3425,10 +5497,7 @@ function readChatMessage(msgEl) {
       || msgEl.querySelector('#author-photo img, yt-img-shadow#author-photo img')?.getAttribute('src')
       || '',
   );
-  const superchat = msgEl.tagName === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
-    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
-    || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(msgEl.tagName || '')
-    || !!amount;
+  const superchat = isPinnedChatElement(msgEl);
 
   return {
     message,
@@ -3439,6 +5508,7 @@ function readChatMessage(msgEl) {
     usernameColor,
     profileUrl,
     avatarUrl,
+    membership,
     superchat,
     superchatStyle: superchat ? readSuperchatStyle(msgEl) : null,
   };
@@ -3462,15 +5532,26 @@ function readCssVarColor(el, name) {
 }
 
 function readSuperchatStyle(msgEl) {
+  const membership = isMembershipElement(msgEl);
   const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
   const content = msgEl.querySelector('#content');
   const headerStyle = header ? getComputedStyle(header) : null;
   const contentStyle = content ? getComputedStyle(content) : null;
+  const fallbackBg = membership ? '#0f9d58' : '#e53935';
 
-  const background = readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
+  const background = (
+    membership
+      ? (
+        readCssVarColor(msgEl, '--yt-live-chat-sponsor')
+        || readCssVarColor(msgEl, '--yt-live-chat-pamphlet-background-color')
+        || readCssVarColor(msgEl, '--yt-live-chat-moderator-color')
+      )
+      : ''
+  )
+    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
     || readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-background-color')
     || usableCssColor(headerStyle?.backgroundColor)
-    || '#e53935';
+    || fallbackBg;
   const bodyBackground = readCssVarColor(msgEl, '--yt-live-chat-paid-message-secondary-container-color')
     || readCssVarColor(msgEl, '--yt-live-chat-paid-message-background-color')
     || usableCssColor(contentStyle?.backgroundColor)
@@ -3493,6 +5574,7 @@ function usableCssColor(value) {
 function markExistingMessages(chatRoot) {
   chatRoot.querySelectorAll(SELECTORS.chatMessage).forEach((el) => {
     el.classList.add('ydm-processed');
+    ensureAuthorProfileLink(el);
   });
 }
 
@@ -3506,149 +5588,6 @@ function isLiveMessage(msgEl, chatRoot) {
     if (node === msgEl || node.contains(msgEl) || msgEl.contains(node)) return true;
   }
   return false;
-}
-
-const CHAT_TRANSLATE_STYLE_ID = 'ydm-chat-translate-style';
-
-const CHAT_TRANSLATE_CSS = `
-.ydm-chat-translation {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  box-sizing: border-box;
-  width: 100%;
-  margin: 3px 0 1px;
-  padding: 3px 0 2px 8px;
-  border-left: 2px solid rgba(230, 33, 23, 1);
-  background: rgba(155, 155, 155, 0.4);
-  color: #fff;
-  font-size: 12.5px;
-  line-height: 1.4;
-  font-weight: 400;
-  font-style: italic;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.ydm-chat-translation-label {
-  flex: 0 0 auto;
-  margin-top: 1px;
-  padding: 0 5px;
-  border-radius: 3px;
-  background: rgba(230, 33, 23, 1);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  font-style: normal;
-  letter-spacing: 0.02em;
-  line-height: 1.5;
-  text-transform: uppercase;
-}
-
-.ydm-chat-translation-text {
-  flex: 1 1 auto;
-  min-width: 0;
-  color: #0f0f0f;
-}
-
-.ydm-chat-translation--pending .ydm-chat-translation-text {
-  color: #606060;
-  font-style: italic;
-}
-
-.ydm-chat-translation--error .ydm-chat-translation-text {
-  color: #b71c1c;
-}
-
-.ydm-chat-menu {
-  position: fixed;
-  z-index: 2147483646;
-  min-width: 160px;
-  padding: 6px 0;
-  border-radius: 8px;
-  background: #212121;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-family: Roboto, Arial, sans-serif;
-  font-size: 13px;
-}
-
-.ydm-chat-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  margin: 0;
-  padding: 8px 14px;
-  border: none;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.ydm-chat-menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.ydm-chat-menu-item svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-  flex: 0 0 auto;
-}
-
-.ydm-sc-action-panel {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  box-sizing: border-box;
-  width: 100%;
-  margin: 6px 0 2px;
-  padding: 6px;
-  border-radius: 8px;
-  background: rgba(15, 15, 15, 0.72);
-}
-
-.ydm-sc-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
-}
-
-.ydm-sc-action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.ydm-sc-action-btn:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.ydm-sc-action-btn svg {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-  flex: 0 0 auto;
-}
-`;
-
-function ensureChatTranslateStyles(doc) {
-  if (!doc || doc.getElementById(CHAT_TRANSLATE_STYLE_ID)) return;
-  const style = doc.createElement('style');
-  style.id = CHAT_TRANSLATE_STYLE_ID;
-  style.textContent = CHAT_TRANSLATE_CSS;
-  (doc.head || doc.documentElement).appendChild(style);
 }
 
 function findChatTranslationMount(msgEl) {
@@ -3744,6 +5683,8 @@ function setChatTranslationStatus(msgEl, status, text) {
   if (textEl) textEl.textContent = text || '';
 }
 
+
+
 function closeChatOverlayUi(doc) {
   if (!doc) return;
   doc.querySelectorAll('.ydm-chat-menu, .ydm-sc-action-panel').forEach((node) => node.remove());
@@ -3798,7 +5739,6 @@ function showSuperchatActionPanel(msgEl, items) {
   ensureChatTranslateStyles(doc);
 
   msgEl.querySelectorAll('.ydm-sc-action-panel').forEach((node) => node.remove());
-
   const panel = doc.createElement('div');
   panel.className = 'ydm-sc-action-panel';
   panel.addEventListener('click', (e) => e.stopPropagation());
@@ -3807,6 +5747,21 @@ function showSuperchatActionPanel(msgEl, items) {
     const btn = createChatActionButton(doc, item);
     btn.className = 'ydm-sc-action-btn';
     panel.appendChild(btn);
+  }
+
+  // Paid stickers / message-less SC: `#content` is a tight horizontal flex —
+  // mounting the panel inside squeezes the author name out of view.
+  const isPaidSticker = msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER';
+  const purchaseDesc = msgEl.querySelector('#purchase-description');
+  const hasBodyText = !!(
+    msgEl.querySelector('#message')?.textContent?.trim()
+    || (purchaseDesc && !purchaseDesc.hasAttribute('hidden') && purchaseDesc.textContent?.trim())
+  );
+  const card = msgEl.querySelector('#card');
+
+  if ((isPaidSticker || !hasBodyText) && card?.parentElement) {
+    card.after(panel);
+    return panel;
   }
 
   const mount = findChatTranslationMount(msgEl);
@@ -3819,11 +5774,553 @@ function showSuperchatActionPanel(msgEl, items) {
   return panel;
 }
 
+function pageWin() {
+  return typeof unsafeWindow !== 'undefined' ? unsafeWindow : window;
+}
+
+function currentChannelId() {
+  const page = pageWin();
+  const fromPlayer = page.ytInitialPlayerResponse?.videoDetails?.channelId;
+  if (fromPlayer) return String(fromPlayer);
+  try {
+    const fromCfg = page.ytcfg?.get?.('CHANNEL_ID') || page.ytcfg?.data_?.CHANNEL_ID;
+    if (fromCfg) return String(fromCfg);
+  } catch (_) {
+    /* ignore */
+  }
+  const link = document.querySelector(
+    'ytd-video-owner-renderer a[href*="/channel/"], #owner #channel-name a[href*="/channel/"]',
+  );
+  const match = link?.getAttribute('href')?.match(/\/channel\/([^/?#]+)/);
+  return match?.[1] || '';
+}
+
+function currentChannelLabel() {
+  const page = pageWin();
+  const author = page.ytInitialPlayerResponse?.videoDetails?.author;
+  if (author) return String(author).trim();
+  const name = document.querySelector(
+    'ytd-video-owner-renderer #channel-name a, #owner #channel-name yt-formatted-string',
+  )?.textContent?.replace(/\s+/g, ' ').trim();
+  return name || currentChannelId();
+}
+
+function sanitizeChannelKey(value) {
+  const text = String(value || '').trim();
+  if (!text) return null;
+  if (/^UC[\w-]{20,}$/i.test(text)) return text;
+  return text.replace(/^@+/, '').slice(0, 64) || null;
+}
+
+function isLiveWatchMode() {
+  if (document.documentElement.dataset.ydmPreview === 'true') return true;
+  const page = pageWin();
+  if (page.ytInitialPlayerResponse?.videoDetails?.isLive) return true;
+  if (page.ytInitialPlayerResponse?.videoDetails?.isLiveContent) return true;
+  return !!document.querySelector('.ytp-live-badge, .ytp-live');
+}
+
+const SEND_PARAMS_CACHE = { key: '', params: '', at: 0 };
+
+/** Matches kusaanko/YouTubeLiveChat Util.generateClientMessageId() — 26 chars from [a-zA-Z-]. */
+const CLIENT_MESSAGE_ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-';
+const CLIENT_MESSAGE_ID_STATE = { base: '', counter: 0 };
+
+function generateClientMessageIdBase() {
+  let out = '';
+  const alphabet = CLIENT_MESSAGE_ID_ALPHABET;
+  const len = alphabet.length;
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const buf = new Uint8Array(26);
+    crypto.getRandomValues(buf);
+    for (let i = 0; i < 26; i += 1) out += alphabet[buf[i] % len];
+    return out;
+  }
+  for (let i = 0; i < 26; i += 1) {
+    out += alphabet[Math.floor(Math.random() * len)];
+  }
+  return out;
+}
+
+/**
+ * clientMessageId = base(26) + counter, same as YouTubeLiveChat.getPayloadToSendMessage.
+ * @see https://github.com/kusaanko/YouTubeLiveChat
+ */
+function createClientMessageId() {
+  if (!CLIENT_MESSAGE_ID_STATE.base) {
+    CLIENT_MESSAGE_ID_STATE.base = generateClientMessageIdBase();
+    CLIENT_MESSAGE_ID_STATE.counter = 0;
+  }
+  if (CLIENT_MESSAGE_ID_STATE.counter >= Number.MAX_SAFE_INTEGER - 1) {
+    CLIENT_MESSAGE_ID_STATE.counter = 0;
+  }
+  return CLIENT_MESSAGE_ID_STATE.base + CLIENT_MESSAGE_ID_STATE.counter++;
+}
+
+function walkFindSendParams(node, depth = 0, seen = new Set()) {
+  if (!node || depth > 14) return '';
+  if (typeof node !== 'object') return '';
+  if (seen.has(node)) return '';
+  seen.add(node);
+
+  try {
+    const endpoint = node.sendLiveChatMessageEndpoint || node.sendLiveChatMessageCommand;
+    if (endpoint?.params) return String(endpoint.params);
+    if (node.commandMetadata?.webCommandMetadata?.apiUrl?.includes?.('send_message') && node.params) {
+      return String(node.params);
+    }
+  } catch (_) {
+    /* ignore */
+  }
+
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = walkFindSendParams(item, depth + 1, seen);
+      if (found) return found;
+    }
+    return '';
+  }
+
+  for (const value of Object.values(node)) {
+    const found = walkFindSendParams(value, depth + 1, seen);
+    if (found) return found;
+  }
+  return '';
+}
+
+function readSendParamsFromSources() {
+  const page = pageWin();
+  const chatDoc = getChatDocument();
+  const chatWin = chatDoc?.defaultView;
+  const sources = [
+    chatWin?.ytInitialData,
+    chatWin?.ytcfg?.data_,
+    page.ytInitialData,
+    page.ytcfg?.data_,
+  ];
+  for (const source of sources) {
+    const found = walkFindSendParams(source);
+    if (found) return found;
+  }
+  return '';
+}
+
+function getLiveChatSendParams(force = false) {
+  const key = pageKey() || location.href;
+  if (!force && SEND_PARAMS_CACHE.params && SEND_PARAMS_CACHE.key === key && Date.now() - SEND_PARAMS_CACHE.at < 120000) {
+    return SEND_PARAMS_CACHE.params;
+  }
+  const params = readSendParamsFromSources();
+  if (params) {
+    SEND_PARAMS_CACHE.key = key;
+    SEND_PARAMS_CACHE.params = params;
+    SEND_PARAMS_CACHE.at = Date.now();
+  }
+  return params;
+}
+
+function readCookieValue(name) {
+  try {
+    const match = document.cookie.match(new RegExp(`(?:^|; )${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}=([^;]*)`));
+    return match ? decodeURIComponent(match[1]) : '';
+  } catch (_) {
+    return '';
+  }
+}
+
+async function sha1Hex(text) {
+  const data = new TextEncoder().encode(text);
+  if (crypto?.subtle?.digest) {
+    const buf = await crypto.subtle.digest('SHA-1', data);
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return '';
+}
+
+/** SAPISIDHASH Authorization as in kusaanko/YouTubeLiveChat.getHeader(). */
+async function buildSapisidAuthorization() {
+  const sapisid = readCookieValue('SAPISID')
+    || readCookieValue('__Secure-3PAPISID')
+    || readCookieValue('__Secure-1PAPISID');
+  if (!sapisid) return '';
+  const time = Math.floor(Date.now() / 1000);
+  const origin = 'https://www.youtube.com';
+  const digest = await sha1Hex(`${time} ${sapisid} ${origin}`);
+  if (!digest) return '';
+  return `SAPISIDHASH ${time}_${digest}`;
+}
+
+function readDatasyncId(win) {
+  try {
+    const raw = win?.ytcfg?.get?.('DATASYNC_ID')
+      || win?.ytcfg?.data_?.DATASYNC_ID
+      || '';
+    return String(raw).split('||')[0] || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function getInnertubeSendConfig() {
+  const page = pageWin();
+  const chatWin = getChatDocument()?.defaultView;
+  const windows = [chatWin, page].filter(Boolean);
+  for (const win of windows) {
+    const ytcfg = win.ytcfg;
+    if (!ytcfg?.get) continue;
+    let key = '';
+    let context = null;
+    try {
+      key = ytcfg.get('INNERTUBE_API_KEY') || '';
+      context = ytcfg.get('INNERTUBE_CONTEXT') || null;
+    } catch (_) {
+      continue;
+    }
+    if (!key || !context) continue;
+    return {
+      win,
+      key,
+      context,
+      clientName: String(ytcfg.get('INNERTUBE_CONTEXT_CLIENT_NAME') || context?.client?.clientName || '1'),
+      clientVersion: String(
+        context?.client?.clientVersion || ytcfg.get('INNERTUBE_CLIENT_VERSION') || '',
+      ),
+      datasyncId: readDatasyncId(win) || readDatasyncId(page),
+      fetchFn: typeof win.fetch === 'function' ? win.fetch.bind(win) : page.fetch?.bind(page),
+    };
+  }
+  return null;
+}
+
+function buildSendContext(baseContext, datasyncId) {
+  let context;
+  try {
+    context = JSON.parse(JSON.stringify(baseContext || {}));
+  } catch (_) {
+    context = { client: { clientName: 'WEB' } };
+  }
+  if (!context.client || typeof context.client !== 'object') context.client = {};
+  if (!context.client.clientName) context.client.clientName = 'WEB';
+  if (!context.user || typeof context.user !== 'object') context.user = {};
+  if (datasyncId) context.user.onBehalfOfUser = datasyncId;
+  if (typeof context.user.lockedSafetyMode !== 'boolean') context.user.lockedSafetyMode = false;
+  return context;
+}
+
+function normalizeYouTubeSendCode(raw) {
+  const code = String(raw || '').trim().toLowerCase();
+  if (!code) return '';
+  if (code.includes('login') || code.includes('auth') || code.includes('unauthenticated')) return 'not_logged_in';
+  if (code.includes('slow')) return 'slow_mode';
+  if (code.includes('duplicate')) return 'duplicate';
+  if (code.includes('rate') || code.includes('too_many')) return 'rate_limit';
+  if (code.includes('forbidden') || code.includes('permission')) return 'forbidden';
+  if (code.includes('live_chat_disabled') || code.includes('chat_disabled')) return 'chat_disabled';
+  if (code.includes('empty')) return 'empty_message';
+  return code || 'send_failed';
+}
+
+function chatSendErrorMessage(error) {
+  const code = normalizeYouTubeSendCode(error?.code || error?.message);
+  switch (code) {
+    case 'not_logged_in':
+      return t('fsChatNeedLogin');
+    case 'no_channel':
+    case 'no_params':
+      return t('favoritesNeedChannel');
+    case 'slow_mode':
+      return t('fsChatSlowMode');
+    case 'duplicate':
+      return t('fsChatDuplicate');
+    case 'rate_limit':
+      return t('fsChatRateLimit');
+    case 'forbidden':
+      return t('fsChatForbidden');
+    case 'chat_disabled':
+      return t('fsChatDisabled');
+    case 'empty_message':
+      return t('favoritesEmptyText');
+    case 'preview':
+      return t('fsChatPreviewOnly');
+    default:
+      break;
+  }
+  const msg = String(error?.userMessage || '').trim();
+  return msg || t('fsChatFailed');
+}
+
+function createSendError(code, userMessage = '', details = null) {
+  const error = new Error(code || 'send_failed');
+  error.code = code || 'send_failed';
+  error.userMessage = userMessage || '';
+  error.details = details;
+  return error;
+}
+
+async function sendViaDomFallback(text) {
+  const ok = await setChatInputText(text);
+  if (!ok) throw createSendError('send_failed');
+  const doc = getChatDocument();
+  const btn = doc?.querySelector(
+    '#send-button button:not([disabled]), yt-button-renderer#send-button button:not([disabled]), #send-button',
+  );
+  if (!btn || btn.disabled || btn.getAttribute('aria-disabled') === 'true') {
+    throw createSendError('send_failed', t('fsChatFailed'));
+  }
+  btn.click();
+  return { via: 'dom' };
+}
+
+async function sendYouTubeLiveChatMessage(message) {
+  const text = String(message || '').trim();
+  if (!text) throw createSendError('empty_message');
+
+  if (document.documentElement.dataset.ydmPreview === 'true') {
+    throw createSendError('preview');
+  }
+
+  const config = getInnertubeSendConfig();
+  const params = getLiveChatSendParams(true);
+
+  if (config?.key && config.context && params && config.fetchFn) {
+    try {
+      const context = buildSendContext(config.context, config.datasyncId);
+      const authorization = await buildSapisidAuthorization();
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-Youtube-Client-Name': config.clientName,
+        'X-Youtube-Client-Version': config.clientVersion,
+        Origin: 'https://www.youtube.com',
+        'X-Origin': 'https://www.youtube.com',
+      };
+      if (authorization) headers.Authorization = authorization;
+
+      const response = await config.fetchFn(
+        `https://www.youtube.com/youtubei/v1/live_chat/send_message?prettyPrint=false&key=${encodeURIComponent(config.key)}`,
+        {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers,
+          body: JSON.stringify({
+            context,
+            params,
+            clientMessageId: createClientMessageId(),
+            richMessage: {
+              textSegments: [{ text }],
+            },
+          }),
+        },
+      );
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        const apiCode = data?.error?.status || data?.error?.message || `http_${response.status}`;
+        throw createSendError(normalizeYouTubeSendCode(apiCode) || 'send_failed', data?.error?.message || '', data);
+      }
+
+      const actions = data?.actions || data?.continuationContents || data;
+      const errText = JSON.stringify(data || {}).match(/"errorMessage(?:Text)?"\s*:\s*"([^"]+)"/);
+      if (errText?.[1]) {
+        throw createSendError('send_failed', errText[1], data);
+      }
+      if (data?.error) {
+        throw createSendError(
+          normalizeYouTubeSendCode(data.error.status || data.error.message) || 'send_failed',
+          data.error.message || '',
+          data,
+        );
+      }
+      return { via: 'api', data: actions };
+    } catch (error) {
+      if (error?.code && error.code !== 'send_failed') throw error;
+      // Fall through to DOM send when API params/session are stale.
+    }
+  }
+
+  return sendViaDomFallback(text);
+}
+
+const FAVORITES_STORAGE_KEY = 'ydm_favorites_v1';
+const FAVORITES_LIMIT = 80;
+const FAVORITE_TEXT_LIMIT = 500;
+
+const DEFAULT_FAVORITES_STATE = {
+  items: [],
+  wheel: {
+    minIntervalSec: 3,
+    maxIntervalSec: 20,
+    maxCount: 30,
+    maxDurationSec: 300,
+  },
+};
+
+const WHEEL_MIN_INTERVAL_FLOOR = 1.5;
+
+function createFavoriteId() {
+  return `fav-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function sanitizeFavoriteShortcut(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const digit = String(value).trim();
+  if (!/^[0-9]$/.test(digit)) return null;
+  return digit;
+}
+
+function sanitizeFavoriteItem(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const text = String(raw.text || '').trim().slice(0, FAVORITE_TEXT_LIMIT);
+  if (!text) return null;
+  let channel = null;
+  if (Object.prototype.hasOwnProperty.call(raw, 'channel')) {
+    channel = raw.channel == null || raw.channel === ''
+      ? null
+      : sanitizeChannelKey(raw.channel);
+  }
+  return {
+    id: String(raw.id || createFavoriteId()),
+    text,
+    shortcut: sanitizeFavoriteShortcut(raw.shortcut),
+    channel,
+  };
+}
+
+function sanitizeFavoritesState(raw) {
+  const base = {
+    items: [],
+    wheel: { ...DEFAULT_FAVORITES_STATE.wheel },
+  };
+  if (!raw || typeof raw !== 'object') return base;
+
+  const seen = new Set();
+  const items = [];
+  for (const entry of Array.isArray(raw.items) ? raw.items : []) {
+    const item = sanitizeFavoriteItem(entry);
+    if (!item || seen.has(item.id)) continue;
+    seen.add(item.id);
+    items.push(item);
+    if (items.length >= FAVORITES_LIMIT) break;
+  }
+
+  const used = new Map();
+  for (const item of items) {
+    if (!item.shortcut) continue;
+    const scope = item.channel || '__global__';
+    const key = `${scope}:${item.shortcut}`;
+    if (used.has(key)) item.shortcut = null;
+    else used.set(key, item.id);
+  }
+
+  const wheelRaw = raw.wheel && typeof raw.wheel === 'object' ? raw.wheel : {};
+  let minIntervalSec = clamp(
+    finiteNumber(wheelRaw.minIntervalSec, DEFAULT_FAVORITES_STATE.wheel.minIntervalSec),
+    WHEEL_MIN_INTERVAL_FLOOR,
+    600,
+  );
+  let maxIntervalSec = clamp(
+    finiteNumber(wheelRaw.maxIntervalSec, DEFAULT_FAVORITES_STATE.wheel.maxIntervalSec),
+    WHEEL_MIN_INTERVAL_FLOOR,
+    600,
+  );
+  if (minIntervalSec > maxIntervalSec) {
+    const swap = minIntervalSec;
+    minIntervalSec = maxIntervalSec;
+    maxIntervalSec = swap;
+  }
+  return {
+    items,
+    wheel: {
+      minIntervalSec,
+      maxIntervalSec,
+      maxCount: clamp(finiteNumber(wheelRaw.maxCount, DEFAULT_FAVORITES_STATE.wheel.maxCount), 1, 500),
+      maxDurationSec: clamp(finiteNumber(wheelRaw.maxDurationSec, DEFAULT_FAVORITES_STATE.wheel.maxDurationSec), 10, 7200),
+    },
+  };
+}
+
+function loadFavoritesState() {
+  try {
+    return sanitizeFavoritesState(GM_getValue(FAVORITES_STORAGE_KEY, null));
+  } catch (_) {
+    return sanitizeFavoritesState(null);
+  }
+}
+
+function saveFavoritesState(state) {
+  const next = sanitizeFavoritesState(state);
+  GM_setValue(FAVORITES_STORAGE_KEY, next);
+  return next;
+}
+
+function favoriteVisibleForChannel(item, channelId) {
+  if (!item) return false;
+  if (!item.channel) return true;
+  const channel = sanitizeChannelKey(channelId);
+  return !!channel && item.channel === channel;
+}
+
+function listFavoritesForChannel(state, channelId) {
+  const items = Array.isArray(state?.items) ? state.items : [];
+  return items.filter((item) => favoriteVisibleForChannel(item, channelId));
+}
+
+function addFavoriteText(text, { shortcut = null, channel = undefined } = {}) {
+  const state = loadFavoritesState();
+  const currentChannel = sanitizeChannelKey(
+    channel === undefined ? currentChannelId() : channel,
+  );
+  const item = sanitizeFavoriteItem({
+    text,
+    shortcut,
+    channel: channel === null ? null : currentChannel,
+  });
+  if (!item) return { state, item: null, added: false };
+
+  if (item.shortcut) {
+    state.items.forEach((entry) => {
+      if (entry.shortcut !== item.shortcut) return;
+      const sameScope = (entry.channel || null) === (item.channel || null);
+      if (sameScope) entry.shortcut = null;
+    });
+  }
+
+  const existing = state.items.find((entry) => (
+    entry.text === item.text && (entry.channel || null) === (item.channel || null)
+  ));
+  if (existing) {
+    if (item.shortcut) existing.shortcut = item.shortcut;
+    return { state: saveFavoritesState(state), item: existing, added: false };
+  }
+
+  if (state.items.length >= FAVORITES_LIMIT) {
+    return { state, item: null, added: false, full: true };
+  }
+
+  state.items.unshift(item);
+  return { state: saveFavoritesState(state), item, added: true };
+}
+
+function setFavoriteGlobal(itemId, global = true) {
+  const state = loadFavoritesState();
+  const item = state.items.find((entry) => entry.id === itemId);
+  if (!item) return { state, item: null };
+  item.channel = global ? null : (sanitizeChannelKey(currentChannelId()) || item.channel);
+  if (item.shortcut) {
+    state.items.forEach((entry) => {
+      if (entry.id === item.id || entry.shortcut !== item.shortcut) return;
+      const sameScope = (entry.channel || null) === (item.channel || null);
+      if (sameScope) entry.shortcut = null;
+    });
+  }
+  return { state: saveFavoritesState(state), item };
+}
+
 class ChatActions {
-  constructor({ getSettings, danmakuEmitter, isActive }) {
+  constructor({ getSettings, danmakuEmitter, isActive, favoritesPanel = null }) {
     this.getSettings = getSettings;
     this.danmakuEmitter = danmakuEmitter;
     this.isActive = isActive;
+    this.favoritesPanel = favoritesPanel;
     this.chatRoot = null;
     this.doc = null;
     this.panelObserver = null;
@@ -3884,12 +6381,22 @@ class ChatActions {
   }
 
   isSuperchatElement(msgEl) {
-    if (!msgEl) return false;
-    const tag = msgEl.tagName || '';
-    return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
-      || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
-      || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
-      || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
+    return isPinnedChatElement(msgEl);
+  }
+
+  profileMenuItem(msgEl, { closeMenu = true } = {}) {
+    // Resolve at click time so Polymer channel ids / @handles are available
+    // for any target inside the message row (not only the avatar).
+    return {
+      icon: ICON_PROFILE,
+      label: t('chatActionOpenProfile'),
+      onClick: () => {
+        if (closeMenu) closeChatOverlayUi(this.doc);
+        const href = getYouTubeProfileUrl(msgEl);
+        if (!href) return;
+        window.open(href, '_blank', 'noopener,noreferrer');
+      },
+    };
   }
 
   handleContextMenu(e) {
@@ -3901,14 +6408,42 @@ class ChatActions {
     e.stopPropagation();
 
     const translated = hasChatTranslation(msgEl);
-    showChatContextMenu(this.doc, e.clientX, e.clientY, [{
-      icon: ICON_TRANSLATE,
-      label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
-      onClick: () => {
-        closeChatOverlayUi(this.doc);
-        this.translateMessage(msgEl).catch(() => {});
+    const items = [
+      {
+        icon: ICON_TRANSLATE,
+        label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.translateMessage(msgEl).catch(() => {});
+        },
       },
-    }]);
+      {
+        icon: ICON_SPEECH_ON,
+        label: t('chatActionSpeak'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.speakMessage(msgEl);
+        },
+      },
+      {
+        icon: ICON_DANMAKU_ON,
+        label: t('chatActionDanmaku'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.sendDanmaku(msgEl);
+        },
+      },
+      {
+        icon: ICON_FAVORITE,
+        label: t('chatActionFavorite'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.favoriteMessage(msgEl);
+        },
+      },
+    ];
+    items.push(this.profileMenuItem(msgEl));
+    showChatContextMenu(this.doc, e.clientX, e.clientY, items);
   }
 
   handleClick(e) {
@@ -3927,7 +6462,7 @@ class ChatActions {
   openSuperchatPanel(msgEl) {
     if (!this.doc || !msgEl?.isConnected) return;
     const translated = hasChatTranslation(msgEl);
-    showSuperchatActionPanel(msgEl, [
+    const items = [
       {
         icon: ICON_TRANSLATE,
         label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
@@ -3945,7 +6480,14 @@ class ChatActions {
         label: t('chatActionDanmaku'),
         onClick: () => this.sendDanmaku(msgEl),
       },
-    ]);
+      {
+        icon: ICON_FAVORITE,
+        label: t('chatActionFavorite'),
+        onClick: () => this.favoriteMessage(msgEl),
+      },
+    ];
+    items.push(this.profileMenuItem(msgEl, { closeMenu: false }));
+    showSuperchatActionPanel(msgEl, items);
   }
 
   findOpenSuperchatCards() {
@@ -3954,13 +6496,18 @@ class ChatActions {
     const selectors = [
       '#chat-messages yt-live-chat-paid-message-renderer',
       '#chat-messages yt-live-chat-paid-sticker-renderer',
+      '#chat-messages yt-live-chat-membership-item-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-message-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-sticker-renderer',
+      'yt-live-chat-banner-manager yt-live-chat-membership-item-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-message-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-sticker-renderer',
+      'tp-yt-paper-dialog yt-live-chat-membership-item-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[aria-selected="true"] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[selected] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer #card:not([hidden]) yt-live-chat-paid-message-renderer',
+      'yt-live-chat-ticker-sponsor-item-renderer[aria-selected="true"] yt-live-chat-membership-item-renderer',
+      'yt-live-chat-ticker-sponsor-item-renderer[selected] yt-live-chat-membership-item-renderer',
     ];
 
     const found = [];
@@ -4044,6 +6591,24 @@ class ChatActions {
     speakTextNow(translated || parsed.message);
   }
 
+  favoriteMessage(msgEl) {
+    const parsed = readChatMessage(msgEl);
+    const text = String(
+      partsToFavoriteText(parsed?.bodyParts || parsed?.parts || [])
+      || parsed?.message
+      || '',
+    ).trim();
+    if (!text) return;
+    if (this.favoritesPanel?.addFromText) {
+      this.favoritesPanel.addFromText(text);
+      if (!this.favoritesPanel.isOpen && this.favoritesPanel.btn) {
+        this.favoritesPanel.open(this.favoritesPanel.btn);
+      }
+      return;
+    }
+    addFavoriteText(text);
+  }
+
   sendDanmaku(msgEl) {
     if (!this.danmakuEmitter || !this.isActive()) return;
     const settings = this.getSettings();
@@ -4086,11 +6651,12 @@ class ChatActions {
 }
 
 class ChatObserver {
-  constructor({ getSettings, danmakuEmitter, translateQueue, isActive }) {
+  constructor({ getSettings, danmakuEmitter, translateQueue, isActive, favoritesPanel = null }) {
     this.getSettings = getSettings;
     this.danmakuEmitter = danmakuEmitter;
     this.translateQueue = translateQueue;
     this.isActive = isActive;
+    this.favoritesPanel = favoritesPanel;
     this.observer = null;
     this.chatRoot = null;
     this.readyAt = 0;
@@ -4102,7 +6668,13 @@ class ChatObserver {
       getSettings,
       danmakuEmitter,
       isActive,
+      favoritesPanel,
     });
+  }
+
+  setFavoritesPanel(panel) {
+    this.favoritesPanel = panel;
+    if (this.chatActions) this.chatActions.favoritesPanel = panel;
   }
 
   isConnected() {
@@ -4217,6 +6789,7 @@ class ChatObserver {
     for (const msgEl of found) {
       if (seen.has(msgEl)) continue;
       seen.add(msgEl);
+      ensureAuthorProfileLink(msgEl);
       if (!this.shouldEmit(msgEl)) continue;
       const parsed = parseChatMessage(msgEl);
       if (!parsed) continue;
@@ -4428,13 +7001,12 @@ function parseDomHistoryItem(msgEl, index) {
     ?.textContent?.replace(/\s+/g, ' ').trim() || '';
 
   const messageEl = msgEl.querySelector('#message');
-  let message = '';
-  if (messageEl) {
-    message = partsToText(collectParts(messageEl));
-  } else {
+  let message = messageEl ? partsToText(collectParts(messageEl)) : '';
+  if (!message || msgEl.tagName === 'YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER') {
     const primary = partsToText(collectParts(msgEl.querySelector('#header-primary-text, #primary-text')));
     const sub = partsToText(collectParts(msgEl.querySelector('#header-subtext')));
-    message = [primary, sub].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    const headerText = [primary, sub].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+    message = [headerText, message].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
   }
 
   if (!author && !message && !amount) return null;
@@ -5078,845 +7650,6 @@ function formatLiveConcurrentLabel(count) {
   if (count == null) return 'Live';
   return `Live · ${formatCountNumber(count)} ${t('liveWatching')}`;
 }
-
-function injectStyles() {
-  GM_addStyle(`
-    .ydm-danmaku-layer {
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .ydm-danmaku-item {
-      position: absolute;
-      left: 100%;
-      white-space: nowrap;
-      font-weight: 700;
-      line-height: 1.2;
-      pointer-events: auto;
-      cursor: default;
-      user-select: none;
-      text-shadow:
-        1px 1px 2px rgba(0, 0, 0, 0.9),
-        -1px -1px 2px rgba(0, 0, 0, 0.9),
-        0 0 4px rgba(0, 0, 0, 0.8);
-      animation: ydm-scroll var(--ydm-duration, 8s) linear forwards;
-      will-change: transform;
-    }
-
-    .ydm-emote {
-      display: inline-block;
-      width: 1.15em;
-      height: 1.15em;
-      margin: 0 0.08em;
-      vertical-align: -0.2em;
-      overflow: hidden;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .ydm-emote img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      font-size: 0;
-      pointer-events: none;
-    }
-
-    .ydm-danmaku-item.ydm-paused {
-      animation-play-state: paused;
-      z-index: 20;
-      cursor: pointer;
-    }
-
-    .ydm-danmaku-item.ydm-paused.ydm-click-locked {
-      z-index: 30;
-    }
-
-    .ydm-superchat-layer {
-      pointer-events: none;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-
-    .ydm-superchat-layer.ydm-sc-bottom {
-      justify-content: flex-end;
-    }
-
-    .ydm-superchat-item {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      flex: 0 0 auto;
-      gap: 6px;
-      box-sizing: border-box;
-      width: fit-content;
-      max-width: min(720px, calc(100% - 24px));
-      padding: 5px 12px 5px 6px;
-      border-radius: 999px;
-      font-weight: 500;
-      line-height: 1.25;
-      white-space: nowrap;
-      overflow: hidden;
-      pointer-events: auto;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-      animation-duration: var(--ydm-sc-duration, 6s);
-      animation-timing-function: ease;
-      animation-fill-mode: forwards;
-    }
-
-    .ydm-sc-avatar {
-      width: 1.45em;
-      height: 1.45em;
-      border-radius: 50%;
-      object-fit: cover;
-      flex: 0 0 auto;
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    .ydm-sc-username {
-      flex: 0 0 auto;
-      max-width: 7.5em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      opacity: 0.92;
-      font-size: 0.78em;
-      font-weight: 500;
-    }
-
-    .ydm-sc-amount {
-      flex: 0 0 auto;
-      font-size: 0.78em;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      white-space: nowrap;
-    }
-
-    .ydm-sc-message-clip {
-      flex: 0 1 auto;
-      min-width: 0;
-      overflow: hidden;
-      max-width: 100%;
-    }
-
-    .ydm-sc-message {
-      display: inline-block;
-      white-space: nowrap;
-      font-size: 0.92em;
-      font-weight: 500;
-      will-change: transform;
-    }
-
-    .ydm-superchat-item.ydm-sc-marquee .ydm-sc-message {
-      animation: ydm-sc-marquee var(--ydm-sc-marquee-duration, 4s) linear 0.45s infinite alternate;
-    }
-
-    .ydm-superchat-item.ydm-paused .ydm-sc-message {
-      animation-play-state: paused;
-    }
-
-    @keyframes ydm-sc-marquee {
-      0%, 8% { transform: translateX(0); }
-      92%, 100% { transform: translateX(var(--ydm-sc-marquee-distance, 0)); }
-    }
-
-    .ydm-superchat-item.ydm-sc-fade,
-    .ydm-superchat-item.ydm-sc-shine {
-      animation-name: ydm-sc-fade;
-    }
-
-    .ydm-superchat-item.ydm-sc-slide {
-      animation-name: ydm-sc-slide;
-    }
-
-    .ydm-superchat-layer.ydm-sc-bottom .ydm-superchat-item.ydm-sc-slide {
-      animation-name: ydm-sc-slide-up;
-    }
-
-    .ydm-superchat-item.ydm-sc-pop {
-      animation-name: ydm-sc-pop;
-    }
-
-    .ydm-superchat-item.ydm-sc-shine::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(110deg, transparent 28%, rgba(255, 255, 255, 0.55) 50%, transparent 72%);
-      transform: translateX(-130%);
-      animation: ydm-sc-shine-sweep 1.15s ease 0.25s;
-      pointer-events: none;
-    }
-
-    .ydm-superchat-item.ydm-paused,
-    .ydm-superchat-item.ydm-paused.ydm-click-locked {
-      animation-play-state: paused;
-      z-index: 20;
-    }
-
-    @keyframes ydm-sc-fade {
-      0% { opacity: 0; }
-      12% { opacity: 1; }
-      88% { opacity: 1; }
-      100% { opacity: 0; }
-    }
-
-    @keyframes ydm-sc-slide {
-      0% { opacity: 0; transform: translateY(-14px); }
-      14% { opacity: 1; transform: translateY(0); }
-      86% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(10px); }
-    }
-
-    @keyframes ydm-sc-slide-up {
-      0% { opacity: 0; transform: translateY(14px); }
-      14% { opacity: 1; transform: translateY(0); }
-      86% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-10px); }
-    }
-
-    @keyframes ydm-sc-pop {
-      0% { opacity: 0; transform: scale(0.7); }
-      16% { opacity: 1; transform: scale(1); }
-      86% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(0.92); }
-    }
-
-    @keyframes ydm-sc-shine-sweep {
-      from { transform: translateX(-130%); }
-      to { transform: translateX(130%); }
-    }
-
-    .ydm-click-lock-backdrop {
-      position: absolute;
-      inset: 0;
-      z-index: 25;
-      pointer-events: auto;
-      background: transparent;
-    }
-
-    .ydm-danmaku-tooltip {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      pointer-events: auto;
-      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
-      max-width: min(280px, calc(100vw - 16px));
-      overflow: hidden;
-    }
-
-    .ydm-danmaku-tooltip-bubble {
-      background: rgba(15, 15, 15, 0.96);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      padding: 6px 8px;
-      max-width: min(280px, 100%);
-      min-height: 0;
-      overflow-y: auto;
-      user-select: text;
-    }
-
-    .ydm-danmaku-tooltip-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 6px;
-    }
-
-    .ydm-danmaku-tooltip-header--solo {
-      justify-content: flex-end;
-    }
-
-    .ydm-danmaku-tooltip-name {
-      flex: 1;
-      min-width: 0;
-      font-size: 12px;
-      font-weight: 600;
-      line-height: 1.3;
-      word-break: break-word;
-      text-decoration: none;
-    }
-
-    a.ydm-danmaku-tooltip-name {
-      cursor: pointer;
-    }
-
-    a.ydm-danmaku-tooltip-name:hover {
-      text-decoration: underline;
-    }
-
-    .ydm-danmaku-tooltip-actions {
-      display: flex;
-      flex-shrink: 0;
-      gap: 2px;
-    }
-
-    .ydm-danmaku-tooltip-copy,
-    .ydm-danmaku-tooltip-speak {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      width: clamp(24px, 6vw, 28px);
-      height: clamp(24px, 6vw, 28px);
-      padding: 0;
-      border: none;
-      border-radius: 4px;
-      background: transparent;
-      color: #e5e5e5;
-      cursor: pointer;
-    }
-
-    .ydm-danmaku-tooltip-copy:hover,
-    .ydm-danmaku-tooltip-speak:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff;
-    }
-
-    .ydm-danmaku-tooltip-copy svg,
-    .ydm-danmaku-tooltip-speak svg {
-      width: clamp(14px, 3.5vw, 16px);
-      height: clamp(14px, 3.5vw, 16px);
-      fill: currentColor;
-      display: block;
-    }
-
-    .ydm-danmaku-tooltip-original {
-      margin-top: 4px;
-      color: #aaa;
-      font-size: 11px;
-      line-height: 1.3;
-      word-break: break-word;
-    }
-
-    .ydm-danmaku-tooltip-tail {
-      width: 6px;
-      height: 6px;
-      flex-shrink: 0;
-      background: rgba(15, 15, 15, 0.96);
-      transform: rotate(45deg);
-    }
-
-    .ydm-danmaku-tooltip--above .ydm-danmaku-tooltip-tail {
-      margin: -3px auto 0;
-      border-right: 1px solid rgba(255, 255, 255, 0.12);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .ydm-danmaku-tooltip--below .ydm-danmaku-tooltip-bubble {
-      order: 2;
-    }
-
-    .ydm-danmaku-tooltip--below .ydm-danmaku-tooltip-tail {
-      order: 1;
-      margin: 0 auto -3px;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-      border-left: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    @keyframes ydm-scroll {
-      from { transform: translateX(var(--ydm-start, 0px)); }
-      to { transform: translateX(calc(-1 * var(--ydm-travel, 100vw))); }
-    }
-
-    .ytp-right-controls > .ydm-controls-wrap {
-      display: inline-flex !important;
-      align-items: center !important;
-      height: 100% !important;
-      flex: 0 0 auto !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-time-wrapper {
-      white-space: nowrap;
-      max-width: none;
-      padding-right: 2px;
-    }
-
-    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-      max-width: none;
-      margin-left: 2px;
-      vertical-align: top;
-    }
-
-    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper[hidden] {
-      display: none !important;
-    }
-
-    .ydm-live-views-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 0;
-    }
-
-    .ydm-live-views-icon svg {
-      width: 18px;
-      height: 18px;
-      fill: currentColor;
-      display: block;
-    }
-
-    .ydm-live-views-count {
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.01em;
-    }
-
-    .ydm-control-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 100%;
-      min-height: 36px;
-      padding: 0;
-      border: none;
-      background: transparent;
-      color: #fff;
-      cursor: pointer;
-      opacity: 0.9;
-      flex-shrink: 0;
-    }
-
-    .ydm-control-btn:hover,
-    .ydm-control-btn.ydm-active {
-      opacity: 1;
-    }
-
-    .ydm-control-btn svg {
-      width: 22px;
-      height: 22px;
-      fill: currentColor;
-      display: block;
-    }
-
-    .ydm-danmaku-btn .ydm-icon {
-      display: none;
-      line-height: 0;
-    }
-
-    .ydm-danmaku-btn.ydm-danmaku-enabled .ydm-icon-on,
-    .ydm-danmaku-btn.ydm-danmaku-disabled .ydm-icon-off {
-      display: block;
-    }
-
-    .ydm-speech-btn .ydm-icon {
-      display: none;
-      line-height: 0;
-    }
-
-    .ydm-speech-btn.ydm-speech-on .ydm-icon-on,
-    .ydm-speech-btn.ydm-speech-mute .ydm-icon-mute,
-    .ydm-speech-btn.ydm-speech-off .ydm-icon-off {
-      display: block;
-    }
-
-    .ydm-speech-btn.ydm-speech-mute {
-      opacity: 0.7;
-    }
-
-    .ydm-speech-btn.ydm-speech-off {
-      opacity: 0.45;
-    }
-
-    .ydm-danmaku-btn.ydm-danmaku-disabled {
-      opacity: 0.45;
-    }
-
-    .ydm-balloon {
-      background: #212121;
-      color: #f1f1f1;
-      border-radius: 12px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
-      font-family: Roboto, Arial, sans-serif;
-      font-size: 14px;
-      overflow: hidden;
-    }
-
-    .ydm-balloon-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 12px 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .ydm-balloon-title {
-      font-size: 14px;
-      font-weight: 600;
-      line-height: 1.4;
-    }
-
-    .ydm-balloon-close {
-      background: none;
-      border: none;
-      color: #ff4e45;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 4px 6px;
-      border-radius: 4px;
-    }
-
-    .ydm-balloon-close:hover {
-      background: rgba(255, 78, 69, 0.12);
-    }
-
-    .ydm-balloon-body {
-      padding: 4px 0 8px;
-      max-height: min(60vh, 420px);
-      overflow-y: auto;
-    }
-
-    .ydm-balloon-body--speech {
-      max-height: min(70vh, 520px);
-    }
-
-    .ydm-balloon-section {
-      padding: 6px 12px 0;
-      color: #aaa;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .ydm-speech-modes {
-      display: flex;
-      gap: 8px;
-      padding: 8px 12px;
-    }
-
-    .ydm-speech-mode {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 4px;
-      border: 1px solid #3a3a3a;
-      border-radius: 8px;
-      background: #0f0f0f;
-      color: #aaa;
-      cursor: pointer;
-      font-size: 12px;
-      line-height: 1.2;
-    }
-
-    .ydm-speech-mode svg {
-      width: 22px;
-      height: 22px;
-      fill: currentColor;
-      display: block;
-    }
-
-    .ydm-speech-mode:hover,
-    .ydm-speech-mode.ydm-active {
-      color: #fff;
-      border-color: #ff4e45;
-      background: rgba(255, 78, 69, 0.12);
-    }
-
-    .ydm-speech-test {
-      display: flex;
-      gap: 6px;
-    }
-
-    .ydm-speech-test .ydm-balloon-input {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .ydm-speech-play {
-      flex-shrink: 0;
-      min-width: 36px;
-      border: none;
-      border-radius: 8px;
-      background: #3a3a3a;
-      color: #f1f1f1;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .ydm-speech-play:hover {
-      background: #4a4a4a;
-    }
-
-    .ydm-speech-note {
-      margin: 0;
-      padding: 0 12px 8px;
-      color: #aaa;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .ydm-balloon-row {
-      padding: 8px 12px;
-    }
-
-    .ydm-balloon-row--toggle {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .ydm-balloon-row--field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .ydm-balloon-field-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .ydm-balloon-label {
-      color: #f1f1f1;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-
-    .ydm-balloon-value {
-      color: #aaa;
-      font-size: 12px;
-    }
-
-    .ydm-balloon-range {
-      width: 100%;
-      accent-color: #ff4e45;
-      height: 4px;
-    }
-
-    .ydm-balloon-select,
-    .ydm-balloon-input {
-      width: 100%;
-      padding: 6px 8px;
-      border: 1px solid #3a3a3a;
-      border-radius: 8px;
-      background: #0f0f0f;
-      color: #f1f1f1;
-      font-size: 13px;
-    }
-
-    .ydm-keyword-hint {
-      color: #aaa;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
-    .ydm-keyword-add {
-      display: flex;
-      gap: 6px;
-    }
-
-    .ydm-keyword-add-btn {
-      flex-shrink: 0;
-      border: none;
-      border-radius: 8px;
-      background: #3a3a3a;
-      color: #f1f1f1;
-      padding: 0 10px;
-      cursor: pointer;
-    }
-
-    .ydm-keyword-add-btn:hover {
-      background: #4a4a4a;
-    }
-
-    .ydm-keyword-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .ydm-keyword-list:empty {
-      display: none;
-    }
-
-    .ydm-keyword-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 2px;
-      max-width: 100%;
-      padding: 2px 2px 2px 8px;
-      border-radius: 999px;
-      background: #3a3a3a;
-      color: #f1f1f1;
-      font-size: 12px;
-    }
-
-    .ydm-keyword-chip > span {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .ydm-keyword-remove {
-      width: 18px;
-      height: 18px;
-      padding: 0;
-      border: none;
-      border-radius: 50%;
-      background: transparent;
-      color: #aaa;
-      cursor: pointer;
-      line-height: 18px;
-    }
-
-    .ydm-keyword-remove:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .ydm-balloon-divider {
-      height: 1px;
-      margin: 4px 12px;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .ydm-history-status {
-      margin: 0;
-      padding: 4px 12px 8px;
-      color: #aaa;
-      font-size: 12px;
-      line-height: 1.45;
-      min-height: 1.45em;
-    }
-
-    .ydm-history-status:empty {
-      display: none;
-    }
-
-    .ydm-history-status--error {
-      color: #ff8a80;
-    }
-
-    .ydm-history-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 0 12px 12px;
-    }
-
-    .ydm-history-download,
-    .ydm-history-pause,
-    .ydm-history-resume,
-    .ydm-history-cancel {
-      border: none;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .ydm-history-download {
-      flex: 1 1 100%;
-      background: #ff4e45;
-      color: #fff;
-    }
-
-    .ydm-history-pause,
-    .ydm-history-resume {
-      flex: 1 1 auto;
-      background: #3ea6ff;
-      color: #0f0f0f;
-    }
-
-    .ydm-history-cancel {
-      flex: 1 1 auto;
-      background: #272727;
-      color: #fff;
-    }
-
-    .ydm-history-download:disabled,
-    .ydm-history-pause:disabled,
-    .ydm-history-resume:disabled,
-    .ydm-history-cancel:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-
-    .ydm-history-download[hidden],
-    .ydm-history-pause[hidden],
-    .ydm-history-resume[hidden],
-    .ydm-history-cancel[hidden] {
-      display: none;
-    }
-
-    .ydm-switch {
-      position: relative;
-      width: 40px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-
-    .ydm-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .ydm-switch-slider {
-      position: absolute;
-      inset: 0;
-      background: #3a3a3a;
-      border-radius: 11px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .ydm-switch-slider::before {
-      content: '';
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      left: 3px;
-      bottom: 3px;
-      background: #fff;
-      border-radius: 50%;
-      transition: transform 0.2s;
-    }
-
-    .ydm-switch input:checked + .ydm-switch-slider {
-      background: #ff4e45;
-    }
-
-    .ydm-switch input:checked + .ydm-switch-slider::before {
-      transform: translateX(18px);
-    }
-  `);
-}
-
-const ICON_DANMAKU_ON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M11.989 4.828c-.47 0-.975.004-1.515.012l-1.71-2.566a1.008 1.008 0 0 0-1.678 1.118l.999 1.5c-.681.018-1.403.04-2.164.068a4.013 4.013 0 0 0-3.83 3.44c-.165 1.15-.245 2.545-.245 4.185 0 1.965.115 3.67.35 5.116a4.012 4.012 0 0 0 3.763 3.363l.906.046c1.205.063 1.808.095 3.607.095a.988.988 0 0 0 0-1.975c-1.758 0-2.339-.03-3.501-.092l-.915-.047a2.037 2.037 0 0 1-1.91-1.708c-.216-1.324-.325-2.924-.325-4.798 0-1.563.076-2.864.225-3.904.14-.977.96-1.713 1.945-1.747 2.444-.087 4.465-.13 6.063-.131 1.598 0 3.62.044 6.064.13.96.034 1.71.81 1.855 1.814.075.524.113 1.962.141 3.065v.002c.01.342.017.65.025.88a.987.987 0 1 0 1.974-.068c-.008-.226-.016-.523-.025-.856v-.027c-.03-1.118-.073-2.663-.16-3.276-.273-1.906-1.783-3.438-3.74-3.507-.9-.032-1.743-.058-2.531-.078l1.05-1.46a1.008 1.008 0 0 0-1.638-1.177l-1.862 2.59c-.38-.004-.744-.007-1.088-.007h-.13Zm.521 4.775h-1.32v4.631h2.222v.847h-2.618v1.078h2.618l.003.678c.36.026.714.163 1.01.407h.11v-1.085h2.694v-1.078h-2.695v-.847H16.8v-4.63h-1.276a8.59 8.59 0 0 0 .748-1.42L15.183 7.8a14.232 14.232 0 0 1-.814 1.804h-1.518l.693-.308a8.862 8.862 0 0 0-.814-1.408l-1.045.352c.297.396.572.847.825 1.364Zm-4.18 3.564.154-1.485h1.98V8.294h-3.2v.98H9.33v1.43H7.472l-.308 3.453h2.277c0 1.166-.044 1.925-.12 2.277-.078.352-.386.528-.936.528-.308 0-.616-.022-.902-.055l.297 1.067.062.005c.285.02.551.04.818.04 1.001-.067 1.562-.419 1.694-1.057.11-.638.176-1.903.176-3.795h-2.2Zm7.458.11v-.858h-1.254v.858h1.254Zm-2.376-.858v.858h-1.199v-.858h1.2Zm-1.199-.946h1.2v-.902h-1.2v.902Zm2.321 0v-.902h1.254v.902h-1.254Z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M22.846 14.627a1 1 0 0 0-1.412.075l-5.091 5.703-2.216-2.275-.097-.086-.008-.005a1 1 0 0 0-1.322 1.493l2.963 3.041.093.083.007.005c.407.315 1 .27 1.354-.124l5.81-6.505.08-.102.005-.008a1 1 0 0 0-.166-1.295Z" clip-rule="evenodd"/></svg>`;
-
-const ICON_DANMAKU_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m8.085 4.891-.999-1.499a1.008 1.008 0 0 1 1.679-1.118l1.709 2.566c.54-.008 1.045-.012 1.515-.012h.13c.345 0 .707.003 1.088.007l1.862-2.59a1.008 1.008 0 0 1 1.637 1.177l-1.049 1.46c.788.02 1.631.046 2.53.078 1.958.069 3.468 1.6 3.74 3.507.088.613.13 2.158.16 3.276l.001.027c.01.333.017.63.025.856a.987.987 0 0 1-1.974.069c-.008-.23-.016-.539-.025-.881v-.002c-.028-1.103-.066-2.541-.142-3.065-.143-1.004-.895-1.78-1.854-1.813-2.444-.087-4.466-.13-6.064-.131-1.598 0-3.619.044-6.063.13a2.037 2.037 0 0 0-1.945 1.748c-.15 1.04-.225 2.341-.225 3.904 0 1.874.11 3.474.325 4.798.154.949.95 1.66 1.91 1.708a97.58 97.58 0 0 0 5.416.139.988.988 0 0 1 0 1.975c-2.196 0-3.61-.047-5.513-.141A4.012 4.012 0 0 1 2.197 17.7c-.236-1.446-.351-3.151-.351-5.116 0-1.64.08-3.035.245-4.184A4.013 4.013 0 0 1 5.92 4.96c.761-.027 1.483-.05 2.164-.069Zm4.436 4.707h-1.32v4.63h2.222v.848h-2.618v1.078h2.431a5.01 5.01 0 0 1 3.575-3.115V9.598h-1.276a8.59 8.59 0 0 0 .748-1.42l-1.089-.384a14.232 14.232 0 0 1-.814 1.804h-1.518l.693-.308a8.862 8.862 0 0 0-.814-1.408l-1.045.352c.297.396.572.847.825 1.364Zm-4.18 3.564.154-1.485h1.98V8.289h-3.2v.979h2.067v1.43H7.483l-.308 3.454h2.277c0 1.166-.044 1.925-.12 2.277-.078.352-.386.528-.936.528-.308 0-.616-.022-.902-.055l.297 1.067.062.004c.285.02.551.04.818.04 1.001-.066 1.562-.418 1.694-1.056.11-.638.176-1.903.176-3.795h-2.2Zm7.458.11v-.858h-1.254v.858H15.8Zm-2.376-.858v.858h-1.199v-.858h1.2Zm-1.199-.946h1.2v-.902h-1.2v.902Zm2.321 0v-.902H15.8v.902h-1.254Zm3.517 10.594a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-.002-1.502a2.5 2.5 0 0 1-2.217-3.657l3.326 3.398a2.49 2.49 0 0 1-1.109.259Zm2.5-2.5c0 .42-.103.815-.286 1.162l-3.328-3.401a2.5 2.5 0 0 1 3.614 2.239Z" clip-rule="evenodd"/></svg>`;
-
-const ICON_SETTINGS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m15.645 4.881 1.06-1.473a.998.998 0 1 0-1.622-1.166L13.22 4.835a110.67 110.67 0 0 0-1.1-.007h-.131c-.47 0-.975.004-1.515.012L8.783 2.3A.998.998 0 0 0 7.12 3.408l.988 1.484c-.688.019-1.418.042-2.188.069a4.013 4.013 0 0 0-3.83 3.44c-.165 1.15-.245 2.545-.245 4.185 0 1.965.115 3.67.35 5.116a4.012 4.012 0 0 0 3.763 3.363c1.903.094 3.317.141 5.513.141a.988.988 0 0 0 0-1.975 97.58 97.58 0 0 1-5.416-.139 2.037 2.037 0 0 1-1.91-1.708c-.216-1.324-.325-2.924-.325-4.798 0-1.563.076-2.864.225-3.904.14-.977.96-1.713 1.945-1.747 2.444-.087 4.465-.13 6.063-.131 1.598 0 3.62.044 6.064.13.96.034 1.71.81 1.855 1.814.075.524.113 1.962.141 3.065v.002c.005.183.01.07.014-.038.004-.096.008-.189.011-.081a.987.987 0 1 0 1.974-.069c-.004-.105-.007-.009-.011.09-.002.056-.004.112-.007.135l-.002.01a.574.574 0 0 1-.005-.091v-.027c-.03-1.118-.073-2.663-.16-3.276-.273-1.906-1.783-3.438-3.74-3.507-.905-.032-1.752-.058-2.543-.079Zm-3.113 4.703h-1.307v4.643h2.2v.04l.651-1.234c.113-.215.281-.389.482-.509v-.11h.235c.137-.049.283-.074.433-.074h1.553V9.584h-1.264a8.5 8.5 0 0 0 .741-1.405l-1.078-.381c-.24.631-.501 1.23-.806 1.786h-1.503l.686-.305c-.228-.501-.5-.959-.806-1.394l-1.034.348c.294.392.566.839.817 1.35Zm-1.7 5.502h2.16l-.564 1.068h-1.595v-1.068Zm-2.498-1.863.152-1.561h1.96V8.289H7.277v.969h2.048v1.435h-1.84l-.306 3.51h2.254c0 1.155-.043 1.906-.12 2.255-.076.348-.38.523-.925.523-.305 0-.61-.022-.893-.055l.294 1.056.061.005c.282.02.546.039.81.039.991-.065 1.547-.414 1.677-1.046.11-.631.175-1.883.175-3.757H8.334Zm5.09-.8v.85h-1.188v-.85h1.187Zm-1.188-.955h1.187v-.893h-1.187v.893Zm2.322.007v-.893h1.241v.893h-1.241Zm.528 2.757a1.26 1.26 0 0 1 1.087-.627l4.003-.009a1.26 1.26 0 0 1 1.094.63l1.721 2.982c.226.39.225.872-.001 1.263l-1.743 3a1.26 1.26 0 0 1-1.086.628l-4.003.009a1.26 1.26 0 0 1-1.094-.63l-1.722-2.982a1.26 1.26 0 0 1 .002-1.263l1.742-3Zm1.967.858a1.26 1.26 0 0 0-1.08.614l-.903 1.513a1.26 1.26 0 0 0-.002 1.289l.885 1.492c.227.384.64.62 1.086.618l2.192-.005a1.26 1.26 0 0 0 1.08-.615l.904-1.518a1.26 1.26 0 0 0 .001-1.288l-.884-1.489a1.26 1.26 0 0 0-1.086-.616l-2.193.005Zm2.517 2.76a1.4 1.4 0 1 1-2.8 0 1.4 1.4 0 0 1 2.8 0Z" clip-rule="evenodd"/></svg>`;
-
-const ICON_COPY = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>`;
-
-const ICON_SPEECH_ON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
-
-const ICON_SPEECH_MUTE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z"/></svg>`;
-
-const ICON_SPEECH_OFF = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>`;
-
-const ICON_DOWNLOAD = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14v-2H5v2zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1z"/></svg>`;
-
-const ICON_EYE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
-
-const ICON_TRANSLATE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12.87 15.07l-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>`;
 
 class SettingsPanel {
   constructor({ settings, onChange, onClose }) {
@@ -6988,21 +8721,1428 @@ class HistoryPanel {
   }
 }
 
+class FavoritesPanel {
+  constructor() {
+    this.state = loadFavoritesState();
+    this.balloon = null;
+    this.anchor = null;
+    this.btn = null;
+    this.wrap = null;
+    this.isOpen = false;
+    this.sending = false;
+    this.wheel = {
+      running: false,
+      timer: null,
+      statusTimer: null,
+      sent: 0,
+      startedAt: 0,
+      endsAt: 0,
+      lastId: '',
+      failStreak: 0,
+    };
+    this.retryTimer = null;
+    this.boundKeyDown = (e) => this.onKeyDown(e);
+    this.boundReposition = () => this.reposition();
+    this.boundOutsideClick = (e) => this.handleOutsideClick(e);
+    this.listEl = null;
+    this.statusEl = null;
+    this.wheelStatusEl = null;
+    this.wheelToggleBtn = null;
+  }
+
+  attach() {
+    document.addEventListener('keydown', this.boundKeyDown, true);
+    this.bindChatKeyDown();
+  }
+
+  bindChatKeyDown() {
+    const doc = getChatDocument();
+    if (!doc || doc === document) return;
+    if (this.chatKeyDoc && this.chatKeyDoc !== doc) {
+      this.chatKeyDoc.removeEventListener('keydown', this.boundKeyDown, true);
+    }
+    this.chatKeyDoc = doc;
+    doc.addEventListener('keydown', this.boundKeyDown, true);
+  }
+
+  destroy() {
+    this.stopWheel(false);
+    this.close();
+    document.removeEventListener('keydown', this.boundKeyDown, true);
+    this.chatKeyDoc?.removeEventListener('keydown', this.boundKeyDown, true);
+    this.chatKeyDoc = null;
+    clearTimeout(this.retryTimer);
+    this.wrap?.remove();
+    if (this.btn && this.btn !== this.wrap) this.btn.remove();
+    this.wrap = null;
+    this.btn = null;
+    this.anchor = null;
+  }
+
+  remount() {
+    if (this.wrap?.isConnected || this.btn?.isConnected) return;
+    this.wrap?.remove();
+    if (this.btn && this.btn !== this.wrap) this.btn.remove();
+    this.wrap = null;
+    this.btn = null;
+    clearTimeout(this.retryTimer);
+    this.retryTimer = setTimeout(() => this.mount(), 500);
+  }
+
+  currentChannel() {
+    return sanitizeChannelKey(currentChannelId?.() || '');
+  }
+
+  visibleItems() {
+    return listFavoritesForChannel(this.state, this.currentChannel());
+  }
+
+  createButton(doc = document) {
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ydm-fav-btn';
+    btn.setAttribute('data-ydm-favorites', 'true');
+    btn.setAttribute('aria-label', t('favoritesTitle'));
+    btn.setAttribute('title', t('favoritesTitle'));
+    appendMarkup(btn, ICON_FAVORITE);
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggle(btn);
+    });
+    return btn;
+  }
+
+  async mount() {
+    if (this.wrap?.isConnected || this.btn?.isConnected) return;
+
+    const doc = getChatDocument() || document;
+    ensureChatTranslateStyles(doc);
+    const host = await waitForElement('#picker-buttons', doc, 12000);
+    if (!host) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = setTimeout(() => this.mount(), 1200);
+      return;
+    }
+
+    if (doc.querySelector('[data-ydm-favorites="true"], [data-ydm-favorites-wrap="true"]')) return;
+
+    this.btn = this.createButton(doc);
+    this.wrap = this.btn;
+    host.appendChild(this.btn);
+    this.bindChatKeyDown();
+  }
+
+  isEditableTarget(target) {
+    if (!target || target === document.body || target === document.documentElement) return false;
+    const el = target.nodeType === 1 ? target : target.parentElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (el.isContentEditable) return true;
+    return !!el.closest?.('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+  }
+
+  onKeyDown(e) {
+    if (e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (!/^[0-9]$/.test(e.key)) return;
+    if (this.isEditableTarget(e.target)) return;
+    if (this.isOpen && this.balloon?.contains(e.target)) return;
+
+    const channel = this.currentChannel();
+    const visible = listFavoritesForChannel(this.state, channel);
+    // Prefer channel-scoped shortcut over a colliding global one.
+    const item = visible.find((entry) => entry.shortcut === e.key && entry.channel === channel)
+      || visible.find((entry) => entry.shortcut === e.key && !entry.channel);
+    if (!item) return;
+    e.preventDefault();
+    e.stopPropagation();
+    this.sendFavorite(item);
+  }
+
+  toggle(anchor) {
+    if (this.isOpen && this.anchor === anchor) this.close();
+    else this.open(anchor || this.btn);
+  }
+
+  open(anchor) {
+    this.close();
+    this.state = loadFavoritesState();
+    this.anchor = anchor || this.btn;
+    this.isOpen = true;
+    this.render();
+    this.reposition();
+    requestAnimationFrame(() => this.reposition());
+    window.addEventListener('resize', this.boundReposition);
+    document.addEventListener('fullscreenchange', this.boundReposition);
+    document.addEventListener('webkitfullscreenchange', this.boundReposition);
+    document.addEventListener('scroll', this.boundReposition, true);
+    setTimeout(() => document.addEventListener('click', this.boundOutsideClick, true), 0);
+  }
+
+  close() {
+    const wasOpen = this.isOpen;
+    this.isOpen = false;
+    this.anchor = null;
+    this.balloon?.remove();
+    this.balloon = null;
+    this.listEl = null;
+    this.statusEl = null;
+    this.wheelStatusEl = null;
+    this.wheelToggleBtn = null;
+    window.removeEventListener('resize', this.boundReposition);
+    document.removeEventListener('fullscreenchange', this.boundReposition);
+    document.removeEventListener('webkitfullscreenchange', this.boundReposition);
+    document.removeEventListener('scroll', this.boundReposition, true);
+    document.removeEventListener('click', this.boundOutsideClick, true);
+    if (wasOpen) this.refreshWheelControls();
+  }
+
+  handleOutsideClick(event) {
+    if (!this.balloon || !this.isOpen) return;
+    if (this.balloon.contains(event.target)) return;
+    if (this.anchor?.contains?.(event.target)) return;
+    this.close();
+  }
+
+  anchorRectInPage() {
+    const rect = this.anchor.getBoundingClientRect();
+    const ownerWin = this.anchor.ownerDocument?.defaultView;
+    if (!ownerWin || ownerWin === window) return rect;
+    const frameEl = ownerWin.frameElement;
+    if (!frameEl) return rect;
+    const fr = frameEl.getBoundingClientRect();
+    return {
+      left: rect.left + fr.left,
+      right: rect.right + fr.left,
+      top: rect.top + fr.top,
+      bottom: rect.bottom + fr.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  }
+
+  reposition() {
+    if (!this.balloon || !this.anchor) return;
+    const mountTarget = getFullscreenElement() || document.body;
+    if (this.balloon.parentElement !== mountTarget) mountTarget.appendChild(this.balloon);
+
+    const rect = this.anchorRectInPage();
+    const width = 380;
+    const gap = 8;
+    const height = this.balloon.offsetHeight || 320;
+    let left = rect.right - width;
+    let top = rect.top - height - gap;
+    left = clamp(left, 8, window.innerWidth - width - 8);
+    if (top < 8) top = Math.min(window.innerHeight - height - 8, rect.bottom + gap);
+    Object.assign(this.balloon.style, {
+      position: 'fixed',
+      left: `${left}px`,
+      top: `${Math.max(8, top)}px`,
+      width: `${width}px`,
+      zIndex: '100040',
+    });
+  }
+
+  setStatus(message, ok = false) {
+    if (!this.statusEl) return;
+    this.statusEl.textContent = message || '';
+    this.statusEl.classList.toggle('is-ok', !!ok && !!message);
+  }
+
+  persist() {
+    this.state = saveFavoritesState(this.state);
+    return this.state;
+  }
+
+  addFromText(text) {
+    const result = addFavoriteText(text);
+    this.state = result.state;
+    if (result.full) {
+      this.setStatus(t('favoritesFull'));
+      return false;
+    }
+    if (!result.item) {
+      this.setStatus(t('favoritesEmptyText'));
+      return false;
+    }
+    if (this.isOpen) this.renderList();
+    this.setStatus(result.added ? t('favoritesAdded') : t('favoritesExists'), true);
+    return true;
+  }
+
+  render() {
+    const balloon = document.createElement('div');
+    balloon.className = 'ydm-balloon ydm-fav-panel';
+    balloon.addEventListener('click', (e) => e.stopPropagation());
+
+    const header = document.createElement('div');
+    header.className = 'ydm-balloon-header';
+    const title = document.createElement('div');
+    title.className = 'ydm-balloon-title';
+    title.textContent = t('favoritesTitle');
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-balloon-close';
+    closeBtn.setAttribute('aria-label', t('panelClose'));
+    closeBtn.textContent = t('panelClose');
+    closeBtn.addEventListener('click', () => this.close());
+    header.append(title, closeBtn);
+
+    const addRow = document.createElement('div');
+    addRow.className = 'ydm-fav-add-row';
+    const addInput = document.createElement('input');
+    addInput.type = 'text';
+    addInput.className = 'ydm-fav-add-input';
+    addInput.maxLength = FAVORITE_TEXT_LIMIT;
+    addInput.placeholder = t('favoritesAddPlaceholder');
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'ydm-fav-add-btn';
+    addBtn.textContent = t('favoritesAdd');
+    const doAdd = () => {
+      const text = addInput.value.trim();
+      if (!text) return;
+      if (this.addFromText(text)) addInput.value = '';
+    };
+    addBtn.addEventListener('click', doAdd);
+    addInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doAdd();
+      }
+    });
+    addRow.append(addInput, addBtn);
+
+    this.listEl = document.createElement('div');
+    this.listEl.className = 'ydm-fav-list';
+
+    const status = document.createElement('div');
+    status.className = 'ydm-fav-status';
+    this.statusEl = status;
+
+    const wheelBox = this.renderWheelSection();
+
+    balloon.append(header, addRow, this.listEl, status, wheelBox);
+    (getFullscreenElement() || document.body).appendChild(balloon);
+    this.balloon = balloon;
+    this.renderList();
+    this.refreshWheelControls();
+  }
+
+  renderWheelSection() {
+    const box = document.createElement('div');
+    box.className = 'ydm-fav-wheel';
+
+    const head = document.createElement('div');
+    head.className = 'ydm-fav-wheel-head';
+    const label = document.createElement('div');
+    label.className = 'ydm-fav-wheel-title';
+    label.textContent = t('favoritesWheel');
+    this.wheelToggleBtn = document.createElement('button');
+    this.wheelToggleBtn.type = 'button';
+    this.wheelToggleBtn.className = 'ydm-fav-wheel-toggle';
+    this.wheelToggleBtn.addEventListener('click', () => {
+      if (this.wheel.running) this.stopWheel(true);
+      else this.startWheel();
+    });
+    head.append(label, this.wheelToggleBtn);
+
+    const grid = document.createElement('div');
+    grid.className = 'ydm-fav-wheel-grid';
+
+    const fields = [
+      ['minIntervalSec', t('favoritesWheelMinInterval'), 1.5, 600],
+      ['maxIntervalSec', t('favoritesWheelMaxInterval'), 1.5, 600],
+      ['maxCount', t('favoritesWheelMaxCount'), 1, 500],
+      ['maxDurationSec', t('favoritesWheelMaxDuration'), 10, 7200],
+    ];
+
+    fields.forEach(([key, name, min, max]) => {
+      const field = document.createElement('label');
+      field.className = 'ydm-fav-wheel-field';
+      const span = document.createElement('span');
+      span.textContent = name;
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = String(min);
+      input.max = String(max);
+      input.step = key.includes('Interval') ? '0.5' : '1';
+      input.value = String(this.state.wheel[key]);
+      input.addEventListener('change', () => {
+        const value = clamp(Number(input.value) || min, min, max);
+        this.state.wheel[key] = value;
+        if (this.state.wheel.minIntervalSec > this.state.wheel.maxIntervalSec) {
+          if (key === 'minIntervalSec') this.state.wheel.maxIntervalSec = value;
+          else this.state.wheel.minIntervalSec = value;
+        }
+        this.persist();
+        this.state = loadFavoritesState();
+        Array.from(grid.querySelectorAll('.ydm-fav-wheel-field')).forEach((fieldEl, idx) => {
+          const fieldInput = fieldEl.querySelector('input');
+          const fieldKey = fields[idx]?.[0];
+          if (fieldInput && fieldKey) fieldInput.value = String(this.state.wheel[fieldKey]);
+        });
+      });
+      field.append(span, input);
+      grid.appendChild(field);
+    });
+
+    this.wheelStatusEl = document.createElement('div');
+    this.wheelStatusEl.className = 'ydm-fav-wheel-status';
+
+    box.append(head, grid, this.wheelStatusEl);
+    return box;
+  }
+
+  renderList() {
+    if (!this.listEl) return;
+    this.listEl.replaceChildren();
+    const items = this.visibleItems();
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'ydm-fav-empty';
+      empty.textContent = t('favoritesEmpty');
+      this.listEl.appendChild(empty);
+      return;
+    }
+
+    items.forEach((item) => {
+      this.listEl.appendChild(this.createItemRow(item));
+    });
+  }
+
+  createItemRow(item) {
+    const row = document.createElement('div');
+    row.className = 'ydm-fav-item';
+    row.dataset.id = item.id;
+    row.classList.toggle('is-global', !item.channel);
+
+    const meta = document.createElement('div');
+    meta.className = 'ydm-fav-item-meta';
+    const channelLabel = item.channel === this.currentChannel()
+      ? (currentChannelLabel() || item.channel)
+      : item.channel;
+    meta.textContent = item.channel
+      ? t('favoritesScopeChannel').replace('{channel}', channelLabel)
+      : t('favoritesScopeGlobal');
+
+    const text = document.createElement('textarea');
+    text.className = 'ydm-fav-item-text';
+    text.rows = 2;
+    text.maxLength = FAVORITE_TEXT_LIMIT;
+    text.value = item.text;
+    text.addEventListener('change', () => {
+      const next = text.value.trim().slice(0, FAVORITE_TEXT_LIMIT);
+      if (!next) {
+        text.value = item.text;
+        return;
+      }
+      item.text = next;
+      this.persist();
+    });
+
+    const tools = document.createElement('div');
+    tools.className = 'ydm-fav-item-tools';
+
+    const shortcut = document.createElement('select');
+    shortcut.className = 'ydm-fav-item-shortcut';
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = t('favoritesShortcutNone');
+    shortcut.appendChild(none);
+    for (let i = 0; i <= 9; i += 1) {
+      const opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = String(i);
+      shortcut.appendChild(opt);
+    }
+    shortcut.value = item.shortcut || '';
+    shortcut.addEventListener('change', () => {
+      const value = sanitizeFavoriteShortcut(shortcut.value);
+      if (value) {
+        this.state.items.forEach((entry) => {
+          if (entry.id === item.id || entry.shortcut !== value) return;
+          const sameScope = (entry.channel || null) === (item.channel || null);
+          if (sameScope) entry.shortcut = null;
+        });
+      }
+      item.shortcut = value;
+      this.persist();
+      this.renderList();
+    });
+
+    const scopeBtn = document.createElement('button');
+    scopeBtn.type = 'button';
+    scopeBtn.className = 'ydm-fav-item-scope';
+    scopeBtn.textContent = item.channel ? t('favoritesMakeGlobal') : t('favoritesMakeChannel');
+    scopeBtn.title = item.channel ? t('favoritesMakeGlobalHint') : t('favoritesMakeChannelHint');
+    scopeBtn.addEventListener('click', () => {
+      const channel = this.currentChannel();
+      if (item.channel) {
+        const result = setFavoriteGlobal(item.id, true);
+        this.state = result.state;
+        this.renderList();
+        this.setStatus(t('favoritesScopedGlobal'), true);
+        return;
+      }
+      if (!channel) {
+        this.setStatus(t('favoritesNeedChannel'));
+        return;
+      }
+      item.channel = channel;
+      this.persist();
+      this.renderList();
+      this.setStatus(t('favoritesScopedChannel'), true);
+    });
+
+    const sendBtn = document.createElement('button');
+    sendBtn.type = 'button';
+    sendBtn.className = 'ydm-fav-item-send';
+    sendBtn.textContent = t('favoritesSend');
+    sendBtn.addEventListener('click', () => this.sendFavorite(item));
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'ydm-fav-item-remove';
+    removeBtn.textContent = t('favoritesRemove');
+    removeBtn.addEventListener('click', () => {
+      this.state.items = this.state.items.filter((entry) => entry.id !== item.id);
+      this.persist();
+      this.renderList();
+    });
+
+    tools.append(shortcut, scopeBtn, sendBtn, removeBtn);
+    row.append(meta, text, tools);
+    return row;
+  }
+
+  async sendFavorite(item) {
+    const text = String(item?.text || '').trim();
+    if (!text || this.sending) return false;
+    this.sending = true;
+    try {
+      await sendYouTubeLiveChatMessage(text);
+      this.setStatus(t('favoritesSent'), true);
+      return true;
+    } catch (error) {
+      this.setStatus(chatSendErrorMessage(error));
+      return false;
+    } finally {
+      this.sending = false;
+    }
+  }
+
+  refreshWheelControls() {
+    if (this.wheelToggleBtn) {
+      this.wheelToggleBtn.textContent = this.wheel.running ? t('favoritesWheelStop') : t('favoritesWheelStart');
+      this.wheelToggleBtn.classList.toggle('is-running', this.wheel.running);
+    }
+    if (!this.wheelStatusEl) return;
+    if (!this.wheel.running) {
+      this.wheelStatusEl.textContent = t('favoritesWheelIdle');
+      return;
+    }
+    const leftSec = Math.max(0, Math.ceil((this.wheel.endsAt - Date.now()) / 1000));
+    this.wheelStatusEl.textContent = t('favoritesWheelRunning')
+      .replace('{sent}', String(this.wheel.sent))
+      .replace('{max}', String(this.state.wheel.maxCount))
+      .replace('{left}', String(leftSec));
+  }
+
+  startWheel() {
+    this.state = loadFavoritesState();
+    if (!this.visibleItems().length) {
+      this.setStatus(t('favoritesEmpty'));
+      return;
+    }
+    this.stopWheel(false);
+    this.wheel.running = true;
+    this.wheel.sent = 0;
+    this.wheel.lastId = '';
+    this.wheel.failStreak = 0;
+    this.wheel.startedAt = Date.now();
+    this.wheel.endsAt = this.wheel.startedAt + this.state.wheel.maxDurationSec * 1000;
+    this.refreshWheelControls();
+    clearInterval(this.wheel.statusTimer);
+    this.wheel.statusTimer = setInterval(() => {
+      if (!this.wheel.running) return;
+      this.refreshWheelControls();
+    }, 1000);
+    // Send first message immediately (same as 独轮车.js), then cool down.
+    this.scheduleWheelTick(0);
+  }
+
+  stopWheel(showStatus) {
+    clearTimeout(this.wheel.timer);
+    clearInterval(this.wheel.statusTimer);
+    this.wheel.timer = null;
+    this.wheel.statusTimer = null;
+    const wasRunning = this.wheel.running;
+    this.wheel.running = false;
+    this.wheel.failStreak = 0;
+    this.refreshWheelControls();
+    if (showStatus && wasRunning) this.setStatus(t('favoritesWheelStopped'), true);
+  }
+
+  scheduleWheelTick(delayMs) {
+    clearTimeout(this.wheel.timer);
+    this.wheel.timer = setTimeout(() => this.runWheelTick(), Math.max(0, delayMs));
+  }
+
+  pickWheelItem(pool) {
+    if (!pool.length) return null;
+    if (pool.length === 1) return pool[0];
+    // Avoid sending the same favorite twice in a row when possible.
+    const choices = this.wheel.lastId
+      ? pool.filter((item) => item.id !== this.wheel.lastId)
+      : pool;
+    const list = choices.length ? choices : pool;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  nextWheelDelay(ok) {
+    const minMs = Math.max(1500, Number(this.state.wheel.minIntervalSec) * 1000);
+    const maxMs = Math.max(minMs, Number(this.state.wheel.maxIntervalSec) * 1000);
+    let delay = minMs + Math.random() * (maxMs - minMs);
+    // Back off after failures so rate limits / network blips cool down.
+    if (!ok && this.wheel.failStreak > 0) {
+      delay += Math.min(15000, this.wheel.failStreak * 2000);
+    }
+    return delay;
+  }
+
+  async runWheelTick() {
+    if (!this.wheel.running) return;
+    this.state = loadFavoritesState();
+    if (Date.now() >= this.wheel.endsAt || this.wheel.sent >= this.state.wheel.maxCount) {
+      this.stopWheel(true);
+      return;
+    }
+    const pool = this.visibleItems();
+    if (!pool.length) {
+      this.stopWheel(true);
+      return;
+    }
+
+    const item = this.pickWheelItem(pool);
+    const ok = await this.sendFavorite(item);
+    if (ok) {
+      this.wheel.sent += 1;
+      this.wheel.lastId = item?.id || '';
+      this.wheel.failStreak = 0;
+    } else {
+      this.wheel.failStreak += 1;
+      if (this.wheel.failStreak >= 5) {
+        this.stopWheel(true);
+        return;
+      }
+    }
+    this.refreshWheelControls();
+
+    if (!this.wheel.running) return;
+    if (Date.now() >= this.wheel.endsAt || this.wheel.sent >= this.state.wheel.maxCount) {
+      this.stopWheel(true);
+      return;
+    }
+
+    this.scheduleWheelTick(this.nextWheelDelay(ok));
+  }
+}
+
+class ChatClearButton {
+  constructor({ onClear } = {}) {
+    this.onClear = onClear;
+    this.wrap = null;
+    this.btn = null;
+    this.retryTimer = null;
+  }
+
+  resetChatScroller(doc) {
+    const offset = doc.querySelector(
+      'yt-live-chat-item-list-renderer #item-offset, #item-offset.yt-live-chat-item-list-renderer',
+    );
+    if (offset) {
+      // YouTube virtualizes with a tall #item-offset; wipe must collapse it or
+      // new lines stay stuck in a tiny visible band.
+      offset.style.height = '0px';
+      offset.style.minHeight = '0px';
+      offset.style.transform = 'translateY(0px)';
+    }
+
+    const scroller = doc.querySelector(
+      'yt-live-chat-item-list-renderer #item-scroller, #item-scroller.yt-live-chat-item-list-renderer',
+    );
+    const stickBottom = () => {
+      if (!scroller) return;
+      scroller.scrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    };
+    stickBottom();
+    requestAnimationFrame(() => {
+      if (offset && (!offset.children.length || offset.scrollHeight < 8)) {
+        offset.style.height = '0px';
+        offset.style.transform = 'translateY(0px)';
+      } else if (offset) {
+        offset.style.height = `${Math.max(offset.scrollHeight, 0)}px`;
+        offset.style.transform = 'translateY(0px)';
+      }
+      stickBottom();
+    });
+
+    const list = doc.querySelector('yt-live-chat-item-list-renderer');
+    if (!list) return;
+    try {
+      if (typeof list.scrollToBottom === 'function') list.scrollToBottom();
+      if ('atBottom' in list) list.atBottom = true;
+      if ('isAtBottom' in list) list.isAtBottom = true;
+      if ('stickToBottom' in list) list.stickToBottom = true;
+      if ('activeItems' in list && Array.isArray(list.activeItems)) list.activeItems = [];
+      if ('visibleItems' in list && Array.isArray(list.visibleItems)) list.visibleItems = [];
+      list.setAttribute('at-bottom', '');
+      list.removeAttribute('has-user-scrolled');
+      list.dispatchEvent?.(new Event('scroll'));
+      if (typeof list.notifyPath === 'function') list.notifyPath('items');
+      if (typeof list.requestUpdate === 'function') list.requestUpdate();
+    } catch (_) {
+      /* ignore host API differences */
+    }
+  }
+
+  clearLiveChat() {
+    const doc = getChatDocument() || document;
+    const items = doc.querySelector(SELECTORS.chatItems);
+    let removed = 0;
+
+    if (items) {
+      const nodes = [...items.querySelectorAll(SELECTORS.chatMessage)];
+      removed = nodes.length;
+      nodes.forEach((node) => node.remove());
+      // Drop leftover empty wrappers that can keep a tall offset box.
+      [...items.children].forEach((child) => {
+        if (!child.matches?.(SELECTORS.chatMessage) && !child.querySelector?.(SELECTORS.chatMessage)) {
+          if (child.id === 'item-offset') return;
+          if (!child.children?.length && !child.textContent?.trim()) child.remove();
+        }
+      });
+    } else {
+      doc.querySelectorAll(SELECTORS.chatMessage).forEach((node) => {
+        node.remove();
+        removed += 1;
+      });
+    }
+
+    this.resetChatScroller(doc);
+    this.onClear?.(removed);
+    return removed;
+  }
+
+  createButton(doc = document) {
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ydm-chat-clear-btn';
+    btn.setAttribute('data-ydm-chat-clear', 'true');
+    btn.setAttribute('aria-label', t('chatClear'));
+    btn.setAttribute('title', t('chatClear'));
+    appendMarkup(btn, ICON_CHAT_CLEAR);
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.clearLiveChat();
+    });
+    return btn;
+  }
+
+  async mount() {
+    if (this.wrap?.isConnected || this.btn?.isConnected) {
+      this.refreshLabel();
+      return;
+    }
+
+    const doc = getChatDocument() || document;
+    ensureChatTranslateStyles(doc);
+    if (doc.querySelector('[data-ydm-chat-clear="true"]')) return;
+
+    const header = await waitForElement(
+      '#chat-messages > yt-live-chat-header-renderer, yt-live-chat-header-renderer',
+      doc,
+      12000,
+    );
+    if (!header) return;
+
+    const wrap = doc.createElement('div');
+    wrap.className = 'ydm-chat-clear-wrap';
+    wrap.setAttribute('data-ydm-chat-clear-wrap', 'true');
+    this.btn = this.createButton(doc);
+    wrap.appendChild(this.btn);
+    this.wrap = wrap;
+
+    const closeBtn = header.querySelector('#close-button');
+    if (closeBtn) closeBtn.before(wrap);
+    else header.appendChild(wrap);
+  }
+
+  refreshLabel() {
+    if (!this.btn) return;
+    this.btn.setAttribute('title', t('chatClear'));
+    this.btn.setAttribute('aria-label', t('chatClear'));
+  }
+
+  remount() {
+    if (this.wrap?.isConnected || this.btn?.isConnected) {
+      this.refreshLabel();
+      return;
+    }
+    this.wrap?.remove();
+    this.btn?.remove();
+    this.wrap = null;
+    this.btn = null;
+    clearTimeout(this.retryTimer);
+    this.retryTimer = setTimeout(() => this.mount(), 500);
+  }
+
+  destroy() {
+    clearTimeout(this.retryTimer);
+    this.wrap?.remove();
+    if (this.btn && this.btn !== this.wrap) this.btn.remove();
+    this.wrap = null;
+    this.btn = null;
+  }
+}
+
+class ChatCollapseButton {
+  constructor({ onCollapsedChange } = {}) {
+    this.onCollapsedChange = onCollapsedChange || null;
+    this.headerWrap = null;
+    this.headerBtn = null;
+    this.expandBtn = null;
+    this.collapsed = false;
+    this.retryTimer = null;
+  }
+
+  setCollapsedChangeHandler(handler) {
+    this.onCollapsedChange = handler || null;
+  }
+
+  emitCollapsedChange() {
+    try {
+      this.onCollapsedChange?.(this.collapsed);
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
+  getChatFrame() {
+    return document.querySelector(SELECTORS.chatHost)
+      || document.querySelector('ytd-live-chat-frame');
+  }
+
+  /** Ask YouTube's player / flexy layout to refill the freed sidebar width. */
+  notifyLayoutResize() {
+    const fire = () => {
+      window.dispatchEvent(new Event('resize'));
+      const flexy = document.querySelector('ytd-watch-flexy');
+      const player = document.querySelector('#movie_player, .html5-video-player');
+      try {
+        if (typeof flexy?.onWindowResized_ === 'function') flexy.onWindowResized_();
+        else if (typeof flexy?.onResize_ === 'function') flexy.onResize_();
+        else if (typeof flexy?.scheduleVideoContainerResize_ === 'function') {
+          flexy.scheduleVideoContainerResize_();
+        }
+      } catch (_) {
+        /* ignore */
+      }
+      try {
+        if (typeof player?.setSize === 'function') player.setSize();
+        player?.dispatchEvent?.(new Event('resize'));
+      } catch (_) {
+        /* ignore */
+      }
+    };
+    requestAnimationFrame(() => {
+      fire();
+      setTimeout(fire, 50);
+      setTimeout(fire, 200);
+    });
+  }
+
+  collapse() {
+    if (this.collapsed) {
+      this.ensureExpandButton();
+      this.emitCollapsedChange();
+      return;
+    }
+    this.collapsed = true;
+    document.documentElement.classList.add('ydm-chat-collapsed');
+    this.getChatFrame()?.setAttribute('data-ydm-collapsed', 'true');
+    this.ensureExpandButton();
+    this.emitCollapsedChange();
+    this.notifyLayoutResize();
+  }
+
+  expand() {
+    if (!this.collapsed && !document.documentElement.classList.contains('ydm-chat-collapsed')) {
+      this.emitCollapsedChange();
+      return;
+    }
+    this.collapsed = false;
+    document.documentElement.classList.remove('ydm-chat-collapsed');
+    this.getChatFrame()?.removeAttribute('data-ydm-collapsed');
+    this.expandBtn?.remove();
+    this.expandBtn = null;
+    this.emitCollapsedChange();
+    this.notifyLayoutResize();
+    clearTimeout(this.retryTimer);
+    this.retryTimer = setTimeout(() => this.mountHeaderButton(), 400);
+  }
+
+  toggle() {
+    if (this.collapsed) this.expand();
+    else this.collapse();
+  }
+
+  ensureExpandButton() {
+    if (this.expandBtn?.isConnected) {
+      this.refreshExpandLabel();
+      return;
+    }
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ydm-chat-expand-btn';
+    btn.setAttribute('data-ydm-chat-expand', 'true');
+    btn.setAttribute('aria-label', t('chatExpand'));
+    btn.setAttribute('title', t('chatExpand'));
+    appendMarkup(btn, ICON_CHAT_EXPAND);
+    const label = document.createElement('span');
+    label.className = 'ydm-chat-expand-label';
+    label.textContent = t('chatExpand');
+    btn.appendChild(label);
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.expand();
+    });
+
+    const host = document.querySelector('ytd-watch-flexy') || document.body;
+    host.appendChild(btn);
+    this.expandBtn = btn;
+  }
+
+  refreshExpandLabel() {
+    if (!this.expandBtn) return;
+    this.expandBtn.setAttribute('title', t('chatExpand'));
+    this.expandBtn.setAttribute('aria-label', t('chatExpand'));
+    const label = this.expandBtn.querySelector('.ydm-chat-expand-label');
+    if (label) label.textContent = t('chatExpand');
+  }
+
+  createHeaderButton(doc) {
+    const btn = doc.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ydm-chat-collapse-btn';
+    btn.setAttribute('data-ydm-chat-collapse', 'true');
+    btn.setAttribute('aria-label', t('chatCollapse'));
+    btn.setAttribute('title', t('chatCollapse'));
+    appendMarkup(btn, ICON_CHAT_COLLAPSE);
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.collapse();
+    });
+    return btn;
+  }
+
+  async mountHeaderButton() {
+    if (this.collapsed) return;
+    if (this.headerWrap?.isConnected || this.headerBtn?.isConnected) {
+      this.refreshHeaderLabel();
+      return;
+    }
+
+    const doc = getChatDocument() || document;
+    ensureChatDocStyles(doc);
+    if (doc.querySelector('[data-ydm-chat-collapse="true"]')) return;
+
+    const header = await waitForElement(
+      '#chat-messages > yt-live-chat-header-renderer, yt-live-chat-header-renderer',
+      doc,
+      12000,
+    );
+    if (!header || this.collapsed) return;
+
+    const wrap = doc.createElement('div');
+    wrap.className = 'ydm-chat-collapse-wrap';
+    wrap.setAttribute('data-ydm-chat-collapse-wrap', 'true');
+    this.headerBtn = this.createHeaderButton(doc);
+    wrap.appendChild(this.headerBtn);
+    this.headerWrap = wrap;
+
+    // Place beside clear (before it), otherwise before YouTube's close.
+    const clearWrap = header.querySelector('[data-ydm-chat-clear-wrap="true"]');
+    const closeBtn = header.querySelector('#close-button');
+    if (clearWrap) clearWrap.before(wrap);
+    else if (closeBtn) closeBtn.before(wrap);
+    else header.appendChild(wrap);
+  }
+
+  refreshHeaderLabel() {
+    if (!this.headerBtn) return;
+    this.headerBtn.setAttribute('title', t('chatCollapse'));
+    this.headerBtn.setAttribute('aria-label', t('chatCollapse'));
+  }
+
+  async mount() {
+    if (this.collapsed) {
+      document.documentElement.classList.add('ydm-chat-collapsed');
+      this.ensureExpandButton();
+      return;
+    }
+    await this.mountHeaderButton();
+  }
+
+  remount() {
+    if (this.collapsed) {
+      document.documentElement.classList.add('ydm-chat-collapsed');
+      this.ensureExpandButton();
+      return;
+    }
+    if (this.headerWrap?.isConnected || this.headerBtn?.isConnected) {
+      this.refreshHeaderLabel();
+      return;
+    }
+    this.headerWrap?.remove();
+    this.headerBtn?.remove();
+    this.headerWrap = null;
+    this.headerBtn = null;
+    clearTimeout(this.retryTimer);
+    this.retryTimer = setTimeout(() => this.mountHeaderButton(), 500);
+  }
+
+  destroy() {
+    clearTimeout(this.retryTimer);
+    this.collapsed = false;
+    document.documentElement.classList.remove('ydm-chat-collapsed');
+    this.getChatFrame()?.removeAttribute('data-ydm-collapsed');
+    this.headerWrap?.remove();
+    this.headerBtn?.remove();
+    this.expandBtn?.remove();
+    this.headerWrap = null;
+    this.headerBtn = null;
+    this.expandBtn = null;
+    this.emitCollapsedChange();
+  }
+}
+
+class FullscreenChatInput {
+  constructor({ favoritesPanel } = {}) {
+    this.favoritesPanel = favoritesPanel || null;
+    this.root = null;
+    this.input = null;
+    this.sendBtn = null;
+    this.closeBtn = null;
+    this.favBtn = null;
+    this.favList = null;
+    this.statusEl = null;
+    this.sending = false;
+    this.favOpen = false;
+    this.boundKeyDown = (e) => this.onKeyDown(e);
+    this.boundKeyUp = (e) => this.onKeyUp(e);
+    this.boundFsChange = () => this.onFullscreenChange();
+    this.boundPointerDown = (e) => this.onPointerDownOutside(e);
+    this.playerObserver = null;
+  }
+
+  attach() {
+    // Prefer window capture so we run before YouTube player handlers that call
+    // stopImmediatePropagation on document/player keydown.
+    window.addEventListener('keydown', this.boundKeyDown, true);
+    window.addEventListener('keyup', this.boundKeyUp, true);
+    document.addEventListener('pointerdown', this.boundPointerDown, true);
+    document.addEventListener('fullscreenchange', this.boundFsChange);
+    document.addEventListener('webkitfullscreenchange', this.boundFsChange);
+    this.watchPlayerFullscreenClass();
+  }
+
+  watchPlayerFullscreenClass() {
+    this.playerObserver?.disconnect();
+    const player = getPlayerElement();
+    if (!player) {
+      clearTimeout(this.playerWatchTimer);
+      this.playerWatchTimer = setTimeout(() => this.watchPlayerFullscreenClass(), 1500);
+      return;
+    }
+    this.playerObserver = new MutationObserver(() => this.onFullscreenChange());
+    this.playerObserver.observe(player, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  destroy() {
+    this.close();
+    window.removeEventListener('keydown', this.boundKeyDown, true);
+    window.removeEventListener('keyup', this.boundKeyUp, true);
+    document.removeEventListener('pointerdown', this.boundPointerDown, true);
+    document.removeEventListener('fullscreenchange', this.boundFsChange);
+    document.removeEventListener('webkitfullscreenchange', this.boundFsChange);
+    this.playerObserver?.disconnect();
+    this.playerObserver = null;
+    clearTimeout(this.playerWatchTimer);
+  }
+
+  isEditableTarget(target) {
+    if (!target || target === document.body || target === document.documentElement) return false;
+    const el = target.nodeType === 1 ? target : target.parentElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (el.isContentEditable) return true;
+    return !!el.closest?.('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+  }
+
+  canOpen() {
+    // Match twitch-danmaku: only while actually fullscreen (native or ytp-fullscreen).
+    if (!getFullscreenMount()) return false;
+    if (!isLiveWatchMode()) return false;
+    return !!currentChannelId() || document.documentElement.dataset.ydmPreview === 'true';
+  }
+
+  stopEvent(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+
+  isEnterKey(e) {
+    return e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13;
+  }
+
+  onKeyDown(e) {
+    if (e.isComposing) return;
+    if (e.key === 'Escape' && this.root) {
+      if (this.favOpen) {
+        this.stopEvent(e);
+        this.closeFavorites();
+        return;
+      }
+    }
+    if (!this.isEnterKey(e)) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    this._enterHandledAt = 0;
+
+    if (this.root) {
+      if (e.target === this.input || this.root.contains(e.target)) {
+        this.stopEvent(e);
+        this._enterHandledAt = Date.now();
+        this.submit();
+      }
+      return;
+    }
+
+    if (!this.canOpen()) return;
+    if (this.isEditableTarget(e.target)) return;
+
+    this.stopEvent(e);
+    this._enterHandledAt = Date.now();
+    this.open();
+  }
+
+  onKeyUp(e) {
+    if (e.isComposing) return;
+    if (!this.isEnterKey(e)) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (this._enterHandledAt && Date.now() - this._enterHandledAt < 800) return;
+    if (this.root) return;
+    if (!this.canOpen()) return;
+    if (this.isEditableTarget(e.target)) return;
+    this.stopEvent(e);
+    this.open();
+  }
+
+  onPointerDownOutside(e) {
+    if (!this.root) return;
+    if (Date.now() < (this._ignoreOutsideUntil || 0)) return;
+    if (this.root.contains(e.target)) return;
+    if (this.input?.value.trim()) return;
+    this.close();
+  }
+
+  onFullscreenChange() {
+    if (!getFullscreenMount()) this.close();
+  }
+
+  setStatus(message, ok = false) {
+    if (!this.statusEl) return;
+    this.statusEl.textContent = message || '';
+    this.statusEl.classList.toggle('is-ok', !!ok && !!message);
+  }
+
+  listFavoriteItems() {
+    if (this.favoritesPanel?.visibleItems) {
+      this.favoritesPanel.state = loadFavoritesState();
+      return this.favoritesPanel.visibleItems();
+    }
+    const state = loadFavoritesState();
+    return listFavoritesForChannel(state, currentChannelId?.() || '');
+  }
+
+  open() {
+    if (this.root) {
+      this.input?.focus();
+      return;
+    }
+
+    // Same strategy as twitch-danmaku: mount on the fullscreen host itself
+    // (native FS element / #movie_player), not the video container.
+    const mount = getFullscreenMount();
+    if (!mount) return;
+
+    if (getComputedStyle(mount).position === 'static') {
+      mount.style.position = 'relative';
+    }
+
+    const root = document.createElement('div');
+    root.className = 'ydm-fs-chat';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-label', t('fsChatPlaceholder'));
+    // Inline fallback (Twitch uses CSS z-index 100020 on the FS host).
+    Object.assign(root.style, {
+      position: 'absolute',
+      left: '50%',
+      bottom: 'max(72px, 10%)',
+      transform: 'translateX(-50%)',
+      zIndex: '100020',
+      width: 'min(560px, calc(100% - 48px))',
+      maxWidth: 'calc(100% - 24px)',
+      pointerEvents: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+      visibility: 'visible',
+      opacity: '1',
+    });
+
+    const row = document.createElement('div');
+    row.className = 'ydm-fs-chat-row';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'ydm-fs-chat-input';
+    input.maxLength = 500;
+    input.autocomplete = 'off';
+    input.spellcheck = true;
+    input.placeholder = t('fsChatPlaceholder');
+
+    const favWrap = document.createElement('div');
+    favWrap.className = 'ydm-fs-chat-fav-wrap';
+
+    const favBtn = document.createElement('button');
+    favBtn.type = 'button';
+    favBtn.className = 'ydm-fs-chat-fav';
+    favBtn.setAttribute('aria-label', t('fsChatFavorites'));
+    favBtn.setAttribute('aria-expanded', 'false');
+    appendMarkup(favBtn, ICON_FAVORITE);
+    const favLabel = document.createElement('span');
+    favLabel.textContent = t('fsChatFavorites');
+    favBtn.appendChild(favLabel);
+
+    const favList = document.createElement('div');
+    favList.className = 'ydm-fs-chat-fav-list';
+    favList.hidden = true;
+    favList.setAttribute('role', 'listbox');
+    favList.setAttribute('aria-label', t('fsChatFavorites'));
+
+    favWrap.append(favBtn, favList);
+
+    const sendBtn = document.createElement('button');
+    sendBtn.type = 'button';
+    sendBtn.className = 'ydm-fs-chat-send';
+    sendBtn.setAttribute('aria-label', t('fsChatSend'));
+    appendMarkup(sendBtn, ICON_CHAT_SEND);
+    const sendLabel = document.createElement('span');
+    sendLabel.textContent = t('fsChatSend');
+    sendBtn.appendChild(sendLabel);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-fs-chat-close';
+    closeBtn.setAttribute('aria-label', t('fsChatClose'));
+    closeBtn.textContent = t('fsChatClose');
+
+    const meta = document.createElement('div');
+    meta.className = 'ydm-fs-chat-meta';
+
+    const status = document.createElement('div');
+    status.className = 'ydm-fs-chat-status';
+
+    row.append(input, favWrap, sendBtn, closeBtn);
+    meta.append(status);
+    root.append(row, meta);
+
+    const trap = (e) => {
+      e.stopPropagation();
+    };
+    root.addEventListener('keydown', trap);
+    root.addEventListener('keyup', trap);
+    root.addEventListener('keypress', trap);
+    root.addEventListener('mousedown', trap);
+    root.addEventListener('pointerdown', trap);
+    root.addEventListener('click', trap);
+
+    favBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.toggleFavorites();
+    });
+
+    sendBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.submit();
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.close();
+    });
+
+    mount.appendChild(root);
+    this.root = root;
+    this.input = input;
+    this.sendBtn = sendBtn;
+    this.closeBtn = closeBtn;
+    this.favBtn = favBtn;
+    this.favList = favList;
+    this.statusEl = status;
+    this._ignoreOutsideUntil = Date.now() + 500;
+    this.renderFavorites();
+    requestAnimationFrame(() => {
+      this.input?.focus();
+      // Keep composer as the topmost child of the player shell.
+      if (this.root?.parentElement === mount) mount.appendChild(this.root);
+    });
+  }
+
+  toggleFavorites() {
+    this.favOpen = !this.favOpen;
+    if (this.favList) this.favList.hidden = !this.favOpen;
+    this.favBtn?.setAttribute('aria-expanded', this.favOpen ? 'true' : 'false');
+    this.favBtn?.classList.toggle('is-open', this.favOpen);
+    if (this.favOpen) this.renderFavorites();
+  }
+
+  closeFavorites() {
+    this.favOpen = false;
+    if (this.favList) this.favList.hidden = true;
+    this.favBtn?.setAttribute('aria-expanded', 'false');
+    this.favBtn?.classList.remove('is-open');
+  }
+
+  renderFavorites() {
+    if (!this.favList) return;
+    this.favList.replaceChildren();
+    const items = this.listFavoriteItems();
+    if (!items.length) {
+      const empty = document.createElement('div');
+      empty.className = 'ydm-fs-chat-fav-empty';
+      empty.textContent = t('fsChatFavoritesEmpty');
+      this.favList.appendChild(empty);
+      return;
+    }
+
+    items.forEach((item) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ydm-fs-chat-fav-item';
+      btn.setAttribute('role', 'option');
+      btn.title = item.text;
+      btn.textContent = item.text;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (this.input) {
+          this.input.value = item.text;
+          this.input.focus();
+          const len = this.input.value.length;
+          this.input.setSelectionRange(len, len);
+        }
+        this.closeFavorites();
+      });
+      this.favList.appendChild(btn);
+    });
+  }
+
+  close() {
+    this.closeFavorites();
+    this.root?.remove();
+    this.root = null;
+    this.input = null;
+    this.sendBtn = null;
+    this.closeBtn = null;
+    this.favBtn = null;
+    this.favList = null;
+    this.statusEl = null;
+    this.sending = false;
+    this.favOpen = false;
+  }
+
+  async submit() {
+    if (!this.input || this.sending) return;
+    const text = this.input.value.trim();
+    if (!text) {
+      this.setStatus('');
+      return;
+    }
+
+    this.sending = true;
+    if (this.sendBtn) this.sendBtn.disabled = true;
+    this.closeFavorites();
+    this.setStatus('');
+
+    try {
+      await sendYouTubeLiveChatMessage(text);
+      this.input.value = '';
+      this.setStatus(t('fsChatSent'), true);
+      setTimeout(() => {
+        if (this.statusEl?.textContent === t('fsChatSent')) this.setStatus('');
+      }, 1200);
+    } catch (error) {
+      this.setStatus(chatSendErrorMessage(error));
+    } finally {
+      this.sending = false;
+      if (this.sendBtn) this.sendBtn.disabled = false;
+      this.input?.focus();
+    }
+  }
+}
+
 class ControlButton {
-  constructor({ onToggleDanmaku, onTogglePanel, onToggleSpeech, onToggleHistory, getSettings, isPanelOpen, isSpeechPanelOpen, isHistoryPanelOpen }) {
+  constructor({
+    onToggleDanmaku,
+    onTogglePanel,
+    onToggleSpeech,
+    onToggleHistory,
+    onExpandChat,
+    getSettings,
+    isPanelOpen,
+    isSpeechPanelOpen,
+    isHistoryPanelOpen,
+    isChatCollapsed,
+  }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
     this.onToggleSpeech = onToggleSpeech;
     this.onToggleHistory = onToggleHistory;
+    this.onExpandChat = onExpandChat;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
     this.isSpeechPanelOpen = isSpeechPanelOpen;
     this.isHistoryPanelOpen = isHistoryPanelOpen;
+    this.isChatCollapsed = isChatCollapsed || (() => false);
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
+    this.chatExpandBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
   }
@@ -7070,7 +10210,20 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.wrap.append(this.danmakuBtn, this.settingsBtn, this.speechBtn, this.historyBtn);
+      this.chatExpandBtn = this.createBtn('ydm-chat-expand-control-btn', t('chatExpand'), ICON_CHAT_EXPAND);
+      this.chatExpandBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.onExpandChat?.();
+      });
+
+      this.wrap.append(
+        this.danmakuBtn,
+        this.settingsBtn,
+        this.speechBtn,
+        this.historyBtn,
+        this.chatExpandBtn,
+      );
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
       else this.controlsGroup.appendChild(this.wrap);
@@ -7079,13 +10232,17 @@ class ControlButton {
       this.updateSpeechState();
       this.updateHistoryState();
       this.updatePanelState();
+      this.updateChatCollapsedState(this.isChatCollapsed());
     } finally {
       this.mounting = false;
     }
   }
 
   remount() {
-    if (this.wrap?.isConnected) return;
+    if (this.wrap?.isConnected) {
+      this.updateChatCollapsedState(this.isChatCollapsed());
+      return;
+    }
     const existing = document.querySelector('.ydm-controls-wrap');
     if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn') && existing.querySelector('.ydm-history-btn')) {
       this.wrap = existing;
@@ -7093,8 +10250,19 @@ class ControlButton {
       this.speechBtn = existing.querySelector('.ydm-speech-btn');
       this.historyBtn = existing.querySelector('.ydm-history-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
+      this.chatExpandBtn = existing.querySelector('.ydm-chat-expand-control-btn');
+      if (!this.chatExpandBtn) {
+        this.chatExpandBtn = this.createBtn('ydm-chat-expand-control-btn', t('chatExpand'), ICON_CHAT_EXPAND);
+        this.chatExpandBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.onExpandChat?.();
+        });
+        existing.appendChild(this.chatExpandBtn);
+      }
       this.updateSpeechState();
       this.updateHistoryState();
+      this.updateChatCollapsedState(this.isChatCollapsed());
       return;
     }
     existing?.remove();
@@ -7103,6 +10271,7 @@ class ControlButton {
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
+    this.chatExpandBtn = null;
     this.mount();
   }
 
@@ -7145,6 +10314,17 @@ class ControlButton {
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
     this.updateSpeechState();
     this.updateHistoryState();
+    this.updateChatCollapsedState(this.isChatCollapsed());
+  }
+
+  updateChatCollapsedState(collapsed = this.isChatCollapsed()) {
+    if (!this.chatExpandBtn) return;
+    const show = !!collapsed;
+    this.chatExpandBtn.hidden = !show;
+    this.chatExpandBtn.classList.toggle('ydm-visible', show);
+    this.chatExpandBtn.title = t('chatExpand');
+    this.chatExpandBtn.setAttribute('aria-label', t('chatExpand'));
+    this.chatExpandBtn.setAttribute('aria-hidden', show ? 'false' : 'true');
   }
 
   destroy() {
@@ -7154,6 +10334,7 @@ class ControlButton {
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
+    this.chatExpandBtn = null;
     this.mounting = false;
   }
 }
@@ -7312,6 +10493,10 @@ let danmaku = null;
 let danmakuEmitter = null;
 let translateQueue = null;
 let chatObserver = null;
+let favoritesPanel = null;
+let fullscreenChat = null;
+let chatClearButton = null;
+let chatCollapseButton = null;
 let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
@@ -7365,6 +10550,10 @@ function handleVisibilityChange() {
 function teardown() {
   generation += 1;
   chatObserver?.stop();
+  favoritesPanel?.destroy();
+  fullscreenChat?.destroy();
+  chatClearButton?.destroy();
+  chatCollapseButton?.destroy();
   danmaku?.destroy();
   controlButton?.destroy();
   danmakuEmitter?.clear();
@@ -7375,6 +10564,10 @@ function teardown() {
   liveViewersBadge?.stop();
   cancelSpeech();
   chatObserver = null;
+  favoritesPanel = null;
+  fullscreenChat = null;
+  chatClearButton = null;
+  chatCollapseButton = null;
   danmaku = null;
   danmakuEmitter = null;
   translateQueue = null;
@@ -7398,11 +10591,25 @@ async function boot() {
   const engine = new DanmakuEngine(getSettings);
   const emitter = new DanmakuEmitter(engine, getSettings, isActive);
   const queue = new TranslateQueue(getSettings, isActive);
+  favoritesPanel = new FavoritesPanel();
+  favoritesPanel.attach();
+
+  fullscreenChat = new FullscreenChatInput({ favoritesPanel });
+  fullscreenChat.attach();
+
+  chatClearButton = new ChatClearButton({
+    onClear: () => {
+      chatObserver?.seenIds?.clear?.();
+    },
+  });
+  chatCollapseButton = new ChatCollapseButton();
+
   const observer = new ChatObserver({
     getSettings,
     danmakuEmitter: emitter,
     translateQueue: queue,
     isActive,
+    favoritesPanel,
   });
 
   if (!settingsPanel) {
@@ -7451,10 +10658,15 @@ async function boot() {
       historyPanel.toggle(anchor);
       controls.updatePanelState();
     },
+    onExpandChat: () => chatCollapseButton?.expand(),
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
     isHistoryPanelOpen: () => historyPanel.isOpen,
+    isChatCollapsed: () => !!chatCollapseButton?.collapsed,
+  });
+  chatCollapseButton.setCollapsedChangeHandler((collapsed) => {
+    controls.updateChatCollapsedState(collapsed);
   });
 
   await engine.mount();
@@ -7476,6 +10688,13 @@ async function boot() {
   if (gen !== generation) return;
   await liveViewersBadge.start();
   if (gen !== generation) return;
+  await favoritesPanel.mount();
+  if (gen !== generation) return;
+  // Clear first so collapse can sit immediately beside it.
+  await chatClearButton.mount();
+  if (gen !== generation) return;
+  await chatCollapseButton.mount();
+  if (gen !== generation) return;
 
   console.log('[YDM] YouTube Danmaku initialized');
 }
@@ -7487,6 +10706,9 @@ async function reconcile() {
     if (!key) return;
     controlButton?.remount();
     liveViewersBadge?.remount();
+    favoritesPanel?.remount();
+    chatClearButton?.remount();
+    chatCollapseButton?.remount();
     if (chatObserver && !chatObserver.isConnected()) {
       chatObserver.start().catch((err) => console.warn('[YDM] Chat restart failed:', err));
     }

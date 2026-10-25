@@ -3,6 +3,10 @@ let danmaku = null;
 let danmakuEmitter = null;
 let translateQueue = null;
 let chatObserver = null;
+let favoritesPanel = null;
+let fullscreenChat = null;
+let chatClearButton = null;
+let chatCollapseButton = null;
 let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
@@ -56,6 +60,10 @@ function handleVisibilityChange() {
 function teardown() {
   generation += 1;
   chatObserver?.stop();
+  favoritesPanel?.destroy();
+  fullscreenChat?.destroy();
+  chatClearButton?.destroy();
+  chatCollapseButton?.destroy();
   danmaku?.destroy();
   controlButton?.destroy();
   danmakuEmitter?.clear();
@@ -66,6 +74,10 @@ function teardown() {
   liveViewersBadge?.stop();
   cancelSpeech();
   chatObserver = null;
+  favoritesPanel = null;
+  fullscreenChat = null;
+  chatClearButton = null;
+  chatCollapseButton = null;
   danmaku = null;
   danmakuEmitter = null;
   translateQueue = null;
@@ -89,11 +101,25 @@ async function boot() {
   const engine = new DanmakuEngine(getSettings);
   const emitter = new DanmakuEmitter(engine, getSettings, isActive);
   const queue = new TranslateQueue(getSettings, isActive);
+  favoritesPanel = new FavoritesPanel();
+  favoritesPanel.attach();
+
+  fullscreenChat = new FullscreenChatInput({ favoritesPanel });
+  fullscreenChat.attach();
+
+  chatClearButton = new ChatClearButton({
+    onClear: () => {
+      chatObserver?.seenIds?.clear?.();
+    },
+  });
+  chatCollapseButton = new ChatCollapseButton();
+
   const observer = new ChatObserver({
     getSettings,
     danmakuEmitter: emitter,
     translateQueue: queue,
     isActive,
+    favoritesPanel,
   });
 
   if (!settingsPanel) {
@@ -142,10 +168,15 @@ async function boot() {
       historyPanel.toggle(anchor);
       controls.updatePanelState();
     },
+    onExpandChat: () => chatCollapseButton?.expand(),
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
     isHistoryPanelOpen: () => historyPanel.isOpen,
+    isChatCollapsed: () => !!chatCollapseButton?.collapsed,
+  });
+  chatCollapseButton.setCollapsedChangeHandler((collapsed) => {
+    controls.updateChatCollapsedState(collapsed);
   });
 
   await engine.mount();
@@ -167,6 +198,13 @@ async function boot() {
   if (gen !== generation) return;
   await liveViewersBadge.start();
   if (gen !== generation) return;
+  await favoritesPanel.mount();
+  if (gen !== generation) return;
+  // Clear first so collapse can sit immediately beside it.
+  await chatClearButton.mount();
+  if (gen !== generation) return;
+  await chatCollapseButton.mount();
+  if (gen !== generation) return;
 
   console.log('[YDM] YouTube Danmaku initialized');
 }
@@ -178,6 +216,9 @@ async function reconcile() {
     if (!key) return;
     controlButton?.remount();
     liveViewersBadge?.remount();
+    favoritesPanel?.remount();
+    chatClearButton?.remount();
+    chatCollapseButton?.remount();
     if (chatObserver && !chatObserver.isConnected()) {
       chatObserver.start().catch((err) => console.warn('[YDM] Chat restart failed:', err));
     }

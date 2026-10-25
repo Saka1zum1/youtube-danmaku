@@ -1,8 +1,9 @@
 class ChatActions {
-  constructor({ getSettings, danmakuEmitter, isActive }) {
+  constructor({ getSettings, danmakuEmitter, isActive, favoritesPanel = null }) {
     this.getSettings = getSettings;
     this.danmakuEmitter = danmakuEmitter;
     this.isActive = isActive;
+    this.favoritesPanel = favoritesPanel;
     this.chatRoot = null;
     this.doc = null;
     this.panelObserver = null;
@@ -63,12 +64,22 @@ class ChatActions {
   }
 
   isSuperchatElement(msgEl) {
-    if (!msgEl) return false;
-    const tag = msgEl.tagName || '';
-    return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
-      || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
-      || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
-      || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
+    return isPinnedChatElement(msgEl);
+  }
+
+  profileMenuItem(msgEl, { closeMenu = true } = {}) {
+    // Resolve at click time so Polymer channel ids / @handles are available
+    // for any target inside the message row (not only the avatar).
+    return {
+      icon: ICON_PROFILE,
+      label: t('chatActionOpenProfile'),
+      onClick: () => {
+        if (closeMenu) closeChatOverlayUi(this.doc);
+        const href = getYouTubeProfileUrl(msgEl);
+        if (!href) return;
+        window.open(href, '_blank', 'noopener,noreferrer');
+      },
+    };
   }
 
   handleContextMenu(e) {
@@ -80,14 +91,42 @@ class ChatActions {
     e.stopPropagation();
 
     const translated = hasChatTranslation(msgEl);
-    showChatContextMenu(this.doc, e.clientX, e.clientY, [{
-      icon: ICON_TRANSLATE,
-      label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
-      onClick: () => {
-        closeChatOverlayUi(this.doc);
-        this.translateMessage(msgEl).catch(() => {});
+    const items = [
+      {
+        icon: ICON_TRANSLATE,
+        label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.translateMessage(msgEl).catch(() => {});
+        },
       },
-    }]);
+      {
+        icon: ICON_SPEECH_ON,
+        label: t('chatActionSpeak'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.speakMessage(msgEl);
+        },
+      },
+      {
+        icon: ICON_DANMAKU_ON,
+        label: t('chatActionDanmaku'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.sendDanmaku(msgEl);
+        },
+      },
+      {
+        icon: ICON_FAVORITE,
+        label: t('chatActionFavorite'),
+        onClick: () => {
+          closeChatOverlayUi(this.doc);
+          this.favoriteMessage(msgEl);
+        },
+      },
+    ];
+    items.push(this.profileMenuItem(msgEl));
+    showChatContextMenu(this.doc, e.clientX, e.clientY, items);
   }
 
   handleClick(e) {
@@ -106,7 +145,7 @@ class ChatActions {
   openSuperchatPanel(msgEl) {
     if (!this.doc || !msgEl?.isConnected) return;
     const translated = hasChatTranslation(msgEl);
-    showSuperchatActionPanel(msgEl, [
+    const items = [
       {
         icon: ICON_TRANSLATE,
         label: translated ? t('chatActionRetranslate') : t('chatActionTranslate'),
@@ -124,7 +163,14 @@ class ChatActions {
         label: t('chatActionDanmaku'),
         onClick: () => this.sendDanmaku(msgEl),
       },
-    ]);
+      {
+        icon: ICON_FAVORITE,
+        label: t('chatActionFavorite'),
+        onClick: () => this.favoriteMessage(msgEl),
+      },
+    ];
+    items.push(this.profileMenuItem(msgEl, { closeMenu: false }));
+    showSuperchatActionPanel(msgEl, items);
   }
 
   findOpenSuperchatCards() {
@@ -133,13 +179,18 @@ class ChatActions {
     const selectors = [
       '#chat-messages yt-live-chat-paid-message-renderer',
       '#chat-messages yt-live-chat-paid-sticker-renderer',
+      '#chat-messages yt-live-chat-membership-item-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-message-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-sticker-renderer',
+      'yt-live-chat-banner-manager yt-live-chat-membership-item-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-message-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-sticker-renderer',
+      'tp-yt-paper-dialog yt-live-chat-membership-item-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[aria-selected="true"] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[selected] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer #card:not([hidden]) yt-live-chat-paid-message-renderer',
+      'yt-live-chat-ticker-sponsor-item-renderer[aria-selected="true"] yt-live-chat-membership-item-renderer',
+      'yt-live-chat-ticker-sponsor-item-renderer[selected] yt-live-chat-membership-item-renderer',
     ];
 
     const found = [];
@@ -221,6 +272,24 @@ class ChatActions {
     if (!parsed) return;
     const translated = getChatTranslationText(msgEl);
     speakTextNow(translated || parsed.message);
+  }
+
+  favoriteMessage(msgEl) {
+    const parsed = readChatMessage(msgEl);
+    const text = String(
+      partsToFavoriteText(parsed?.bodyParts || parsed?.parts || [])
+      || parsed?.message
+      || '',
+    ).trim();
+    if (!text) return;
+    if (this.favoritesPanel?.addFromText) {
+      this.favoritesPanel.addFromText(text);
+      if (!this.favoritesPanel.isOpen && this.favoritesPanel.btn) {
+        this.favoritesPanel.open(this.favoritesPanel.btn);
+      }
+      return;
+    }
+    addFavoriteText(text);
   }
 
   sendDanmaku(msgEl) {

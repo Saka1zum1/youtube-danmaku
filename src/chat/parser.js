@@ -1,4 +1,36 @@
-const EMOTE_HOST = /(^|\.)(ggpht\.com|googleusercontent\.com|ytimg\.com|youtube\.com)$/i;
+const EMOTE_HOST = /(^|\.)(ggpht\.com|googleusercontent\.com|ytimg\.com|youtube\.com|gstatic\.com)$/i;
+const EMOTE_SHORTCODE_RE = /^:[^:\s]+:$/;
+const EMOTE_SHORTCODE_ONLY_RE = /^\s*(:[^:\s]+:\s*)+$/;
+
+function isEmoteShortcode(value) {
+  return EMOTE_SHORTCODE_RE.test(String(value || '').trim());
+}
+
+/** Recover Unicode from YouTube gaming emoji URLs like emoji_u1f44f / emoji_u1f468_200d_1f4bb. */
+function unicodeFromEmoteSrc(src) {
+  const href = String(src || '');
+  const match = href.match(/emoji_u([0-9a-f_]+)\./i);
+  if (!match) return '';
+  try {
+    const cps = match[1].split('_').map((hex) => parseInt(hex, 16)).filter((n) => Number.isFinite(n));
+    if (!cps.length) return '';
+    return String.fromCodePoint(...cps);
+  } catch (_) {
+    return '';
+  }
+}
+
+function readEmoteAlt(node) {
+  const candidates = [
+    node.getAttribute('alt'),
+    node.getAttribute('shared-tooltip-text'),
+    node.getAttribute('title'),
+    node.getAttribute('aria-label'),
+  ].map((value) => String(value || '').trim()).filter(Boolean);
+  // Prefer real Unicode / labels over :shortcode: (other userscripts often overwrite alt).
+  const unicode = candidates.find((value) => !isEmoteShortcode(value));
+  return unicode || candidates[0] || '';
+}
 
 function safeEmoteSrc(src) {
   if (!src) return '';
@@ -12,15 +44,53 @@ function safeEmoteSrc(src) {
   }
 }
 
+function readEmoteSrc(node) {
+  if (!node) return '';
+  const direct = safeEmoteSrc(
+    node.currentSrc
+    || node.getAttribute('src')
+    || node.getAttribute('data-src')
+    || node.getAttribute('data-thumb')
+    || '',
+  );
+  if (direct) return direct;
+  const srcset = String(node.getAttribute('srcset') || '');
+  const first = srcset.split(',')[0]?.trim().split(/\s+/)[0] || '';
+  return safeEmoteSrc(first);
+}
+
 function isEmoteImage(node) {
   if (node.tagName !== 'IMG') return false;
-  const src = safeEmoteSrc(node.currentSrc || node.getAttribute('src'));
+  if (node.closest('#author-photo, #author-name, yt-live-chat-author-chip')) return false;
+  const src = readEmoteSrc(node);
   if (!src) return false;
-  if (node.id === 'emoji' || node.classList.contains('emoji') || node.classList.contains('small-emoji')) {
+  if (
+    node.id === 'emoji'
+    || (typeof node.id === 'string' && node.id.startsWith('emoji'))
+    || node.classList.contains('emoji')
+    || node.classList.contains('small-emoji')
+    || node.hasAttribute('data-emoji-id')
+    || node.hasAttribute('shared-tooltip-text')
+  ) {
     return true;
   }
-  if (node.closest('#author-photo, #author-name, yt-live-chat-author-chip')) return false;
-  return !!node.closest('#message, #sticker');
+  return !!node.closest('#message, #sticker, #purchase-description');
+}
+
+function buildEmotePart(node) {
+  const src = readEmoteSrc(node);
+  const rawAlt = readEmoteAlt(node);
+  const emoji = (!isEmoteShortcode(rawAlt) && rawAlt && !/^https?:/i.test(rawAlt))
+    ? rawAlt
+    : unicodeFromEmoteSrc(src);
+  const shortcode = isEmoteShortcode(rawAlt)
+    ? rawAlt
+    : (isEmoteShortcode(node.getAttribute('shared-tooltip-text'))
+      ? String(node.getAttribute('shared-tooltip-text')).trim()
+      : '');
+  // Display label: Unicode when possible; never prefer shortcode for rendering.
+  const alt = emoji || shortcode || rawAlt || '';
+  return { type: 'emote', alt, src, emoji: emoji || '', shortcode };
 }
 
 function pushTextPart(parts, text) {
@@ -36,7 +106,10 @@ function collectParts(root) {
 
   const walk = (node) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      pushTextPart(parts, node.textContent);
+      const text = node.textContent || '';
+      // Some clients / copy-fix scripts leave trailing ":shortcode:" text beside imgs.
+      if (EMOTE_SHORTCODE_ONLY_RE.test(text)) return;
+      pushTextPart(parts, text);
       return;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -48,15 +121,13 @@ function collectParts(root) {
     if (tag === 'YT-LIVE-CHAT-AUTHOR-CHIP' || tag === 'YT-ICON') return;
 
     if (tag === 'IMG' && isEmoteImage(node)) {
-      const src = safeEmoteSrc(node.currentSrc || node.getAttribute('src'));
-      const alt = (node.getAttribute('alt') || node.getAttribute('shared-tooltip-text') || '').trim();
-      parts.push({ type: 'emote', alt, src });
+      parts.push(buildEmotePart(node));
       return;
     }
 
     if (tag === 'IMG') {
-      const alt = node.getAttribute('alt') || node.getAttribute('shared-tooltip-text') || '';
-      if (alt) pushTextPart(parts, ` ${alt} `);
+      const alt = readEmoteAlt(node);
+      if (alt && !isEmoteShortcode(alt)) pushTextPart(parts, ` ${alt} `);
       return;
     }
 
@@ -67,11 +138,29 @@ function collectParts(root) {
   return parts;
 }
 
+function emoteDisplayText(part) {
+  if (!part || part.type !== 'emote') return '';
+  const emoji = String(part.emoji || '').trim() || unicodeFromEmoteSrc(part.src);
+  if (emoji) return emoji;
+  const alt = String(part.alt || '').trim();
+  if (alt && !isEmoteShortcode(alt)) return alt;
+  return '';
+}
+
 function partsToText(parts) {
-  return parts.map((part) => (part.type === 'emote' ? (part.alt ? ` ${part.alt} ` : ' ') : part.text))
-    .join('')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return parts.map((part) => {
+    if (part.type !== 'emote') return part.text;
+    const text = emoteDisplayText(part);
+    return text ? text : '';
+  }).join('').replace(/\s+/g, ' ').trim();
+}
+
+/** Favorites store sendable text: Unicode when possible, else YouTube :shortcode:. */
+function partsToFavoriteText(parts) {
+  return parts.map((part) => {
+    if (part.type !== 'emote') return part.text;
+    return emoteDisplayText(part) || String(part.shortcode || '').trim() || '';
+  }).join('').replace(/\s+/g, ' ').trim();
 }
 
 function shieldEmoteParts(parts) {
@@ -150,18 +239,51 @@ function stripAmountFromParts(parts, amount) {
   return out;
 }
 
+function isMembershipElement(msgEl) {
+  const tag = msgEl?.tagName || '';
+  return tag === 'YT-LIVE-CHAT-MEMBERSHIP-ITEM-RENDERER'
+    || /MEMBERSHIP-ITEM/i.test(tag);
+}
+
+function isPinnedChatElement(msgEl) {
+  if (!msgEl) return false;
+  const tag = msgEl.tagName || '';
+  return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
+    || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
+    || isMembershipElement(msgEl)
+    || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
+    || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
+}
+
+function readMembershipBadge(msgEl) {
+  const badge = msgEl?.querySelector?.(
+    'yt-live-chat-author-badge-renderer[type="member"], #chat-badges yt-live-chat-author-badge-renderer',
+  );
+  return (
+    badge?.getAttribute?.('shared-tooltip-text')
+    || badge?.getAttribute?.('aria-label')
+    || badge?.querySelector?.('img')?.getAttribute?.('alt')
+    || ''
+  ).replace(/\s+/g, ' ').trim();
+}
+
 function extractMessageParts(msgEl, { includeAmount = true } = {}) {
   const parts = [];
   const amount = readPurchaseAmount(msgEl);
   if (includeAmount && amount) pushTextPart(parts, `${amount} `);
 
   const messageEl = msgEl.querySelector('#message');
-  if (messageEl) {
-    parts.push(...collectParts(messageEl));
-  } else {
-    const primary = collectParts(msgEl.querySelector('#header-primary-text, #primary-text'));
-    const sub = collectParts(msgEl.querySelector('#header-subtext'));
-    parts.push(...primary, ...sub);
+  const messageParts = messageEl ? collectParts(messageEl) : [];
+  const membership = isMembershipElement(msgEl);
+
+  // Membership cards often put the welcome text in #header-subtext while #message is empty.
+  if (membership || !messageParts.length) {
+    parts.push(...collectParts(msgEl.querySelector('#header-primary-text, #primary-text')));
+    parts.push(...collectParts(msgEl.querySelector('#header-subtext')));
+  }
+  if (messageParts.length) {
+    parts.push(...messageParts);
+  } else if (!membership) {
     const sticker = msgEl.querySelector('#sticker img, img.yt-live-chat-paid-sticker-renderer');
     if (sticker && !parts.some((part) => part.src && part.src === safeEmoteSrc(sticker.getAttribute('src')))) {
       if (isEmoteImage(sticker)) parts.push(...collectParts(sticker));
@@ -175,11 +297,17 @@ function extractMessageParts(msgEl, { includeAmount = true } = {}) {
 function readChatMessage(msgEl) {
   if (!msgEl || msgEl.hasAttribute('is-deleted')) return null;
 
-  const amount = readPurchaseAmount(msgEl);
-  const parts = extractMessageParts(msgEl, { includeAmount: true });
+  const membership = isMembershipElement(msgEl);
+  const purchaseAmount = readPurchaseAmount(msgEl);
+  const membershipBadge = membership ? readMembershipBadge(msgEl) : '';
+  // Reuse the amount badge slot for membership labels (e.g. "New member").
+  const amount = purchaseAmount || membershipBadge;
+  const parts = extractMessageParts(msgEl, { includeAmount: !!purchaseAmount });
   const bodyParts = extractMessageParts(msgEl, { includeAmount: false });
   const rawMessage = partsToText(parts);
-  if (!rawMessage && !parts.some((part) => part.type === 'emote')) return null;
+  if (!rawMessage && !parts.some((part) => part.type === 'emote') && !amount && !membership) {
+    return null;
+  }
 
   const message = dedupeRepeatedMessage(rawMessage) || rawMessage;
   const usernameEl = msgEl.querySelector('#author-name');
@@ -191,10 +319,7 @@ function readChatMessage(msgEl) {
       || msgEl.querySelector('#author-photo img, yt-img-shadow#author-photo img')?.getAttribute('src')
       || '',
   );
-  const superchat = msgEl.tagName === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
-    || msgEl.tagName === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
-    || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(msgEl.tagName || '')
-    || !!amount;
+  const superchat = isPinnedChatElement(msgEl);
 
   return {
     message,
@@ -205,6 +330,7 @@ function readChatMessage(msgEl) {
     usernameColor,
     profileUrl,
     avatarUrl,
+    membership,
     superchat,
     superchatStyle: superchat ? readSuperchatStyle(msgEl) : null,
   };
@@ -228,15 +354,26 @@ function readCssVarColor(el, name) {
 }
 
 function readSuperchatStyle(msgEl) {
+  const membership = isMembershipElement(msgEl);
   const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
   const content = msgEl.querySelector('#content');
   const headerStyle = header ? getComputedStyle(header) : null;
   const contentStyle = content ? getComputedStyle(content) : null;
+  const fallbackBg = membership ? '#0f9d58' : '#e53935';
 
-  const background = readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
+  const background = (
+    membership
+      ? (
+        readCssVarColor(msgEl, '--yt-live-chat-sponsor')
+        || readCssVarColor(msgEl, '--yt-live-chat-pamphlet-background-color')
+        || readCssVarColor(msgEl, '--yt-live-chat-moderator-color')
+      )
+      : ''
+  )
+    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
     || readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-background-color')
     || usableCssColor(headerStyle?.backgroundColor)
-    || '#e53935';
+    || fallbackBg;
   const bodyBackground = readCssVarColor(msgEl, '--yt-live-chat-paid-message-secondary-container-color')
     || readCssVarColor(msgEl, '--yt-live-chat-paid-message-background-color')
     || usableCssColor(contentStyle?.backgroundColor)
@@ -259,6 +396,7 @@ function usableCssColor(value) {
 function markExistingMessages(chatRoot) {
   chatRoot.querySelectorAll(SELECTORS.chatMessage).forEach((el) => {
     el.classList.add('ydm-processed');
+    ensureAuthorProfileLink(el);
   });
 }
 

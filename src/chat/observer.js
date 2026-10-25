@@ -1,9 +1,10 @@
 class ChatObserver {
-  constructor({ getSettings, danmakuEmitter, translateQueue, isActive }) {
+  constructor({ getSettings, danmakuEmitter, translateQueue, isActive, favoritesPanel = null }) {
     this.getSettings = getSettings;
     this.danmakuEmitter = danmakuEmitter;
     this.translateQueue = translateQueue;
     this.isActive = isActive;
+    this.favoritesPanel = favoritesPanel;
     this.observer = null;
     this.chatRoot = null;
     this.readyAt = 0;
@@ -15,7 +16,13 @@ class ChatObserver {
       getSettings,
       danmakuEmitter,
       isActive,
+      favoritesPanel,
     });
+  }
+
+  setFavoritesPanel(panel) {
+    this.favoritesPanel = panel;
+    if (this.chatActions) this.chatActions.favoritesPanel = panel;
   }
 
   isConnected() {
@@ -130,6 +137,7 @@ class ChatObserver {
     for (const msgEl of found) {
       if (seen.has(msgEl)) continue;
       seen.add(msgEl);
+      ensureAuthorProfileLink(msgEl);
       if (!this.shouldEmit(msgEl)) continue;
       const parsed = parseChatMessage(msgEl);
       if (!parsed) continue;
