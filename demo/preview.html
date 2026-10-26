@@ -17,18 +17,6 @@
       padding: 68px 16px 16px;
       align-items: flex-start;
     }
-    #movie_player {
-      position: relative;
-      width: 640px;
-      height: 360px;
-      background: #000;
-    }
-    .page-header,
-    .video-title {
-      position: relative;
-      z-index: 20;
-      background: #0f0f0f;
-    }
     .page-header {
       position: fixed;
       top: 0;
@@ -36,17 +24,112 @@
       right: 0;
       height: 56px;
       z-index: 2000;
+      background: #0f0f0f;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    #movie_player {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      background: #000;
+      overflow: hidden;
     }
     .html5-video-container {
       position: absolute;
       inset: 0;
       overflow: hidden;
     }
+    .ydm-demo-stage {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      background: #0f0f0f;
+      pointer-events: none;
+    }
+    .ydm-demo-stage__bg,
+    .ydm-demo-stage__glow,
+    .ydm-demo-stage__sheen {
+      position: absolute;
+      inset: -40%;
+      will-change: transform, background-position, opacity;
+    }
+    .ydm-demo-stage__bg {
+      background: linear-gradient(
+        120deg,
+        #0f0f0f 0%,
+        #5c0000 16%,
+        #ff0000 30%,
+        #3d0000 46%,
+        #0f0f0f 58%,
+        #cc0000 74%,
+        #0f0f0f 100%
+      );
+      background-size: 320% 320%;
+      animation: ydm-demo-bg-shift 7s ease-in-out infinite;
+    }
+    .ydm-demo-stage__glow {
+      background:
+        radial-gradient(circle at 18% 28%, rgba(255, 0, 0, 0.65), transparent 42%),
+        radial-gradient(circle at 82% 72%, rgba(255, 109, 109, 0.45), transparent 40%),
+        radial-gradient(circle at 52% 12%, rgba(204, 0, 0, 0.4), transparent 38%);
+      mix-blend-mode: screen;
+      animation: ydm-demo-glow-drift 9s ease-in-out infinite;
+    }
+    .ydm-demo-stage__sheen {
+      inset: -60%;
+      background: linear-gradient(
+        105deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.07) 48%,
+        rgba(255, 120, 120, 0.2) 52%,
+        transparent 65%
+      );
+      background-size: 220% 100%;
+      animation: ydm-demo-sheen-sweep 5.5s linear infinite;
+      opacity: 0.9;
+    }
+    .ydm-demo-stage__label {
+      position: absolute;
+      left: 24px;
+      bottom: 56px;
+      z-index: 2;
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.4;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.85);
+      pointer-events: none;
+    }
+    .ydm-demo-stage__title {
+      display: block;
+      margin-bottom: 4px;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    @keyframes ydm-demo-bg-shift {
+      0% { background-position: 0% 50%; transform: scale(1.05) rotate(0deg); }
+      33% { background-position: 50% 100%; transform: scale(1.12) rotate(2deg); }
+      66% { background-position: 100% 0%; transform: scale(1.08) rotate(-2deg); }
+      100% { background-position: 0% 50%; transform: scale(1.05) rotate(0deg); }
+    }
+    @keyframes ydm-demo-glow-drift {
+      0% { transform: translate(-12%, -8%) scale(1) rotate(0deg); }
+      50% { transform: translate(14%, 10%) scale(1.15) rotate(12deg); }
+      100% { transform: translate(-12%, -8%) scale(1) rotate(0deg); }
+    }
+    @keyframes ydm-demo-sheen-sweep {
+      0% { background-position: -120% 0; transform: translateX(-8%); }
+      100% { background-position: 220% 0; transform: translateX(8%); }
+    }
     video {
       width: 100%;
       height: 100%;
-      background: #111;
+      background: transparent;
       object-fit: cover;
+      opacity: 0;
+      pointer-events: none;
     }
     .ytp-chrome-bottom {
       position: absolute;
@@ -69,6 +152,15 @@
       width: 320px;
       height: 596px;
       background: #181818;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chat-messages {
+      flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
     }
@@ -90,13 +182,6 @@
       background: transparent;
       color: #aaa;
       cursor: pointer;
-    }
-    #picker-buttons {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin: 0 8px;
-      min-height: 40px;
     }
     #items {
       flex: 1;
@@ -134,32 +219,51 @@
     }
     #author-name { font-weight: 600; margin-right: 6px; }
     #purchase-amount { font-weight: 700; margin-left: auto; }
+    .chat-input-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      padding: 8px;
+      border-top: 1px solid #303030;
+      box-sizing: border-box;
+    }
     #input {
-      margin: 8px;
-      min-height: 36px;
-      border: 1px solid #333;
+      flex: 1;
+      min-width: 0;
+      min-height: 40px;
+      border: 1px solid #3f3f3f;
       border-radius: 8px;
-      padding: 6px 8px;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      background: #121212;
+      color: #f1f1f1;
+      outline: none;
+    }
+    #picker-buttons {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      flex-shrink: 0;
+      min-height: 40px;
     }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin: 0 8px 8px;
+      padding: 0 8px 8px;
     }
-    .speech-hint {
-      margin: 0 8px 8px;
-      color: #aaa;
-      font-size: 12px;
-      line-height: 1.45;
-    }
-    button {
-      background: #272727;
+    .toolbar button {
+      background: #ff0000;
       color: #fff;
       border: none;
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 8px 12px;
       cursor: pointer;
+      font-weight: 600;
+    }
+    .toolbar button.secondary {
+      background: #3f3f3f;
     }
   </style>
 </head>
@@ -169,6 +273,15 @@
     <ytd-watch-flexy class="ytd-page-manager">
       <div id="movie_player" class="html5-video-player">
         <div class="html5-video-container">
+          <div class="ydm-demo-stage" aria-hidden="true">
+            <div class="ydm-demo-stage__bg"></div>
+            <div class="ydm-demo-stage__glow"></div>
+            <div class="ydm-demo-stage__sheen"></div>
+            <div class="ydm-demo-stage__label">
+              <span class="ydm-demo-stage__title">YouTube Danmaku</span>
+              Demo preview
+            </div>
+          </div>
           <video class="video-stream html5-main-video"></video>
         </div>
         <div class="ytp-chrome-bottom">
@@ -188,14 +301,14 @@
           </yt-live-chat-text-message-renderer>
         </div>
       </div>
-      <div id="picker-buttons"></div>
-      <div id="input" class="yt-live-chat-text-input-field-renderer" contenteditable="true"></div>
+      <div class="chat-input-wrap">
+        <div id="input" class="yt-live-chat-text-input-field-renderer" contenteditable="true"></div>
+        <div id="picker-buttons"></div>
+      </div>
       <div class="toolbar">
         <button id="add-chat" type="button">Add chat</button>
-        <button id="add-superchat" type="button">Add Super Chat</button>
-        <button id="add-member" type="button">Add Member</button>
+        <button id="add-superchat" class="secondary" type="button">Add Super Chat</button>
       </div>
-      <p class="speech-hint">右键聊天可翻译 / 朗读 / 发弹幕 / 收藏 / 打开主页；点击 Super Chat / Member 也可操作。标题栏可清空或收起聊天；收起后可用侧边或控制栏展开。星标可收藏句子。设置里可开启 Super Chat 悬停：选位置（顶/角/底）、精简模式（头像+用户名+金额，点击查看详情）、滚动区域（含下半屏）、最多十条、跟随 YouTube ticker 时间、是否遮挡滚动弹幕。朗读按钮打开面板；音量为 0 时图标变为静音。控制栏的增强画中画可打开带弹幕的小窗口（需 Chrome 或 Edge 116 及以上；开着小窗时切到其他标签，聊天和弹幕也会继续）。</p>
     </ytd-live-chat-frame>
   </div>
   <script>
@@ -239,11 +352,6 @@
       ['Gift', '$2.00', '#1e88e5', 'hello'],
       ['NightOwl', '$10.00', '#8e24aa', 'This is a longer Super Chat so the pinned pill should scroll the message while avatar and amount stay fixed.'],
     ];
-    const memberSamples = [
-      ['@P猫3', 'New member', '#0f9d58', 'Welcome to しらせの楽園'],
-      ['LongMemberNameHere', 'Member', '#0a8043', 'Welcome to the channel!'],
-    ];
-    // Allowed by the userscript emote host allowlist (ggpht).
     const avatarUrl = 'https://yt3.ggpht.com/a/default-user=s48-c-k-c0x00ffffff-no-rj';
     let seq = 0;
 
@@ -301,51 +409,9 @@
       addMessage(sample[0], sample[1], sample[2] + ' ' + (seq + 1));
     });
 
-    function addMember(name, badge, color, welcome) {
-      const item = document.createElement('yt-live-chat-membership-item-renderer');
-      item.id = 'live-member-' + (++seq);
-      const card = document.createElement('div');
-      card.id = 'card';
-      const header = document.createElement('div');
-      header.id = 'header';
-      header.style.background = color;
-      header.style.color = '#fff';
-      const photo = document.createElement('yt-img-shadow');
-      photo.id = 'author-photo';
-      const img = document.createElement('img');
-      img.src = avatarUrl;
-      img.alt = '';
-      photo.appendChild(img);
-      const author = document.createElement('span');
-      author.id = 'author-name';
-      author.textContent = name;
-      const badgeEl = document.createElement('yt-live-chat-author-badge-renderer');
-      badgeEl.setAttribute('type', 'member');
-      badgeEl.setAttribute('shared-tooltip-text', badge);
-      badgeEl.setAttribute('aria-label', badge);
-      const sub = document.createElement('div');
-      sub.id = 'header-subtext';
-      sub.textContent = welcome;
-      header.append(photo, author, badgeEl, sub);
-      const content = document.createElement('div');
-      content.id = 'content';
-      content.style.background = color;
-      const message = document.createElement('div');
-      message.id = 'message';
-      content.appendChild(message);
-      card.append(header, content);
-      item.appendChild(card);
-      document.getElementById('items').appendChild(item);
-    }
-
     document.getElementById('add-superchat').addEventListener('click', () => {
       const sample = scSamples[seq % scSamples.length];
       addSuperchat(sample[0], sample[1], sample[2], sample[3] + ' #' + (seq + 1));
-    });
-
-    document.getElementById('add-member').addEventListener('click', () => {
-      const sample = memberSamples[seq % memberSamples.length];
-      addMember(sample[0], sample[1], sample[2], sample[3] + ' #' + (seq + 1));
     });
 
     setTimeout(() => {
@@ -356,12 +422,6 @@
         setTimeout(
           () => addSuperchat(sample[0], sample[1], sample[2], sample[3]),
           samples.length * 700 + index * 900,
-        );
-      });
-      memberSamples.forEach((sample, index) => {
-        setTimeout(
-          () => addMember(sample[0], sample[1], sample[2], sample[3]),
-          samples.length * 700 + scSamples.length * 900 + index * 900,
         );
       });
     }, 4000);
