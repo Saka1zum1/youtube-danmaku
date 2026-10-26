@@ -195,7 +195,7 @@
         <button id="add-superchat" type="button">Add Super Chat</button>
         <button id="add-member" type="button">Add Member</button>
       </div>
-      <p class="speech-hint">右键聊天可翻译 / 朗读 / 发弹幕 / 收藏 / 打开主页；点击 Super Chat / Member 也可操作。标题栏可清空或收起聊天；收起后可用侧边或控制栏展开。星标可收藏句子。设置里可开启 Super Chat 悬停：选位置（顶/角/底）、精简模式（头像+用户名+金额，点击查看详情）、滚动区域（含下半屏）、最多十条、跟随 YouTube ticker 时间、是否遮挡滚动弹幕。朗读按钮打开面板；音量为 0 时图标变为静音。</p>
+      <p class="speech-hint">右键聊天可翻译 / 朗读 / 发弹幕 / 收藏 / 打开主页；点击 Super Chat / Member 也可操作。标题栏可清空或收起聊天；收起后可用侧边或控制栏展开。星标可收藏句子。设置里可开启 Super Chat 悬停：选位置（顶/角/底）、精简模式（头像+用户名+金额，点击查看详情）、滚动区域（含下半屏）、最多十条、跟随 YouTube ticker 时间、是否遮挡滚动弹幕。朗读按钮打开面板；音量为 0 时图标变为静音。控制栏的增强画中画可打开带弹幕的小窗口（需 Chrome 或 Edge 116 及以上；开着小窗时切到其他标签，聊天和弹幕也会继续）。</p>
     </ytd-live-chat-frame>
   </div>
   <script>
@@ -222,7 +222,7 @@
       if (navigator.clipboard) return navigator.clipboard.writeText(text);
     }
   </script>
-  <script src="../dist/youtube-danmaku.user.js?v=165"></script>
+  <script src="../dist/youtube-danmaku.user.js?v=170"></script>
   <script>
     const samples = [
       ['Alice', '#ff8a80', 'hello from chat'],

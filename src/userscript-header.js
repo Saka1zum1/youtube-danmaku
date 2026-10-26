@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         YouTube Danmaku - Bullet Chat
-// @name:zh-CN   YouTube 弹幕
-// @name:zh-TW   YouTube 彈幕
-// @name:ja      YouTube 弾幕
+// @name:zh-CN   YouTube 弹幕姬 | 实时翻译
+// @name:zh-TW   YouTube 彈幕 | 即時翻譯
+// @name:ja      YouTube 弾幕 | リアルタイム翻訳
 // @namespace    youtube-danmaku
-// @version      1.6.5
-// @description  Turn YouTube live chat into scrolling danmaku — Super Chat pins, favorites, hide chat, and more
-// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持 Super Chat 悬停、收藏、收起聊天等
-// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援 Super Chat 懸停、收藏、收起聊天等
-// @description:ja  YouTube ライブチャットを弾幕化。Super Chat 固定、お気に入り、チャット非表示などに対応
+// @version      1.7.0
+// @description  Turn YouTube live chat into scrolling danmaku with real-time translation
+// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持实时翻译
+// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援即時翻譯
+// @description:ja  YouTube ライブチャットを弾幕化とリアルタイム翻訳に対応
 // @author       KaKa
 // @license      MIT
 // @match        https://www.youtube.com/*

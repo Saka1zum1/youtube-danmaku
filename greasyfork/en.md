@@ -19,6 +19,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
    - **Download button** — Export the archived chat replay
    - **Settings button** — Open the options panel
    - **Show chat** — Appears after you hide the live chat panel
+   - **Enhanced picture-in-picture** — Open a floating window with the video and danmaku
 5. Customize appearance, turn on read-aloud, or enable translation in the panels
 
 **Tip:** Hover over a danmaku to pause and read it. Click to see who sent it. Use the copy button in the bubble to put the text into the live chat box. You still send it yourself. The speaker button reads that one line. Right-click a chat line to translate, read aloud, send as danmaku, favorite, or open the sender’s page. Click a Super Chat for the same actions. Clear or hide chat from the chat header; in fullscreen, press Enter to type.
@@ -44,6 +45,13 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 ### Fullscreen chat
 
 - On a live stream in fullscreen, press Enter to open a composer and send without exiting fullscreen
+
+### Enhanced picture-in-picture
+
+- A player button opens a floating window with the video and danmaku
+- Turn danmaku on or off, open settings, send a chat (including favorites), lock or stretch the picture, refresh the video, or go back to the watch page
+- While the window is open, chat and danmaku keep going if you switch to another tab
+- Needs Chrome or Edge 116 or newer
 
 ### Super Chat
 

@@ -10,6 +10,7 @@ let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
 let controlButton = null;
+let enhancedPip = null;
 let liveViewersBadge = null;
 let stylesInjected = false;
 let pageActive = isPageActive();
@@ -21,10 +22,21 @@ function getSettings() {
   return settings;
 }
 
+function isBackgroundKept() {
+  if (document.documentElement.dataset.ydmPreview === 'true') return true;
+  return !!enhancedPip?.isOpen();
+}
+
 function isActive() {
   if (!isWatchPage()) return false;
-  if (document.documentElement.dataset.ydmPreview === 'true') return true;
+  if (isBackgroundKept()) return true;
   return pageActive;
+}
+
+function syncBackgroundKeepAlive() {
+  const open = !!enhancedPip?.isOpen();
+  syncTabAntiFreeze(() => open);
+  pageActive = open || isPageActive();
 }
 
 function onSettingsChange(newSettings) {
@@ -32,6 +44,7 @@ function onSettingsChange(newSettings) {
   danmaku?.updateLayout();
   controlButton?.updateDanmakuState();
   controlButton?.updateSpeechState();
+  enhancedPip?.syncSettings();
   if (!settings.translateEnabled) {
     translateQueue?.clear();
     clearAllChatTranslations();
@@ -47,9 +60,14 @@ function toggleDanmaku() {
 }
 
 function handleVisibilityChange() {
-  const wasActive = pageActive;
+  if (document.documentElement.dataset.ydmPreview === 'true') {
+    pageActive = true;
+    return;
+  }
+  const wasActive = isActive();
   pageActive = isPageActive();
-  if (wasActive && !pageActive) {
+  syncBackgroundKeepAlive();
+  if (wasActive && !isActive()) {
     danmakuEmitter?.clear();
     translateQueue?.clear();
     cancelSpeech();
@@ -69,6 +87,7 @@ function teardown() {
   chatObserver?.stop();
   favoritesPanel?.destroy();
   fullscreenChat?.destroy();
+  enhancedPip?.destroy();
   chatClearButton?.destroy();
   cleanupLegacyChatCollapseUi();
   danmaku?.destroy();
@@ -80,6 +99,7 @@ function teardown() {
   historyPanel?.close();
   liveViewersBadge?.stop();
   cancelSpeech();
+  tabAntiFreezeDisable();
   chatObserver = null;
   favoritesPanel = null;
   fullscreenChat = null;
@@ -88,6 +108,7 @@ function teardown() {
   danmakuEmitter = null;
   translateQueue = null;
   controlButton = null;
+  enhancedPip = null;
   liveViewersBadge = null;
 }
 
@@ -176,6 +197,8 @@ async function boot() {
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
     isHistoryPanelOpen: () => historyPanel.isOpen,
+    onTogglePip: () => enhancedPip?.toggle(),
+    isPipOpen: () => !!enhancedPip?.isOpen(),
   });
 
   await engine.mount();
@@ -189,6 +212,23 @@ async function boot() {
   translateQueue = queue;
   chatObserver = observer;
   controlButton = controls;
+  enhancedPip = new EnhancedPip({
+    getSettings,
+    danmaku: engine,
+    favoritesPanel,
+    onToggleDanmaku: toggleDanmaku,
+    onOpenSettings: () => {
+      speechPanel?.close();
+      historyPanel?.close();
+      const anchor = controlButton?.settingsBtn || controlButton?.wrap;
+      if (anchor && !settingsPanel?.isOpen) settingsPanel.open(anchor);
+      controlButton?.updatePanelState();
+    },
+    onStateChange: () => {
+      syncBackgroundKeepAlive();
+      controlButton?.updatePipState();
+    },
+  });
   liveViewersBadge = new LiveViewersBadge();
 
   await observer.start();
@@ -203,6 +243,7 @@ async function boot() {
   if (gen !== generation) return;
   cleanupLegacyChatCollapseUi();
   if (gen !== generation) return;
+  syncBackgroundKeepAlive();
 
   console.log('[YDM] YouTube Danmaku initialized');
 }

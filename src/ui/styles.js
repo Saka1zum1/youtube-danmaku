@@ -1715,6 +1715,38 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
   pointer-events: none;
   fill: currentColor;
 }
+
+.ydm-pip-btn.ydm-active {
+  color: #ff4e45;
+}
+
+.ydm-pip-page-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  z-index: 80;
+  max-width: min(440px, calc(100% - 24px));
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #fff;
+  font: 13px/1.35 Roboto, Arial, sans-serif;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+body > .ydm-pip-page-toast {
+  position: fixed;
+  bottom: 24px;
+  z-index: 10050;
+}
+
+.ydm-pip-page-toast.is-show {
+  opacity: 1;
+}
 `;
 
 function injectStyles() {

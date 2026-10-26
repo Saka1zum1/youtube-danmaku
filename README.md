@@ -20,6 +20,7 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 - **Clear live chat** — Header button empties the docked chat panel without closing it
 - **Hide / show chat** — Collapse the live chat to free video space; restore from the side tab or the player control bar
 - **Fullscreen chat input** — In live fullscreen, press Enter to compose and send without leaving fullscreen
+- **Enhanced picture-in-picture** — A player button opens a floating window with the video and danmaku. Turn danmaku on or off, open settings, send chat (including favorites), lock or stretch the picture, refresh the video, or return to the watch page. While that window is open, chat and danmaku keep going if you switch tabs. Needs Chrome or Edge 116 or newer
 - **Super Chat pin** — Optional pins at the top, corners, or bottom of the player. Full mode shows avatar, name, amount, and message; compact mode shows avatar, truncated name, and amount — tap to open a detail card. Up to ten can show at once. Pin time can follow the YouTube chat ticker or use your own setting. Pins may optionally sit over scrolling danmaku
 - **Super Chat actions** — Click a Super Chat (or its detail card) for translate, read aloud, send as danmaku, favorite, or open the sender’s profile
 - **Live viewers** — Concurrent and total viewers beside the Live badge when the stream reports them
@@ -53,6 +54,7 @@ The built script is `dist/youtube-danmaku.user.js`.
    - **Download** — export the archived chat replay
    - **Settings** — open the options panel
    - **Show chat** — appears after you hide the live chat panel
+   - **Enhanced picture-in-picture** — open a floating window with video and danmaku
 5. Hover a line to pause it. Click it to see who sent it
 6. Click the copy icon to put that text into the live chat box. You still send it yourself. Click the speaker icon to read that one line
 7. After a hover, scrolling resumes 0.3 s after the pointer leaves. After a click, click outside the tooltip to resume
@@ -92,7 +94,7 @@ npm run build
 npm run watch
 ```
 
-The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. Try read-aloud, favorites, clear / hide chat, right-click actions, and Super Chat pin options (position, compact mode, scroll area, ticker time). The preview keeps running when its browser tab is in the background.
+The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. Try read-aloud, favorites, clear / hide chat, right-click actions, Super Chat pin options (position, compact mode, scroll area, ticker time), and the enhanced picture-in-picture button (Chrome or Edge 116+). The preview keeps running when its browser tab is in the background.
 
 ## Notes
 

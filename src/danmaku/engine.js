@@ -471,10 +471,23 @@ class DanmakuEngine {
     });
   }
 
+  notifyPipComment(payload) {
+    if (!this.onComment || !payload) return;
+    const parts = Array.isArray(payload.parts) ? payload.parts : [];
+    const hasEmote = parts.some((part) => part?.type === 'emote' && part.src);
+    if (!payload.message && !hasEmote) return;
+    try {
+      this.onComment(payload);
+    } catch (error) {
+      console.warn('[YDM] PiP danmaku hook failed', error);
+    }
+  }
+
   render(payload) {
     const settings = this.getSettings();
     if (payload.superchat && settings.superchatPinned) {
       this.queueSuperchat(payload);
+      if (settings.enabled) this.notifyPipComment(payload);
       return;
     }
     this.renderScrolling(payload);
@@ -948,7 +961,9 @@ class DanmakuEngine {
   renderScrolling({ username, message, parts, usernameColor, profileUrl, originalMessage, translated }) {
     const settings = this.getSettings();
     const hasEmote = Array.isArray(parts) && parts.some((part) => part.type === 'emote' && part.src);
-    if (!settings.enabled || !this.layer || (!message && !hasEmote)) return;
+    if (!settings.enabled || (!message && !hasEmote)) return;
+    this.notifyPipComment({ username, message, parts, usernameColor, profileUrl, originalMessage, translated });
+    if (!this.layer) return;
 
     const layerWidth = this.layer.clientWidth || 800;
     const speed = clamp(settings.speed, 1, 10);
