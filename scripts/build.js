@@ -37,7 +37,6 @@ const MODULES = [
   'ui/history-panel.js',
   'ui/favorites-panel.js',
   'ui/chat-clear-button.js',
-  'ui/chat-collapse-button.js',
   'ui/fullscreen-chat.js',
   'ui/control-button.js',
   'ui/live-viewers.js',

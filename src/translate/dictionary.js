@@ -26,7 +26,7 @@ const TWITCH_DICTIONARY = {
   EZ: dictEntry('轻松', '輕鬆', 'EZ'),
   Clap: dictEntry('（鼓掌）', '（鼓掌）', 'Clap'),
   NPC: dictEntry('工具人', '工具人', 'NPC'),
-  ICANT: dictEntry('我做不到', '我做不到', 'ICANT'),
+  ICANT: dictEntry('笑不活了', '笑翻了', 'ICANT'),
   W: dictEntry('神', '神', 'W'),
   L: dictEntry('拉胯', '拉胯', 'L'),
   F: dictEntry('F', 'F', 'F'),
@@ -66,6 +66,7 @@ const TWITCH_DICTIONARY = {
   ez: dictEntry('轻松', '輕鬆', 'ez'),
   diff: dictEntry('差距', '差距', 'diff'),
   www: dictEntry('笑死', '笑死', 'www'),
+  stream: dictEntry('直播', '直播', 'stream'),
 };
 
 const PLACEHOLDER_PREFIX = '⟦T';

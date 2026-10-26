@@ -11,7 +11,7 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 - **Interactive pause** — Hover or click to pause; click to show the sender, and the original text when a line was translated
 - **Copy to chat** — The tooltip copy button writes the message into the live chat input
 - **Read aloud** — Optional speech for new danmaku. The control-bar icon opens the speech panel. Volume 0 shows a mute icon. Lines that are only symbols, emotes, or numbers are skipped, and a repeated phrase is read at most three times
-- **Customization** — Speed, font, opacity, scroll area (full / top half / top quarter)
+- **Customization** — Speed, font, opacity, scroll area (full / top half / bottom half / top quarter)
 - **Fullscreen-aware** — Follows player resize, theater mode, and fullscreen
 - **Translation** — Microsoft, Google, Volcengine, Caiyun, and Tencent Transmart. Busy chat is batched, and a rate-limited engine is skipped. Numbers and symbols are left as-is
 - **Manual chat translate** — Right-click a docked chat line for Translate / Retranslate. Failed runs retry with another engine
@@ -20,8 +20,8 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 - **Clear live chat** — Header button empties the docked chat panel without closing it
 - **Hide / show chat** — Collapse the live chat to free video space; restore from the side tab or the player control bar
 - **Fullscreen chat input** — In live fullscreen, press Enter to compose and send without leaving fullscreen
-- **Super Chat pin** — Optional pinned band with avatar, truncated username, amount badge, and YouTube-like colors. Several Super Chats can stay on screen at once without overlapping; long text scrolls inside the pill
-- **Super Chat actions** — Click a Super Chat (or its detail card) for translate, read aloud, send as danmaku, or favorite
+- **Super Chat pin** — Optional pins at the top, corners, or bottom of the player. Full mode shows avatar, name, amount, and message; compact mode shows avatar, truncated name, and amount — tap to open a detail card. Up to ten can show at once. Pin time can follow the YouTube chat ticker or use your own setting. Pins may optionally sit over scrolling danmaku
+- **Super Chat actions** — Click a Super Chat (or its detail card) for translate, read aloud, send as danmaku, favorite, or open the sender’s profile
 - **Live viewers** — Concurrent and total viewers beside the Live badge when the stream reports them
 - **Anti-flood** — Messages already on screen when you join, and the first 2.5 seconds after that, are not fired as a burst
 - **UI languages** — Follows the browser language (Chinese / English / Japanese)
@@ -68,9 +68,11 @@ The built script is `dist/youtube-danmaku.user.js`.
 | Read aloud | Off by default. The panel sets voice, volume, pitch, and speed. Volume 0 mutes the icon |
 | Pace mode | Raises speed so one line stays within the max time. With translation on, length uses the translated text |
 | Font | 18 system fonts |
-| Scroll area | Full / top half / top quarter |
-| Pin Super Chats | Hold paid messages in a top or bottom band; several can show at once |
-| Super Chat pin time / animation | How long each pinned card stays, and which enter/exit motion to use |
+| Scroll area | Full / top half / bottom half / top quarter |
+| Pin Super Chats | Hold paid messages on the player; choose position, compact or full layout, and up to ten at once |
+| Super Chat pin time | Manual seconds, or match the YouTube chat ticker when that option is on |
+| Super Chat overlay | Optional: let pins cover scrolling danmaku instead of pushing them down |
+| Super Chat animation | Enter/exit motion for each pinned card |
 | Translation | Replaces the on-screen danmaku text |
 | Show translation in chat | Optional: keep the original line and add a distinct translation under it in the docked chat |
 | Translation engine | Auto / Microsoft / Google / Volcengine / Caiyun / Tencent Transmart |
@@ -90,7 +92,7 @@ npm run build
 npm run watch
 ```
 
-The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. Try read-aloud, favorites, clear / hide chat, right-click actions, and Super Chat samples. The preview keeps running when its browser tab is in the background.
+The public demo needs no build step: [YouTube Danmaku demo](https://saka1zum1.github.io/youtube-danmaku/). It stands in for the watch page (player, control bar, and chat list). Lines already in the list stay put; lines added after the short warm-up scroll across the video. Try read-aloud, favorites, clear / hide chat, right-click actions, and Super Chat pin options (position, compact mode, scroll area, ticker time). The preview keeps running when its browser tab is in the background.
 
 ## Notes
 

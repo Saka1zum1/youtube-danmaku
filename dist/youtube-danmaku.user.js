@@ -4,11 +4,11 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.6.0
-// @description  Turn YouTube live chat into scrolling danmaku — favorites, fullscreen send, hide chat, and more
-// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持收藏、全屏发送、收起聊天等
-// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援收藏、全螢幕發送、收起聊天等
-// @description:ja  YouTube ライブチャットを弾幕化。お気に入り、フルスクリーン送信、チャット非表示などに対応
+// @version      1.6.5
+// @description  Turn YouTube live chat into scrolling danmaku — Super Chat pins, favorites, hide chat, and more
+// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持 Super Chat 悬停、收藏、收起聊天等
+// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援 Super Chat 懸停、收藏、收起聊天等
+// @description:ja  YouTube ライブチャットを弾幕化。Super Chat 固定、お気に入り、チャット非表示などに対応
 // @author       KaKa
 // @license      MIT
 // @match        https://www.youtube.com/*
@@ -103,8 +103,6 @@ const LOCALES = {
     fsChatFailed: '发送失败，请稍后重试',
     fsChatSent: '已发送',
     chatClear: '清空聊天',
-    chatCollapse: '收起聊天',
-    chatExpand: '展开聊天',
     translateProvider: '翻译引擎',
     translateProviderAuto: '自动切换',
     translateProviderMicrosoft: 'Microsoft 翻译',
@@ -117,6 +115,7 @@ const LOCALES = {
     translateSpeedUnit: '条/秒',
     scrollAreaFull: '全屏',
     scrollAreaTopHalf: '上半屏',
+    scrollAreaBottomHalf: '下半屏',
     scrollAreaTopQuarter: '顶部 1/4',
     fontSystem: '系统默认',
     fontYaHei: '微软雅黑',
@@ -180,14 +179,22 @@ const LOCALES = {
     superchatPinned: 'Super Chat 悬停',
     superchatPosition: '悬停位置',
     superchatDuration: '悬停时间',
+    superchatDurationFollowYoutube: '悬停时间跟随 YouTube 聊天栏',
+    superchatDurationFollowYoutubeHint: '开启后按直播聊天 ticker 倒计时消失；找不到 ticker 时用上方手动时间',
     superchatAnimation: '悬停动画',
-    superchatTop: '顶部',
-    superchatBottom: '底部',
+    superchatTop: '顶部居中',
+    superchatTopLeft: '左上',
+    superchatBottom: '底部居中',
+    superchatBottomLeft: '左下',
+    superchatBottomRight: '右下',
+    superchatCompact: '精简模式',
+    superchatOverlayDanmaku: '悬停可遮挡滚动弹幕',
     superchatFade: '淡入淡出',
     superchatSlide: '滑入',
     superchatPop: '弹出',
     superchatShine: '闪光',
     superchatClose: '关闭悬停弹幕',
+    superchatDetailClose: '关闭',
     liveWatching: '人在看',
     liveTotalViews: '累计观看',
     historyToggle: '下载聊天记录',
@@ -283,8 +290,6 @@ const LOCALES = {
     fsChatFailed: 'Failed to send. Try again.',
     fsChatSent: 'Sent',
     chatClear: 'Clear chat',
-    chatCollapse: 'Hide chat',
-    chatExpand: 'Show chat',
     translateProvider: 'Translation engine',
     translateProviderAuto: 'Auto',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -297,6 +302,7 @@ const LOCALES = {
     translateSpeedUnit: '/sec',
     scrollAreaFull: 'Full screen',
     scrollAreaTopHalf: 'Top half',
+    scrollAreaBottomHalf: 'Bottom half',
     scrollAreaTopQuarter: 'Top quarter',
     fontSystem: 'System default',
     fontYaHei: 'Microsoft YaHei',
@@ -360,14 +366,22 @@ const LOCALES = {
     superchatPinned: 'Pin Super Chats',
     superchatPosition: 'Pin position',
     superchatDuration: 'Pin time',
+    superchatDurationFollowYoutube: 'Match YouTube chat ticker time',
+    superchatDurationFollowYoutubeHint: 'Dismiss with the live-chat ticker countdown; falls back to the slider above',
     superchatAnimation: 'Pin animation',
-    superchatTop: 'Top',
-    superchatBottom: 'Bottom',
+    superchatTop: 'Top center',
+    superchatTopLeft: 'Top left',
+    superchatBottom: 'Bottom center',
+    superchatBottomLeft: 'Bottom left',
+    superchatBottomRight: 'Bottom right',
+    superchatCompact: 'Compact mode',
+    superchatOverlayDanmaku: 'Pins may cover scrolling danmaku',
     superchatFade: 'Fade',
     superchatSlide: 'Slide',
     superchatPop: 'Pop',
     superchatShine: 'Shine',
     superchatClose: 'Dismiss pinned Super Chat',
+    superchatDetailClose: 'Close',
     liveWatching: 'watching',
     liveTotalViews: 'Total views',
     historyToggle: 'Download chat history',
@@ -463,8 +477,6 @@ const LOCALES = {
     fsChatFailed: '送信に失敗しました。再試行してください。',
     fsChatSent: '送信しました',
     chatClear: 'チャットをクリア',
-    chatCollapse: 'チャットを隠す',
-    chatExpand: 'チャットを表示',
     translateProvider: '翻訳エンジン',
     translateProviderAuto: '自動',
     translateProviderMicrosoft: 'Microsoft Translator',
@@ -477,6 +489,7 @@ const LOCALES = {
     translateSpeedUnit: '件/秒',
     scrollAreaFull: '全画面',
     scrollAreaTopHalf: '上半分',
+    scrollAreaBottomHalf: '下半分',
     scrollAreaTopQuarter: '上部 1/4',
     fontSystem: 'システム既定',
     fontYaHei: 'Microsoft YaHei',
@@ -540,14 +553,22 @@ const LOCALES = {
     superchatPinned: 'Super Chat を固定',
     superchatPosition: '固定位置',
     superchatDuration: '固定時間',
+    superchatDurationFollowYoutube: 'YouTube チャット欄の表示時間に合わせる',
+    superchatDurationFollowYoutubeHint: 'ティッカーのカウントダウンに合わせて消えます。見つからない場合は上の手動時間を使用',
     superchatAnimation: '固定アニメーション',
-    superchatTop: '上部',
-    superchatBottom: '下部',
+    superchatTop: '上部中央',
+    superchatTopLeft: '左上',
+    superchatBottom: '下部中央',
+    superchatBottomLeft: '左下',
+    superchatBottomRight: '右下',
+    superchatCompact: 'コンパクト固定（アバター＋名前＋金額）',
+    superchatOverlayDanmaku: '固定表示が流れる弾幕に重ねられる',
     superchatFade: 'フェード',
     superchatSlide: 'スライド',
     superchatPop: 'ポップ',
     superchatShine: 'シャイン',
     superchatClose: '固定スーパーチャットを閉じる',
+    superchatDetailClose: '閉じる',
     liveWatching: '人が視聴中',
     liveTotalViews: '総再生回数',
     historyToggle: 'チャット履歴をダウンロード',
@@ -618,7 +639,10 @@ function getFontOptions() {
 function getSuperchatPositionOptions() {
   return [
     { label: t('superchatTop'), value: 'top' },
+    { label: t('superchatTopLeft'), value: 'top-left' },
     { label: t('superchatBottom'), value: 'bottom' },
+    { label: t('superchatBottomLeft'), value: 'bottom-left' },
+    { label: t('superchatBottomRight'), value: 'bottom-right' },
   ];
 }
 
@@ -635,6 +659,7 @@ function getScrollAreaOptions() {
   return [
     { label: t('scrollAreaFull'), value: 'full' },
     { label: t('scrollAreaTopHalf'), value: 'top-half' },
+    { label: t('scrollAreaBottomHalf'), value: 'bottom-half' },
     { label: t('scrollAreaTopQuarter'), value: 'top-quarter' },
   ];
 }
@@ -698,8 +723,19 @@ const DEFAULT_SETTINGS = {
   superchatPinned: false,
   superchatPosition: 'top',
   superchatDuration: 15,
+  /** When true, pin lifetime follows the YouTube live-chat ticker countdown. */
+  superchatDurationFollowYoutube: false,
   superchatAnimation: 'slide',
+  /** Compact pin: avatar + name + amount; click opens a centered detail card. */
+  superchatCompact: false,
+  /** When true, pinned Super Chats may cover scrolling danmaku (no lane reserve). */
+  superchatOverlayDanmaku: true,
 };
+
+const SUPERCHAT_MAX_PINNED = 10;
+
+const SUPERCHAT_POSITIONS = ['top', 'top-left', 'bottom', 'bottom-left', 'bottom-right'];
+const SCROLL_AREAS = ['full', 'top-half', 'bottom-half', 'top-quarter'];
 
 const SELECTORS = {
   player: 'ytd-watch-flexy #movie_player, ytd-player#ytd-player #movie_player',
@@ -760,9 +796,22 @@ function loadSettings() {
       merged.speechVoice = typeof merged.speechVoice === 'string' ? merged.speechVoice : '';
       merged.speechLang = typeof merged.speechLang === 'string' ? merged.speechLang : '';
       merged.superchatPinned = !!merged.superchatPinned;
-      if (!['top', 'bottom'].includes(merged.superchatPosition)) merged.superchatPosition = 'top';
+      if (merged.superchatPosition === 'topleft') merged.superchatPosition = 'top-left';
+      if (merged.superchatPosition === 'bottomRight' || merged.superchatPosition === 'bottom_right') {
+        merged.superchatPosition = 'bottom-right';
+      }
+      if (merged.superchatPosition === 'bottom_left') merged.superchatPosition = 'bottom-left';
+      if (!SUPERCHAT_POSITIONS.includes(merged.superchatPosition)) merged.superchatPosition = 'top';
+      if (!SCROLL_AREAS.includes(merged.scrollArea)) merged.scrollArea = 'full';
       if (!['fade', 'slide', 'pop', 'shine'].includes(merged.superchatAnimation)) merged.superchatAnimation = 'slide';
       merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 300);
+      merged.superchatDurationFollowYoutube = !!merged.superchatDurationFollowYoutube;
+      merged.superchatCompact = !!merged.superchatCompact;
+      if (typeof merged.superchatOverlayDanmaku !== 'boolean') {
+        merged.superchatOverlayDanmaku = DEFAULT_SETTINGS.superchatOverlayDanmaku;
+      } else {
+        merged.superchatOverlayDanmaku = !!merged.superchatOverlayDanmaku;
+      }
       return merged;
     }
   } catch (_) {
@@ -1224,12 +1273,20 @@ const YDM_CSS = `
       align-items: center;
       justify-content: flex-start;
       gap: 6px;
-      overflow: hidden;
+      overflow: visible;
       box-sizing: border-box;
     }
 
     .ydm-superchat-layer.ydm-sc-bottom {
       justify-content: flex-end;
+    }
+
+    .ydm-superchat-layer.ydm-sc-align-left {
+      align-items: flex-start;
+    }
+
+    .ydm-superchat-layer.ydm-sc-align-right {
+      align-items: flex-end;
     }
 
     .ydm-superchat-item {
@@ -1254,6 +1311,55 @@ const YDM_CSS = `
       animation-duration: var(--ydm-sc-duration, 6s);
       animation-timing-function: ease;
       animation-fill-mode: forwards;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact {
+      gap: 5px;
+      max-width: none;
+      /* Extra right padding so the close control does not sit on the amount. */
+      padding: 3px 30px 3px 3px;
+      border-radius: 999px;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-avatar {
+      width: 1.55em;
+      height: 1.55em;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-username-compact {
+      flex: 0 1 auto;
+      max-width: 6.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.72em;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-amount-badge {
+      font-size: 0.72em;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      padding: 0.12em 0.55em;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      max-width: 8.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-close {
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+    }
+
+    .ydm-superchat-item.ydm-sc-detail-open {
+      outline: 2px solid rgba(255, 255, 255, 0.85);
+      outline-offset: 2px;
     }
 
     .ydm-sc-close {
@@ -1422,6 +1528,177 @@ const YDM_CSS = `
     @keyframes ydm-sc-shine-sweep {
       from { transform: translateX(-130%); }
       to { transform: translateX(130%); }
+    }
+
+    .ydm-sc-detail-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 100030;
+      background: rgba(0, 0, 0, 0.45);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .ydm-sc-detail-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100031;
+      box-sizing: border-box;
+      width: min(420px, calc(100% - 48px));
+      max-height: min(70%, calc(100% - 48px));
+      overflow: auto;
+      padding: 14px 16px 12px;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      pointer-events: auto;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: ydm-sc-detail-in 0.18s ease-out;
+    }
+
+    @keyframes ydm-sc-detail-in {
+      from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .ydm-sc-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .ydm-sc-detail-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .ydm-sc-detail-meta {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ydm-sc-detail-username {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ydm-sc-detail-amount {
+      font-size: 13px;
+      font-weight: 800;
+      opacity: 0.95;
+    }
+
+    .ydm-sc-detail-close {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      margin: 0 0 0 auto;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.2);
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .ydm-sc-detail-close:hover {
+      background: rgba(0, 0, 0, 0.32);
+    }
+
+    .ydm-sc-detail-close svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .ydm-sc-detail-body {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 12em;
+      overflow: auto;
+    }
+
+    .ydm-sc-detail-body .ydm-emote {
+      vertical-align: -0.2em;
+    }
+
+    .ydm-sc-detail-translation {
+      font-size: 13px;
+      line-height: 1.4;
+      opacity: 0.92;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.22);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .ydm-sc-detail-translation.is-error {
+      opacity: 0.8;
+    }
+
+    .ydm-sc-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .ydm-sc-detail-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.22);
+      color: inherit;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .ydm-sc-detail-action:hover {
+      background: rgba(0, 0, 0, 0.34);
+    }
+
+    .ydm-sc-detail-action:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .ydm-sc-detail-action svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      fill: currentColor;
+      flex: 0 0 auto;
     }
 
     .ydm-click-lock-backdrop {
@@ -1618,14 +1895,6 @@ const YDM_CSS = `
       cursor: pointer;
       opacity: 0.9;
       flex-shrink: 0;
-    }
-
-    .ydm-control-btn.ydm-chat-expand-control-btn[hidden] {
-      display: none !important;
-    }
-
-    .ydm-control-btn.ydm-chat-expand-control-btn.ydm-visible {
-      display: inline-flex !important;
     }
 
     .ydm-control-btn:hover,
@@ -2611,8 +2880,7 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
   flex: 0 0 auto;
 }
 
-.ydm-chat-clear-wrap,
-.ydm-chat-collapse-wrap {
+.ydm-chat-clear-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2621,7 +2889,6 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
 }
 
 .ydm-chat-clear-btn,
-.ydm-chat-collapse-btn,
 .ydm-fav-btn {
   display: inline-flex;
   align-items: center;
@@ -2640,105 +2907,9 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.ydm-chat-clear-btn:hover,
-.ydm-chat-collapse-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--yt-spec-text-primary, #f1f1f1);
+.ydm-chat-clear-btn:hover {
+  background-color: var(--yt-spec-text-primary, #f1f1f1);
 }
-
-/* Hide live chat and let the player reclaim the sidebar width. */
-html.ydm-chat-collapsed ytd-live-chat-frame,
-html.ydm-chat-collapsed #chat.ytd-watch-flexy,
-html.ydm-chat-collapsed #chat-container {
-  display: none !important;
-}
-
-html.ydm-chat-collapsed #secondary,
-html.ydm-chat-collapsed #columns > :not(#primary):has(ytd-live-chat-frame),
-html.ydm-chat-collapsed #columns > :not(#primary):has(#chat) {
-  display: none !important;
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  flex: 0 0 0 !important;
-  overflow: hidden !important;
-}
-
-html.ydm-chat-collapsed ytd-watch-flexy,
-html.ydm-chat-collapsed #columns {
-  --ytd-watch-flexy-sidebar-width: 0px !important;
-  --ytd-watch-flexy-sidebar-min-width: 0px !important;
-  --ytd-watch-flexy-chat-max-height: 0px !important;
-}
-
-html.ydm-chat-collapsed #columns.ytd-watch-flexy #primary,
-html.ydm-chat-collapsed ytd-watch-flexy #primary,
-html.ydm-chat-collapsed #primary {
-  max-width: 100% !important;
-  width: 100% !important;
-  flex: 1 1 auto !important;
-}
-
-html.ydm-chat-collapsed #primary-inner,
-html.ydm-chat-collapsed #player,
-html.ydm-chat-collapsed #player-container-outer,
-html.ydm-chat-collapsed #player-container-inner,
-html.ydm-chat-collapsed #player-container,
-html.ydm-chat-collapsed #ytd-player,
-html.ydm-chat-collapsed #ytd-player > #container {
-  width: 100% !important;
-  max-width: none !important;
-}
-
-.ydm-chat-expand-btn {
-  position: fixed;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: opacity 1s ease;
-  opacity: 0;
-  z-index: 2200;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 12px 14px 12px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  background: rgba(15, 15, 15, 0.92);
-  color: #f1f1f1;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
-  box-shadow: -4px 0 18px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  font-family: "YouTube Sans", Roboto, Arial, sans-serif;
-}
-
-.ydm-chat-expand-btn:hover {
-  opacity: 1;
-  background: rgba(33, 33, 33, 0.96);
-  color: #fff;
-}
-
-.ydm-chat-expand-btn svg {
-  width: 20px;
-  height: 20px;
-  display: block;
-  flex-shrink: 0;
-  fill: currentColor;
-  pointer-events: none;
-}
-
-.ydm-chat-expand-label {
-  max-width: 7em;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 
 .ydm-fav-btn {
   color: var(--yt-spec-text-secondary, #aaa);
@@ -2750,7 +2921,6 @@ html.ydm-chat-collapsed #ytd-player > #container {
 }
 
 .ydm-chat-clear-btn svg,
-.ydm-chat-collapse-btn svg,
 .ydm-fav-btn svg {
   width: 24px;
   height: 24px;
@@ -2811,12 +2981,6 @@ const ICON_FAVORITE = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height
 const ICON_CLOSE = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6.414 5 5 6.414l5.588 5.588L5 17.59l1.414 1.414 5.588-5.588 5.588 5.588 1.414-1.414-5.588-5.588 5.588-5.588L17.59 5l-5.588 5.588L6.414 5Z"/></svg>`;
 
 const ICON_PROFILE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/></svg>`;
-
-/** Hide live chat (panel collapses toward the right edge). */
-const ICON_CHAT_COLLAPSE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h10v16H4zm12 0h4v16h-4zm-5.5 8 3.5-3.5v7z"/></svg>`;
-
-/** Restore live chat from the docked expand control. */
-const ICON_CHAT_EXPAND = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zm2 2v12h8V6zm10 0v12h2V6zM9.5 12 13 8.5v7z"/></svg>`;
 
 class LaneManager {
   constructor() {
@@ -3139,6 +3303,84 @@ function appendDanmakuContent(item, message, parts) {
   if (!item.childNodes.length) item.textContent = message || '';
 }
 
+function normalizeScAmountKey(value) {
+  return String(value || '').replace(/\s+/g, '').toLowerCase();
+}
+
+function normalizeScAvatarKey(value) {
+  return String(value || '').replace(/=s\d+.*$/i, '').split('?')[0];
+}
+
+function readTickerDurationSec(el) {
+  if (!el) return 0;
+  const readers = [
+    () => el.durationSec,
+    () => el.fullDurationSec,
+    () => el.__data?.durationSec,
+    () => el.__data?.fullDurationSec,
+    () => el.__data?.data?.durationSec,
+    () => el.__data?.data?.fullDurationSec,
+    () => el.data?.durationSec,
+    () => el.data?.fullDurationSec,
+  ];
+  for (const read of readers) {
+    try {
+      const value = Number(read());
+      if (Number.isFinite(value) && value > 0) return value;
+    } catch (_) {
+      /* polymer access may throw */
+    }
+  }
+  return 0;
+}
+
+function readTickerAmountText(el) {
+  if (!el) return '';
+  const readers = [
+    () => el.__data?.data?.amount?.simpleText,
+    () => el.__data?.amount?.simpleText,
+    () => el.data?.amount?.simpleText,
+    () => el.querySelector?.('#diagonal-amount, #amount')?.textContent,
+  ];
+  for (const read of readers) {
+    try {
+      const value = String(read() || '').replace(/\s+/g, ' ').trim();
+      if (value) return value;
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  return '';
+}
+
+function findYoutubePaidTicker(payload) {
+  const doc = typeof getChatDocument === 'function' ? getChatDocument() : null;
+  if (!doc) return null;
+  const amountKey = normalizeScAmountKey(payload?.amount);
+  const avatarKey = normalizeScAvatarKey(payload?.avatarUrl);
+  const nodes = [
+    ...doc.querySelectorAll(
+      'yt-live-chat-ticker-paid-message-item-renderer, yt-live-chat-ticker-paid-sticker-item-renderer',
+    ),
+  ];
+  let fallback = null;
+  for (const el of nodes) {
+    if (el._ydmBoundPin) continue;
+    const elAmount = normalizeScAmountKey(readTickerAmountText(el) || el.textContent);
+    const elAvatar = normalizeScAvatarKey(
+      el.querySelector?.('#author-photo img, yt-img-shadow#author-photo img')?.currentSrc
+        || el.querySelector?.('#author-photo img, yt-img-shadow#author-photo img')?.getAttribute?.('src')
+        || '',
+    );
+    const amountMatch = amountKey && elAmount && (elAmount === amountKey || elAmount.includes(amountKey) || amountKey.includes(elAmount));
+    const avatarMatch = avatarKey && elAvatar && elAvatar === avatarKey;
+    if (amountMatch && avatarMatch) return el;
+    if (amountMatch && !fallback) fallback = el;
+    if (!amountKey && avatarMatch && !fallback) fallback = el;
+  }
+  return fallback;
+}
+
 class DanmakuEngine {
   constructor(getSettings) {
     this.getSettings = getSettings;
@@ -3152,6 +3394,9 @@ class DanmakuEngine {
     this.resizeObserver = null;
     this.controlsObserver = null;
     this.controlsHeight = SCROLL_AREA_BOTTOM_RESERVE;
+    this.detailCard = null;
+    this.detailBackdrop = null;
+    this.detailSourceItem = null;
     this.boundUpdate = () => this.updateLayout();
   }
 
@@ -3202,6 +3447,7 @@ class DanmakuEngine {
     document.removeEventListener('webkitfullscreenchange', this.boundUpdate);
     this.resizeObserver?.disconnect();
     this.controlsObserver?.disconnect();
+    this.closeSuperchatDetail();
     hideDanmakuTooltip();
     this.layer?.remove();
     this.superchatLayer?.remove();
@@ -3233,6 +3479,9 @@ class DanmakuEngine {
   }
 
   getPinnedRowHeight() {
+    if (this.getSettings().superchatCompact) {
+      return Math.max(28, Math.round(this.getSettings().fontSize * 0.9) + 10);
+    }
     return this.getLaneHeight() + 12;
   }
 
@@ -3242,49 +3491,104 @@ class DanmakuEngine {
 
   getMaxPinnedSuperchats(playerHeight = this.playerEl?.clientHeight || 480) {
     const row = this.getPinnedRowHeight() + this.getPinnedRowGap();
-    const budget = Math.max(row, playerHeight * 0.38);
-    return clamp(Math.floor(budget / row), 1, 5);
+    const topPad = 16;
+    const usable = Math.max(row, playerHeight - this.getBottomReserve() - topPad);
+    return clamp(Math.floor(usable / row), 1, SUPERCHAT_MAX_PINNED);
   }
 
   getPinnedBandHeight(count = this.pinnedItems.size) {
     if (count <= 0) return 0;
-    const row = this.getPinnedRowHeight();
     const gap = this.getPinnedRowGap();
-    return count * row + Math.max(0, count - 1) * gap + 8;
+    const row = this.getPinnedRowHeight();
+    let measured = 0;
+    let total = 0;
+    for (const el of this.pinnedItems) {
+      const height = el?.offsetHeight || 0;
+      if (height > 0) {
+        total += height;
+        measured += 1;
+      }
+    }
+    if (measured > 0) {
+      total += Math.max(0, count - measured) * row;
+      total += Math.max(0, count - 1) * gap;
+      // Extra room so slide-in / shadows are not clipped at the top edge.
+      return total + 16;
+    }
+    return count * row + Math.max(0, count - 1) * gap + 16;
+  }
+
+  resolveSuperchatPlacement() {
+    const raw = String(this.getSettings().superchatPosition || 'top');
+    const map = {
+      top: { edge: 'top', align: 'center' },
+      'top-left': { edge: 'top', align: 'left' },
+      topleft: { edge: 'top', align: 'left' },
+      bottom: { edge: 'bottom', align: 'center' },
+      'bottom-left': { edge: 'bottom', align: 'left' },
+      bottom_left: { edge: 'bottom', align: 'left' },
+      'bottom-right': { edge: 'bottom', align: 'right' },
+      bottomRight: { edge: 'bottom', align: 'right' },
+      bottom_right: { edge: 'bottom', align: 'right' },
+    };
+    return map[raw] || map.top;
   }
 
   getPinnedBandRect(playerHeight) {
     if (!this.pinnedItems.size || !this.getSettings().superchatPinned) return null;
-    const band = this.getPinnedBandHeight();
-    const pos = this.getSettings().superchatPosition === 'bottom' ? 'bottom' : 'top';
-    const top = pos === 'bottom'
+    let band = this.getPinnedBandHeight();
+    const { edge, align } = this.resolveSuperchatPlacement();
+    const maxHeight = Math.max(
+      this.getPinnedRowHeight() + 16,
+      playerHeight - this.getBottomReserve() - 4,
+    );
+    // Never grow past the player; max-count already limits how many we mount.
+    band = Math.min(band, maxHeight);
+    const top = edge === 'bottom'
       ? Math.max(0, playerHeight - this.getBottomReserve() - band)
-      : 8;
-    return { pos, top, height: band };
+      : 4;
+    return { pos: edge, align, top, height: band };
   }
 
   clearPinnedSuperchats() {
+    this.closeSuperchatDetail();
     this.superchatQueue = [];
-    for (const item of this.pinnedItems) item.remove();
+    for (const item of this.pinnedItems) {
+      item._ydmClearFallback?.();
+      item._ydmTickerCleanup?.();
+      if (item._ydmTickerEl && item._ydmTickerEl._ydmBoundPin === item) {
+        delete item._ydmTickerEl._ydmBoundPin;
+      }
+      item.remove();
+    }
     this.pinnedItems.clear();
   }
 
   getScrollAreaRect(playerRect) {
     const laneHeight = this.getLaneHeight();
     const h = playerRect.height;
+    const usable = Math.max(laneHeight, h - this.getBottomReserve());
     let area;
 
     switch (this.getSettings().scrollArea) {
       case 'top-half':
-        area = { top: 0, height: Math.max(laneHeight, h * 0.5) };
+        area = { top: 0, height: Math.max(laneHeight, usable * 0.5) };
         break;
+      case 'bottom-half': {
+        const height = Math.max(laneHeight, usable * 0.5);
+        area = { top: Math.max(0, usable - height), height };
+        break;
+      }
       case 'top-quarter':
-        area = { top: 0, height: Math.max(laneHeight, h * 0.25) };
+        area = { top: 0, height: Math.max(laneHeight, usable * 0.25) };
         break;
       default:
-        area = { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+        area = { top: 0, height: usable };
         break;
     }
+
+    // When overlay is on, pinned Super Chats may cover scrolling lines.
+    if (this.getSettings().superchatOverlayDanmaku) return area;
 
     const band = this.getPinnedBandRect(h);
     if (!band) return area;
@@ -3389,11 +3693,21 @@ class DanmakuEngine {
       this.superchatLayer.style.display = 'none';
       return;
     }
+    const alignItems = band.align === 'left'
+      ? 'flex-start'
+      : band.align === 'right'
+        ? 'flex-end'
+        : 'center';
     this.superchatLayer.classList.toggle('ydm-sc-bottom', band.pos === 'bottom');
+    this.superchatLayer.classList.toggle('ydm-sc-align-left', band.align === 'left');
+    this.superchatLayer.classList.toggle('ydm-sc-align-right', band.align === 'right');
+    // Sit above scrolling danmaku when overlay is enabled.
+    const zIndex = this.getSettings().superchatOverlayDanmaku ? '6' : '4';
     Object.assign(this.superchatLayer.style, {
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
+      alignItems,
+      // Keep the oldest (top) pins visible; newer pins stack downward / upward.
       justifyContent: band.pos === 'bottom' ? 'flex-end' : 'flex-start',
       gap: `${this.getPinnedRowGap()}px`,
       position: 'absolute',
@@ -3401,10 +3715,12 @@ class DanmakuEngine {
       left: '0',
       width: '100%',
       height: `${band.height}px`,
-      zIndex: '4',
-      overflow: 'hidden',
+      zIndex,
+      // Visible so entrance animation / multi-row stacks are not clipped.
+      overflow: 'visible',
       boxSizing: 'border-box',
-      padding: '4px 0',
+      padding: band.align === 'center' ? '8px 0 4px' : '8px 10px 4px',
+      pointerEvents: 'none',
     });
   }
 
@@ -3441,20 +3757,22 @@ class DanmakuEngine {
     this.updateLayout();
   }
 
-  mountSuperchat({
-    username,
-    message,
-    parts,
-    bodyParts,
-    amount,
-    usernameColor,
-    profileUrl,
-    avatarUrl,
-    originalMessage,
-    translated,
-    superchatStyle,
-  }, { skipLayout = false } = {}) {
+  mountSuperchat(payload, { skipLayout = false } = {}) {
+    const {
+      username,
+      message,
+      parts,
+      bodyParts,
+      amount,
+      usernameColor,
+      profileUrl,
+      avatarUrl,
+      originalMessage,
+      translated,
+      superchatStyle,
+    } = payload || {};
     const settings = this.getSettings();
+    const compact = !!settings.superchatCompact;
     const rawParts = Array.isArray(bodyParts) && bodyParts.length
       ? bodyParts
       : (Array.isArray(parts) ? parts : []);
@@ -3472,17 +3790,44 @@ class DanmakuEngine {
     const animation = ['fade', 'slide', 'pop', 'shine'].includes(settings.superchatAnimation)
       ? settings.superchatAnimation
       : 'slide';
-    const duration = clamp(Number(settings.superchatDuration) || 15, 2, 300);
+    const followYoutube = !!settings.superchatDurationFollowYoutube;
+    const manualDuration = clamp(Number(settings.superchatDuration) || 15, 2, 300);
+    const ticker = followYoutube ? findYoutubePaidTicker({ amount, avatarUrl }) : null;
+    const tickerDuration = ticker ? readTickerDurationSec(ticker) : 0;
+    const followTicker = !!(followYoutube && ticker?.isConnected);
+    // Prefer ticker durationSec; if following ticker without a readable value, keep
+    // the pin opaque until the ticker leaves (long CSS lifetime + removal observer).
+    const duration = followTicker && tickerDuration > 0
+      ? clamp(tickerDuration, 2, 3600)
+      : followTicker
+        ? Math.max(manualDuration, 120)
+        : manualDuration;
     // Match YouTube SC card scale: slightly smaller than scrolling danmaku.
     const baseSize = clamp(Math.round(settings.fontSize * 0.82), 13, 28);
     const item = document.createElement('div');
-    item.className = `ydm-superchat-item ydm-sc-${animation}`;
+    item.className = `ydm-superchat-item ydm-sc-${animation}${compact ? ' ydm-sc-compact' : ''}`;
     item.style.setProperty('--ydm-sc-duration', `${duration}s`);
     item.style.background = safeCssColor(superchatStyle?.background || '#e53935');
     item.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
     item.style.fontSize = `${baseSize}px`;
     item.style.fontFamily = settings.fontFamily;
     item.style.zIndex = String(10 + this.pinnedItems.size);
+    item.style.pointerEvents = 'auto';
+
+    const detailPayload = {
+      username: username || '',
+      message: message || '',
+      bodyText,
+      displayParts,
+      amount: amount || '',
+      usernameColor,
+      profileUrl: profileUrl || '',
+      avatarUrl: avatarUrl || '',
+      originalMessage: originalMessage || message || bodyText || '',
+      translated: !!translated,
+      superchatStyle: superchatStyle || null,
+    };
+    item._ydmScPayload = detailPayload;
 
     const avatarSrc = safeEmoteSrc(avatarUrl);
     if (avatarSrc) {
@@ -3497,7 +3842,7 @@ class DanmakuEngine {
 
     if (username) {
       const name = document.createElement('span');
-      name.className = 'ydm-sc-username';
+      name.className = compact ? 'ydm-sc-username ydm-sc-username-compact' : 'ydm-sc-username';
       name.textContent = username;
       name.title = username;
       name.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
@@ -3506,7 +3851,7 @@ class DanmakuEngine {
 
     if (amount) {
       const amt = document.createElement('span');
-      amt.className = 'ydm-sc-amount';
+      amt.className = compact ? 'ydm-sc-amount ydm-sc-amount-badge' : 'ydm-sc-amount';
       amt.textContent = amount;
       amt.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
       item.appendChild(amt);
@@ -3514,7 +3859,7 @@ class DanmakuEngine {
 
     let messageClip = null;
     let messageTrack = null;
-    if (bodyText || hasEmote) {
+    if (!compact && (bodyText || hasEmote)) {
       messageClip = document.createElement('span');
       messageClip.className = 'ydm-sc-message-clip';
       messageTrack = document.createElement('span');
@@ -3535,8 +3880,12 @@ class DanmakuEngine {
 
     this.superchatLayer.appendChild(item);
     this.pinnedItems.add(item);
-    if (!skipLayout) this.updateLayout();
-    this.armSuperchatMarquee(item, messageClip, messageTrack, duration);
+    if (!skipLayout) {
+      this.updateLayout();
+      // Remeasure after paint so multi-row stacks get a tall enough band.
+      requestAnimationFrame(() => this.updateLayout());
+    }
+    if (!compact) this.armSuperchatMarquee(item, messageClip, messageTrack, duration);
     requestSpeech(speechSourceText(bodyText || message, displayParts));
 
     let fallback = null;
@@ -3544,10 +3893,41 @@ class DanmakuEngine {
       clearTimeout(fallback);
       fallback = setTimeout(() => this.finishSuperchat(item), ms);
     };
-    armFallback((duration + 2) * 1000);
+    item._ydmArmFallback = armFallback;
+    item._ydmClearFallback = () => clearTimeout(fallback);
+    item._ydmTickerCleanup = null;
+
+    if (followTicker) {
+      ticker._ydmBoundPin = item;
+      item._ydmTickerEl = ticker;
+      const host = ticker.parentElement || ticker.ownerDocument?.body;
+      if (host) {
+        const observer = new MutationObserver(() => {
+          if (ticker.isConnected) return;
+          observer.disconnect();
+          clearTimeout(fallback);
+          this.finishSuperchat(item);
+        });
+        observer.observe(host, { childList: true, subtree: true });
+        item._ydmTickerCleanup = () => {
+          observer.disconnect();
+          if (ticker._ydmBoundPin === item) delete ticker._ydmBoundPin;
+        };
+      }
+    }
+
+    // When following YouTube without a readable durationSec, wait on ticker removal
+    // and keep a generous fallback so CSS animation does not dismiss early.
+    const lifetimeMs = followTicker && !(tickerDuration > 0)
+      ? Math.max(manualDuration, 120) * 1000
+      : (duration + 2) * 1000;
+    armFallback(lifetimeMs);
+
     item.addEventListener('animationend', (event) => {
       if (event.target !== item) return;
       if (event.animationName === 'ydm-sc-shine-sweep' || event.animationName === 'ydm-sc-marquee') return;
+      // Ticker-synced pins dismiss when the ticker leaves (or fallback fires).
+      if (followTicker) return;
       clearTimeout(fallback);
       this.finishSuperchat(item);
     });
@@ -3559,15 +3939,223 @@ class DanmakuEngine {
       this.finishSuperchat(item);
     });
 
-    attachDanmakuInteraction(item, {
-      username,
-      usernameColor,
-      profileUrl,
-      originalMessage,
-      translated,
-      onPause: () => clearTimeout(fallback),
-      onResume: () => armFallback(20000),
+    if (compact) {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.ydm-sc-close')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this.openSuperchatDetail(item);
+      });
+      item.addEventListener('pointerenter', () => clearTimeout(fallback));
+      item.addEventListener('pointerleave', () => {
+        if (this.detailSourceItem === item) return;
+        armFallback(followTicker ? lifetimeMs : 20000);
+      });
+    } else {
+      attachDanmakuInteraction(item, {
+        username,
+        usernameColor,
+        profileUrl,
+        originalMessage,
+        translated,
+        onPause: () => clearTimeout(fallback),
+        onResume: () => armFallback(followTicker ? lifetimeMs : 20000),
+      });
+    }
+  }
+
+  closeSuperchatDetail() {
+    const source = this.detailSourceItem;
+    this.detailBackdrop?.remove();
+    this.detailCard?.remove();
+    this.detailBackdrop = null;
+    this.detailCard = null;
+    this.detailSourceItem = null;
+    if (source?.isConnected) {
+      source.classList.remove('ydm-sc-detail-open', 'ydm-paused');
+      source._ydmArmFallback?.(20000);
+    }
+  }
+
+  openSuperchatDetail(item) {
+    if (!item?.isConnected) return;
+    const payload = item._ydmScPayload;
+    if (!payload) return;
+
+    this.closeSuperchatDetail();
+    hideDanmakuTooltip?.();
+    item._ydmClearFallback?.();
+    item.classList.add('ydm-sc-detail-open', 'ydm-paused');
+    this.detailSourceItem = item;
+
+    const host = this.playerEl || this.overlayEl || document.body;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'ydm-sc-detail-backdrop';
+    backdrop.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeSuperchatDetail();
     });
+
+    const card = document.createElement('div');
+    card.className = 'ydm-sc-detail-card';
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    const bg = safeCssColor(payload.superchatStyle?.background || '#e53935');
+    const fg = safeCssColor(payload.superchatStyle?.color || '#ffffff');
+    const bodyFg = safeCssColor(payload.superchatStyle?.bodyColor || fg);
+    card.style.background = bg;
+    card.style.color = fg;
+
+    const header = document.createElement('div');
+    header.className = 'ydm-sc-detail-header';
+
+    const avatarSrc = safeEmoteSrc(payload.avatarUrl);
+    if (avatarSrc) {
+      const avatar = document.createElement('img');
+      avatar.className = 'ydm-sc-detail-avatar';
+      avatar.src = avatarSrc;
+      avatar.alt = '';
+      avatar.draggable = false;
+      avatar.referrerPolicy = 'no-referrer';
+      header.appendChild(avatar);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'ydm-sc-detail-meta';
+    if (payload.username) {
+      const name = document.createElement('div');
+      name.className = 'ydm-sc-detail-username';
+      name.textContent = payload.username;
+      meta.appendChild(name);
+    }
+    if (payload.amount) {
+      const amt = document.createElement('div');
+      amt.className = 'ydm-sc-detail-amount';
+      amt.textContent = payload.amount;
+      meta.appendChild(amt);
+    }
+    header.appendChild(meta);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-sc-detail-close';
+    closeBtn.setAttribute('aria-label', t('superchatDetailClose'));
+    closeBtn.setAttribute('title', t('superchatDetailClose'));
+    appendMarkup(closeBtn, ICON_CLOSE);
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeSuperchatDetail();
+    });
+    header.appendChild(closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'ydm-sc-detail-body';
+    body.style.color = bodyFg;
+    if (payload.bodyText || payload.displayParts?.length) {
+      appendDanmakuContent(body, payload.bodyText, payload.displayParts);
+    } else {
+      body.textContent = payload.originalMessage || '';
+    }
+
+    const translation = document.createElement('div');
+    translation.className = 'ydm-sc-detail-translation';
+    translation.hidden = true;
+
+    const actions = document.createElement('div');
+    actions.className = 'ydm-sc-detail-actions';
+
+    const makeAction = (icon, label, onClick) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ydm-sc-detail-action';
+      appendMarkup(btn, icon);
+      const span = document.createElement('span');
+      span.textContent = label;
+      btn.appendChild(span);
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(btn);
+      });
+      actions.appendChild(btn);
+      return btn;
+    };
+
+    const settings = this.getSettings();
+    makeAction(ICON_TRANSLATE, t('chatActionTranslate'), async (btn) => {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      translation.hidden = false;
+      translation.textContent = t('chatActionTranslating');
+      translation.classList.remove('is-error');
+      try {
+        const source = payload.bodyText || payload.originalMessage || '';
+        const outcome = await translateMessagesManual(
+          source,
+          settings.translateTargetLang,
+          settings.translateProvider,
+          { bypassCache: false },
+        );
+        const text = String(outcome || '').trim();
+        if (!text || text === source) {
+          translation.textContent = t('chatActionTranslateFailed');
+          translation.classList.add('is-error');
+          return;
+        }
+        translation.textContent = text;
+        translation.dataset.translated = text;
+      } catch (_) {
+        translation.textContent = t('chatActionTranslateFailed');
+        translation.classList.add('is-error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    makeAction(ICON_SPEECH_ON, t('chatActionSpeak'), () => {
+      const spoken = translation.dataset.translated
+        || payload.bodyText
+        || payload.originalMessage
+        || '';
+      speakTextNow(spoken);
+    });
+
+    makeAction(ICON_FAVORITE, t('chatActionFavorite'), () => {
+      const text = String(payload.bodyText || payload.originalMessage || '').trim();
+      if (text) addFavoriteText(text);
+    });
+
+    if (payload.profileUrl) {
+      makeAction(ICON_PROFILE, t('chatActionOpenProfile'), () => {
+        window.open(payload.profileUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+
+    card.append(header, body, translation, actions);
+    card.addEventListener('click', (e) => e.stopPropagation());
+    card.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.closeSuperchatDetail();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+
+    const prevRemove = card.remove.bind(card);
+    card.remove = () => {
+      document.removeEventListener('keydown', onKey, true);
+      prevRemove();
+    };
+
+    host.append(backdrop, card);
+    this.detailBackdrop = backdrop;
+    this.detailCard = card;
   }
 
   armSuperchatMarquee(item, clip, track, pinDuration) {
@@ -3593,6 +4181,14 @@ class DanmakuEngine {
   finishSuperchat(item) {
     if (!item) return;
     if (!this.pinnedItems.has(item) && !item.isConnected) return;
+    if (this.detailSourceItem === item) this.closeSuperchatDetail();
+    item._ydmClearFallback?.();
+    item._ydmTickerCleanup?.();
+    item._ydmTickerCleanup = null;
+    if (item._ydmTickerEl && item._ydmTickerEl._ydmBoundPin === item) {
+      delete item._ydmTickerEl._ydmBoundPin;
+    }
+    item._ydmTickerEl = null;
     this.pinnedItems.delete(item);
     item.remove();
     if (this.superchatQueue.length && this.getSettings().superchatPinned && this.getSettings().enabled) {
@@ -4121,7 +4717,7 @@ const TWITCH_DICTIONARY = {
   EZ: dictEntry('轻松', '輕鬆', 'EZ'),
   Clap: dictEntry('（鼓掌）', '（鼓掌）', 'Clap'),
   NPC: dictEntry('工具人', '工具人', 'NPC'),
-  ICANT: dictEntry('我做不到', '我做不到', 'ICANT'),
+  ICANT: dictEntry('笑不活了', '笑翻了', 'ICANT'),
   W: dictEntry('神', '神', 'W'),
   L: dictEntry('拉胯', '拉胯', 'L'),
   F: dictEntry('F', 'F', 'F'),
@@ -4161,6 +4757,7 @@ const TWITCH_DICTIONARY = {
   ez: dictEntry('轻松', '輕鬆', 'ez'),
   diff: dictEntry('差距', '差距', 'diff'),
   www: dictEntry('笑死', '笑死', 'www'),
+  stream: dictEntry('直播', '直播', 'stream'),
 };
 
 const PLACEHOLDER_PREFIX = '⟦T';
@@ -5423,12 +6020,13 @@ function isMembershipElement(msgEl) {
     || /MEMBERSHIP-ITEM/i.test(tag);
 }
 
+/** Paid Super Chat / sticker only — membership & gifts stay on the scroll pipeline. */
 function isPinnedChatElement(msgEl) {
   if (!msgEl) return false;
   const tag = msgEl.tagName || '';
+  if (isMembershipElement(msgEl)) return false;
   return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
     || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
-    || isMembershipElement(msgEl)
     || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
     || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
 }
@@ -5488,8 +6086,9 @@ function readChatMessage(msgEl) {
   }
 
   const message = dedupeRepeatedMessage(rawMessage) || rawMessage;
-  const usernameEl = msgEl.querySelector('#author-name');
-  const username = usernameEl?.textContent?.replace(/\s+/g, ' ').trim() || '';
+  const username = (typeof getAuthorDisplayName === 'function'
+    ? getAuthorDisplayName(msgEl)
+    : msgEl.querySelector('#author-name')?.textContent?.replace(/\s+/g, ' ').trim()) || '';
   const usernameColor = getUsernameColor(msgEl, username);
   const profileUrl = getYouTubeProfileUrl(msgEl);
   const avatarUrl = safeEmoteSrc(
@@ -5532,23 +6131,13 @@ function readCssVarColor(el, name) {
 }
 
 function readSuperchatStyle(msgEl) {
-  const membership = isMembershipElement(msgEl);
   const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
   const content = msgEl.querySelector('#content');
   const headerStyle = header ? getComputedStyle(header) : null;
   const contentStyle = content ? getComputedStyle(content) : null;
-  const fallbackBg = membership ? '#0f9d58' : '#e53935';
+  const fallbackBg = '#e53935';
 
-  const background = (
-    membership
-      ? (
-        readCssVarColor(msgEl, '--yt-live-chat-sponsor')
-        || readCssVarColor(msgEl, '--yt-live-chat-pamphlet-background-color')
-        || readCssVarColor(msgEl, '--yt-live-chat-moderator-color')
-      )
-      : ''
-  )
-    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
+  const background = readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
     || readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-background-color')
     || usableCssColor(headerStyle?.backgroundColor)
     || fallbackBg;
@@ -6496,18 +7085,13 @@ class ChatActions {
     const selectors = [
       '#chat-messages yt-live-chat-paid-message-renderer',
       '#chat-messages yt-live-chat-paid-sticker-renderer',
-      '#chat-messages yt-live-chat-membership-item-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-message-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-sticker-renderer',
-      'yt-live-chat-banner-manager yt-live-chat-membership-item-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-message-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-sticker-renderer',
-      'tp-yt-paper-dialog yt-live-chat-membership-item-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[aria-selected="true"] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[selected] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer #card:not([hidden]) yt-live-chat-paid-message-renderer',
-      'yt-live-chat-ticker-sponsor-item-renderer[aria-selected="true"] yt-live-chat-membership-item-renderer',
-      'yt-live-chat-ticker-sponsor-item-renderer[selected] yt-live-chat-membership-item-renderer',
     ];
 
     const found = [];
@@ -7862,7 +8446,10 @@ class SettingsPanel {
       this.createDivider(),
       this.createToggle(t('superchatPinned'), 'superchatPinned'),
       this.createSelect(t('superchatPosition'), 'superchatPosition', getSuperchatPositionOptions()),
+      this.createToggle(t('superchatCompact'), 'superchatCompact'),
+      this.createToggle(t('superchatOverlayDanmaku'), 'superchatOverlayDanmaku'),
       this.createRange(t('superchatDuration'), 'superchatDuration', 2, 300, 1, (v) => `${v} ${t('speechSeconds')}`),
+      this.createToggle(t('superchatDurationFollowYoutube'), 'superchatDurationFollowYoutube'),
       this.createSelect(t('superchatAnimation'), 'superchatAnimation', getSuperchatAnimationOptions()),
       this.createDivider(),
       this.createKeywordBlock(),
@@ -9509,230 +10096,6 @@ class ChatClearButton {
   }
 }
 
-class ChatCollapseButton {
-  constructor({ onCollapsedChange } = {}) {
-    this.onCollapsedChange = onCollapsedChange || null;
-    this.headerWrap = null;
-    this.headerBtn = null;
-    this.expandBtn = null;
-    this.collapsed = false;
-    this.retryTimer = null;
-  }
-
-  setCollapsedChangeHandler(handler) {
-    this.onCollapsedChange = handler || null;
-  }
-
-  emitCollapsedChange() {
-    try {
-      this.onCollapsedChange?.(this.collapsed);
-    } catch (_) {
-      /* ignore */
-    }
-  }
-
-  getChatFrame() {
-    return document.querySelector(SELECTORS.chatHost)
-      || document.querySelector('ytd-live-chat-frame');
-  }
-
-  /** Ask YouTube's player / flexy layout to refill the freed sidebar width. */
-  notifyLayoutResize() {
-    const fire = () => {
-      window.dispatchEvent(new Event('resize'));
-      const flexy = document.querySelector('ytd-watch-flexy');
-      const player = document.querySelector('#movie_player, .html5-video-player');
-      try {
-        if (typeof flexy?.onWindowResized_ === 'function') flexy.onWindowResized_();
-        else if (typeof flexy?.onResize_ === 'function') flexy.onResize_();
-        else if (typeof flexy?.scheduleVideoContainerResize_ === 'function') {
-          flexy.scheduleVideoContainerResize_();
-        }
-      } catch (_) {
-        /* ignore */
-      }
-      try {
-        if (typeof player?.setSize === 'function') player.setSize();
-        player?.dispatchEvent?.(new Event('resize'));
-      } catch (_) {
-        /* ignore */
-      }
-    };
-    requestAnimationFrame(() => {
-      fire();
-      setTimeout(fire, 50);
-      setTimeout(fire, 200);
-    });
-  }
-
-  collapse() {
-    if (this.collapsed) {
-      this.ensureExpandButton();
-      this.emitCollapsedChange();
-      return;
-    }
-    this.collapsed = true;
-    document.documentElement.classList.add('ydm-chat-collapsed');
-    this.getChatFrame()?.setAttribute('data-ydm-collapsed', 'true');
-    this.ensureExpandButton();
-    this.emitCollapsedChange();
-    this.notifyLayoutResize();
-  }
-
-  expand() {
-    if (!this.collapsed && !document.documentElement.classList.contains('ydm-chat-collapsed')) {
-      this.emitCollapsedChange();
-      return;
-    }
-    this.collapsed = false;
-    document.documentElement.classList.remove('ydm-chat-collapsed');
-    this.getChatFrame()?.removeAttribute('data-ydm-collapsed');
-    this.expandBtn?.remove();
-    this.expandBtn = null;
-    this.emitCollapsedChange();
-    this.notifyLayoutResize();
-    clearTimeout(this.retryTimer);
-    this.retryTimer = setTimeout(() => this.mountHeaderButton(), 400);
-  }
-
-  toggle() {
-    if (this.collapsed) this.expand();
-    else this.collapse();
-  }
-
-  ensureExpandButton() {
-    if (this.expandBtn?.isConnected) {
-      this.refreshExpandLabel();
-      return;
-    }
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'ydm-chat-expand-btn';
-    btn.setAttribute('data-ydm-chat-expand', 'true');
-    btn.setAttribute('aria-label', t('chatExpand'));
-    btn.setAttribute('title', t('chatExpand'));
-    appendMarkup(btn, ICON_CHAT_EXPAND);
-    const label = document.createElement('span');
-    label.className = 'ydm-chat-expand-label';
-    label.textContent = t('chatExpand');
-    btn.appendChild(label);
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.expand();
-    });
-
-    const host = document.querySelector('ytd-watch-flexy') || document.body;
-    host.appendChild(btn);
-    this.expandBtn = btn;
-  }
-
-  refreshExpandLabel() {
-    if (!this.expandBtn) return;
-    this.expandBtn.setAttribute('title', t('chatExpand'));
-    this.expandBtn.setAttribute('aria-label', t('chatExpand'));
-    const label = this.expandBtn.querySelector('.ydm-chat-expand-label');
-    if (label) label.textContent = t('chatExpand');
-  }
-
-  createHeaderButton(doc) {
-    const btn = doc.createElement('button');
-    btn.type = 'button';
-    btn.className = 'ydm-chat-collapse-btn';
-    btn.setAttribute('data-ydm-chat-collapse', 'true');
-    btn.setAttribute('aria-label', t('chatCollapse'));
-    btn.setAttribute('title', t('chatCollapse'));
-    appendMarkup(btn, ICON_CHAT_COLLAPSE);
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.collapse();
-    });
-    return btn;
-  }
-
-  async mountHeaderButton() {
-    if (this.collapsed) return;
-    if (this.headerWrap?.isConnected || this.headerBtn?.isConnected) {
-      this.refreshHeaderLabel();
-      return;
-    }
-
-    const doc = getChatDocument() || document;
-    ensureChatDocStyles(doc);
-    if (doc.querySelector('[data-ydm-chat-collapse="true"]')) return;
-
-    const header = await waitForElement(
-      '#chat-messages > yt-live-chat-header-renderer, yt-live-chat-header-renderer',
-      doc,
-      12000,
-    );
-    if (!header || this.collapsed) return;
-
-    const wrap = doc.createElement('div');
-    wrap.className = 'ydm-chat-collapse-wrap';
-    wrap.setAttribute('data-ydm-chat-collapse-wrap', 'true');
-    this.headerBtn = this.createHeaderButton(doc);
-    wrap.appendChild(this.headerBtn);
-    this.headerWrap = wrap;
-
-    // Place beside clear (before it), otherwise before YouTube's close.
-    const clearWrap = header.querySelector('[data-ydm-chat-clear-wrap="true"]');
-    const closeBtn = header.querySelector('#close-button');
-    if (clearWrap) clearWrap.before(wrap);
-    else if (closeBtn) closeBtn.before(wrap);
-    else header.appendChild(wrap);
-  }
-
-  refreshHeaderLabel() {
-    if (!this.headerBtn) return;
-    this.headerBtn.setAttribute('title', t('chatCollapse'));
-    this.headerBtn.setAttribute('aria-label', t('chatCollapse'));
-  }
-
-  async mount() {
-    if (this.collapsed) {
-      document.documentElement.classList.add('ydm-chat-collapsed');
-      this.ensureExpandButton();
-      return;
-    }
-    await this.mountHeaderButton();
-  }
-
-  remount() {
-    if (this.collapsed) {
-      document.documentElement.classList.add('ydm-chat-collapsed');
-      this.ensureExpandButton();
-      return;
-    }
-    if (this.headerWrap?.isConnected || this.headerBtn?.isConnected) {
-      this.refreshHeaderLabel();
-      return;
-    }
-    this.headerWrap?.remove();
-    this.headerBtn?.remove();
-    this.headerWrap = null;
-    this.headerBtn = null;
-    clearTimeout(this.retryTimer);
-    this.retryTimer = setTimeout(() => this.mountHeaderButton(), 500);
-  }
-
-  destroy() {
-    clearTimeout(this.retryTimer);
-    this.collapsed = false;
-    document.documentElement.classList.remove('ydm-chat-collapsed');
-    this.getChatFrame()?.removeAttribute('data-ydm-collapsed');
-    this.headerWrap?.remove();
-    this.headerBtn?.remove();
-    this.expandBtn?.remove();
-    this.headerWrap = null;
-    this.headerBtn = null;
-    this.expandBtn = null;
-    this.emitCollapsedChange();
-  }
-}
-
 class FullscreenChatInput {
   constructor({ favoritesPanel } = {}) {
     this.favoritesPanel = favoritesPanel || null;
@@ -10120,29 +10483,24 @@ class ControlButton {
     onTogglePanel,
     onToggleSpeech,
     onToggleHistory,
-    onExpandChat,
     getSettings,
     isPanelOpen,
     isSpeechPanelOpen,
     isHistoryPanelOpen,
-    isChatCollapsed,
   }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
     this.onToggleSpeech = onToggleSpeech;
     this.onToggleHistory = onToggleHistory;
-    this.onExpandChat = onExpandChat;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
     this.isSpeechPanelOpen = isSpeechPanelOpen;
     this.isHistoryPanelOpen = isHistoryPanelOpen;
-    this.isChatCollapsed = isChatCollapsed || (() => false);
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
-    this.chatExpandBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
   }
@@ -10210,19 +10568,11 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.chatExpandBtn = this.createBtn('ydm-chat-expand-control-btn', t('chatExpand'), ICON_CHAT_EXPAND);
-      this.chatExpandBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.onExpandChat?.();
-      });
-
       this.wrap.append(
         this.danmakuBtn,
         this.settingsBtn,
         this.speechBtn,
         this.historyBtn,
-        this.chatExpandBtn,
       );
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
@@ -10232,17 +10582,13 @@ class ControlButton {
       this.updateSpeechState();
       this.updateHistoryState();
       this.updatePanelState();
-      this.updateChatCollapsedState(this.isChatCollapsed());
     } finally {
       this.mounting = false;
     }
   }
 
   remount() {
-    if (this.wrap?.isConnected) {
-      this.updateChatCollapsedState(this.isChatCollapsed());
-      return;
-    }
+    if (this.wrap?.isConnected) return;
     const existing = document.querySelector('.ydm-controls-wrap');
     if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn') && existing.querySelector('.ydm-history-btn')) {
       this.wrap = existing;
@@ -10250,19 +10596,9 @@ class ControlButton {
       this.speechBtn = existing.querySelector('.ydm-speech-btn');
       this.historyBtn = existing.querySelector('.ydm-history-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
-      this.chatExpandBtn = existing.querySelector('.ydm-chat-expand-control-btn');
-      if (!this.chatExpandBtn) {
-        this.chatExpandBtn = this.createBtn('ydm-chat-expand-control-btn', t('chatExpand'), ICON_CHAT_EXPAND);
-        this.chatExpandBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.onExpandChat?.();
-        });
-        existing.appendChild(this.chatExpandBtn);
-      }
+      existing.querySelector('.ydm-chat-expand-control-btn')?.remove();
       this.updateSpeechState();
       this.updateHistoryState();
-      this.updateChatCollapsedState(this.isChatCollapsed());
       return;
     }
     existing?.remove();
@@ -10271,7 +10607,6 @@ class ControlButton {
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
-    this.chatExpandBtn = null;
     this.mount();
   }
 
@@ -10314,17 +10649,6 @@ class ControlButton {
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
     this.updateSpeechState();
     this.updateHistoryState();
-    this.updateChatCollapsedState(this.isChatCollapsed());
-  }
-
-  updateChatCollapsedState(collapsed = this.isChatCollapsed()) {
-    if (!this.chatExpandBtn) return;
-    const show = !!collapsed;
-    this.chatExpandBtn.hidden = !show;
-    this.chatExpandBtn.classList.toggle('ydm-visible', show);
-    this.chatExpandBtn.title = t('chatExpand');
-    this.chatExpandBtn.setAttribute('aria-label', t('chatExpand'));
-    this.chatExpandBtn.setAttribute('aria-hidden', show ? 'false' : 'true');
   }
 
   destroy() {
@@ -10334,7 +10658,6 @@ class ControlButton {
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
-    this.chatExpandBtn = null;
     this.mounting = false;
   }
 }
@@ -10496,7 +10819,6 @@ let chatObserver = null;
 let favoritesPanel = null;
 let fullscreenChat = null;
 let chatClearButton = null;
-let chatCollapseButton = null;
 let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
@@ -10547,13 +10869,21 @@ function handleVisibilityChange() {
   }
 }
 
+function cleanupLegacyChatCollapseUi() {
+  document.documentElement.classList.remove('ydm-chat-collapsed');
+  document.querySelectorAll(
+    '[data-ydm-chat-collapse="true"], [data-ydm-chat-collapse-wrap="true"], [data-ydm-chat-expand="true"]',
+  ).forEach((el) => el.remove());
+  document.querySelector('ytd-live-chat-frame[data-ydm-collapsed]')?.removeAttribute('data-ydm-collapsed');
+}
+
 function teardown() {
   generation += 1;
   chatObserver?.stop();
   favoritesPanel?.destroy();
   fullscreenChat?.destroy();
   chatClearButton?.destroy();
-  chatCollapseButton?.destroy();
+  cleanupLegacyChatCollapseUi();
   danmaku?.destroy();
   controlButton?.destroy();
   danmakuEmitter?.clear();
@@ -10567,7 +10897,6 @@ function teardown() {
   favoritesPanel = null;
   fullscreenChat = null;
   chatClearButton = null;
-  chatCollapseButton = null;
   danmaku = null;
   danmakuEmitter = null;
   translateQueue = null;
@@ -10602,8 +10931,6 @@ async function boot() {
       chatObserver?.seenIds?.clear?.();
     },
   });
-  chatCollapseButton = new ChatCollapseButton();
-
   const observer = new ChatObserver({
     getSettings,
     danmakuEmitter: emitter,
@@ -10658,15 +10985,10 @@ async function boot() {
       historyPanel.toggle(anchor);
       controls.updatePanelState();
     },
-    onExpandChat: () => chatCollapseButton?.expand(),
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
     isHistoryPanelOpen: () => historyPanel.isOpen,
-    isChatCollapsed: () => !!chatCollapseButton?.collapsed,
-  });
-  chatCollapseButton.setCollapsedChangeHandler((collapsed) => {
-    controls.updateChatCollapsedState(collapsed);
   });
 
   await engine.mount();
@@ -10690,10 +11012,9 @@ async function boot() {
   if (gen !== generation) return;
   await favoritesPanel.mount();
   if (gen !== generation) return;
-  // Clear first so collapse can sit immediately beside it.
   await chatClearButton.mount();
   if (gen !== generation) return;
-  await chatCollapseButton.mount();
+  cleanupLegacyChatCollapseUi();
   if (gen !== generation) return;
 
   console.log('[YDM] YouTube Danmaku initialized');
@@ -10708,7 +11029,6 @@ async function reconcile() {
     liveViewersBadge?.remount();
     favoritesPanel?.remount();
     chatClearButton?.remount();
-    chatCollapseButton?.remount();
     if (chatObserver && !chatObserver.isConnected()) {
       chatObserver.start().catch((err) => console.warn('[YDM] Chat restart failed:', err));
     }

@@ -50,6 +50,84 @@ function appendDanmakuContent(item, message, parts) {
   if (!item.childNodes.length) item.textContent = message || '';
 }
 
+function normalizeScAmountKey(value) {
+  return String(value || '').replace(/\s+/g, '').toLowerCase();
+}
+
+function normalizeScAvatarKey(value) {
+  return String(value || '').replace(/=s\d+.*$/i, '').split('?')[0];
+}
+
+function readTickerDurationSec(el) {
+  if (!el) return 0;
+  const readers = [
+    () => el.durationSec,
+    () => el.fullDurationSec,
+    () => el.__data?.durationSec,
+    () => el.__data?.fullDurationSec,
+    () => el.__data?.data?.durationSec,
+    () => el.__data?.data?.fullDurationSec,
+    () => el.data?.durationSec,
+    () => el.data?.fullDurationSec,
+  ];
+  for (const read of readers) {
+    try {
+      const value = Number(read());
+      if (Number.isFinite(value) && value > 0) return value;
+    } catch (_) {
+      /* polymer access may throw */
+    }
+  }
+  return 0;
+}
+
+function readTickerAmountText(el) {
+  if (!el) return '';
+  const readers = [
+    () => el.__data?.data?.amount?.simpleText,
+    () => el.__data?.amount?.simpleText,
+    () => el.data?.amount?.simpleText,
+    () => el.querySelector?.('#diagonal-amount, #amount')?.textContent,
+  ];
+  for (const read of readers) {
+    try {
+      const value = String(read() || '').replace(/\s+/g, ' ').trim();
+      if (value) return value;
+    } catch (_) {
+      /* ignore */
+    }
+  }
+  return '';
+}
+
+function findYoutubePaidTicker(payload) {
+  const doc = typeof getChatDocument === 'function' ? getChatDocument() : null;
+  if (!doc) return null;
+  const amountKey = normalizeScAmountKey(payload?.amount);
+  const avatarKey = normalizeScAvatarKey(payload?.avatarUrl);
+  const nodes = [
+    ...doc.querySelectorAll(
+      'yt-live-chat-ticker-paid-message-item-renderer, yt-live-chat-ticker-paid-sticker-item-renderer',
+    ),
+  ];
+  let fallback = null;
+  for (const el of nodes) {
+    if (el._ydmBoundPin) continue;
+    const elAmount = normalizeScAmountKey(readTickerAmountText(el) || el.textContent);
+    const elAvatar = normalizeScAvatarKey(
+      el.querySelector?.('#author-photo img, yt-img-shadow#author-photo img')?.currentSrc
+        || el.querySelector?.('#author-photo img, yt-img-shadow#author-photo img')?.getAttribute?.('src')
+        || '',
+    );
+    const amountMatch = amountKey && elAmount && (elAmount === amountKey || elAmount.includes(amountKey) || amountKey.includes(elAmount));
+    const avatarMatch = avatarKey && elAvatar && elAvatar === avatarKey;
+    if (amountMatch && avatarMatch) return el;
+    if (amountMatch && !fallback) fallback = el;
+    if (!amountKey && avatarMatch && !fallback) fallback = el;
+  }
+  return fallback;
+}
+
 class DanmakuEngine {
   constructor(getSettings) {
     this.getSettings = getSettings;
@@ -63,6 +141,9 @@ class DanmakuEngine {
     this.resizeObserver = null;
     this.controlsObserver = null;
     this.controlsHeight = SCROLL_AREA_BOTTOM_RESERVE;
+    this.detailCard = null;
+    this.detailBackdrop = null;
+    this.detailSourceItem = null;
     this.boundUpdate = () => this.updateLayout();
   }
 
@@ -113,6 +194,7 @@ class DanmakuEngine {
     document.removeEventListener('webkitfullscreenchange', this.boundUpdate);
     this.resizeObserver?.disconnect();
     this.controlsObserver?.disconnect();
+    this.closeSuperchatDetail();
     hideDanmakuTooltip();
     this.layer?.remove();
     this.superchatLayer?.remove();
@@ -144,6 +226,9 @@ class DanmakuEngine {
   }
 
   getPinnedRowHeight() {
+    if (this.getSettings().superchatCompact) {
+      return Math.max(28, Math.round(this.getSettings().fontSize * 0.9) + 10);
+    }
     return this.getLaneHeight() + 12;
   }
 
@@ -153,49 +238,104 @@ class DanmakuEngine {
 
   getMaxPinnedSuperchats(playerHeight = this.playerEl?.clientHeight || 480) {
     const row = this.getPinnedRowHeight() + this.getPinnedRowGap();
-    const budget = Math.max(row, playerHeight * 0.38);
-    return clamp(Math.floor(budget / row), 1, 5);
+    const topPad = 16;
+    const usable = Math.max(row, playerHeight - this.getBottomReserve() - topPad);
+    return clamp(Math.floor(usable / row), 1, SUPERCHAT_MAX_PINNED);
   }
 
   getPinnedBandHeight(count = this.pinnedItems.size) {
     if (count <= 0) return 0;
-    const row = this.getPinnedRowHeight();
     const gap = this.getPinnedRowGap();
-    return count * row + Math.max(0, count - 1) * gap + 8;
+    const row = this.getPinnedRowHeight();
+    let measured = 0;
+    let total = 0;
+    for (const el of this.pinnedItems) {
+      const height = el?.offsetHeight || 0;
+      if (height > 0) {
+        total += height;
+        measured += 1;
+      }
+    }
+    if (measured > 0) {
+      total += Math.max(0, count - measured) * row;
+      total += Math.max(0, count - 1) * gap;
+      // Extra room so slide-in / shadows are not clipped at the top edge.
+      return total + 16;
+    }
+    return count * row + Math.max(0, count - 1) * gap + 16;
+  }
+
+  resolveSuperchatPlacement() {
+    const raw = String(this.getSettings().superchatPosition || 'top');
+    const map = {
+      top: { edge: 'top', align: 'center' },
+      'top-left': { edge: 'top', align: 'left' },
+      topleft: { edge: 'top', align: 'left' },
+      bottom: { edge: 'bottom', align: 'center' },
+      'bottom-left': { edge: 'bottom', align: 'left' },
+      bottom_left: { edge: 'bottom', align: 'left' },
+      'bottom-right': { edge: 'bottom', align: 'right' },
+      bottomRight: { edge: 'bottom', align: 'right' },
+      bottom_right: { edge: 'bottom', align: 'right' },
+    };
+    return map[raw] || map.top;
   }
 
   getPinnedBandRect(playerHeight) {
     if (!this.pinnedItems.size || !this.getSettings().superchatPinned) return null;
-    const band = this.getPinnedBandHeight();
-    const pos = this.getSettings().superchatPosition === 'bottom' ? 'bottom' : 'top';
-    const top = pos === 'bottom'
+    let band = this.getPinnedBandHeight();
+    const { edge, align } = this.resolveSuperchatPlacement();
+    const maxHeight = Math.max(
+      this.getPinnedRowHeight() + 16,
+      playerHeight - this.getBottomReserve() - 4,
+    );
+    // Never grow past the player; max-count already limits how many we mount.
+    band = Math.min(band, maxHeight);
+    const top = edge === 'bottom'
       ? Math.max(0, playerHeight - this.getBottomReserve() - band)
-      : 8;
-    return { pos, top, height: band };
+      : 4;
+    return { pos: edge, align, top, height: band };
   }
 
   clearPinnedSuperchats() {
+    this.closeSuperchatDetail();
     this.superchatQueue = [];
-    for (const item of this.pinnedItems) item.remove();
+    for (const item of this.pinnedItems) {
+      item._ydmClearFallback?.();
+      item._ydmTickerCleanup?.();
+      if (item._ydmTickerEl && item._ydmTickerEl._ydmBoundPin === item) {
+        delete item._ydmTickerEl._ydmBoundPin;
+      }
+      item.remove();
+    }
     this.pinnedItems.clear();
   }
 
   getScrollAreaRect(playerRect) {
     const laneHeight = this.getLaneHeight();
     const h = playerRect.height;
+    const usable = Math.max(laneHeight, h - this.getBottomReserve());
     let area;
 
     switch (this.getSettings().scrollArea) {
       case 'top-half':
-        area = { top: 0, height: Math.max(laneHeight, h * 0.5) };
+        area = { top: 0, height: Math.max(laneHeight, usable * 0.5) };
         break;
+      case 'bottom-half': {
+        const height = Math.max(laneHeight, usable * 0.5);
+        area = { top: Math.max(0, usable - height), height };
+        break;
+      }
       case 'top-quarter':
-        area = { top: 0, height: Math.max(laneHeight, h * 0.25) };
+        area = { top: 0, height: Math.max(laneHeight, usable * 0.25) };
         break;
       default:
-        area = { top: 0, height: Math.max(laneHeight, h - this.getBottomReserve()) };
+        area = { top: 0, height: usable };
         break;
     }
+
+    // When overlay is on, pinned Super Chats may cover scrolling lines.
+    if (this.getSettings().superchatOverlayDanmaku) return area;
 
     const band = this.getPinnedBandRect(h);
     if (!band) return area;
@@ -300,11 +440,21 @@ class DanmakuEngine {
       this.superchatLayer.style.display = 'none';
       return;
     }
+    const alignItems = band.align === 'left'
+      ? 'flex-start'
+      : band.align === 'right'
+        ? 'flex-end'
+        : 'center';
     this.superchatLayer.classList.toggle('ydm-sc-bottom', band.pos === 'bottom');
+    this.superchatLayer.classList.toggle('ydm-sc-align-left', band.align === 'left');
+    this.superchatLayer.classList.toggle('ydm-sc-align-right', band.align === 'right');
+    // Sit above scrolling danmaku when overlay is enabled.
+    const zIndex = this.getSettings().superchatOverlayDanmaku ? '6' : '4';
     Object.assign(this.superchatLayer.style, {
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
+      alignItems,
+      // Keep the oldest (top) pins visible; newer pins stack downward / upward.
       justifyContent: band.pos === 'bottom' ? 'flex-end' : 'flex-start',
       gap: `${this.getPinnedRowGap()}px`,
       position: 'absolute',
@@ -312,10 +462,12 @@ class DanmakuEngine {
       left: '0',
       width: '100%',
       height: `${band.height}px`,
-      zIndex: '4',
-      overflow: 'hidden',
+      zIndex,
+      // Visible so entrance animation / multi-row stacks are not clipped.
+      overflow: 'visible',
       boxSizing: 'border-box',
-      padding: '4px 0',
+      padding: band.align === 'center' ? '8px 0 4px' : '8px 10px 4px',
+      pointerEvents: 'none',
     });
   }
 
@@ -352,20 +504,22 @@ class DanmakuEngine {
     this.updateLayout();
   }
 
-  mountSuperchat({
-    username,
-    message,
-    parts,
-    bodyParts,
-    amount,
-    usernameColor,
-    profileUrl,
-    avatarUrl,
-    originalMessage,
-    translated,
-    superchatStyle,
-  }, { skipLayout = false } = {}) {
+  mountSuperchat(payload, { skipLayout = false } = {}) {
+    const {
+      username,
+      message,
+      parts,
+      bodyParts,
+      amount,
+      usernameColor,
+      profileUrl,
+      avatarUrl,
+      originalMessage,
+      translated,
+      superchatStyle,
+    } = payload || {};
     const settings = this.getSettings();
+    const compact = !!settings.superchatCompact;
     const rawParts = Array.isArray(bodyParts) && bodyParts.length
       ? bodyParts
       : (Array.isArray(parts) ? parts : []);
@@ -383,17 +537,44 @@ class DanmakuEngine {
     const animation = ['fade', 'slide', 'pop', 'shine'].includes(settings.superchatAnimation)
       ? settings.superchatAnimation
       : 'slide';
-    const duration = clamp(Number(settings.superchatDuration) || 15, 2, 300);
+    const followYoutube = !!settings.superchatDurationFollowYoutube;
+    const manualDuration = clamp(Number(settings.superchatDuration) || 15, 2, 300);
+    const ticker = followYoutube ? findYoutubePaidTicker({ amount, avatarUrl }) : null;
+    const tickerDuration = ticker ? readTickerDurationSec(ticker) : 0;
+    const followTicker = !!(followYoutube && ticker?.isConnected);
+    // Prefer ticker durationSec; if following ticker without a readable value, keep
+    // the pin opaque until the ticker leaves (long CSS lifetime + removal observer).
+    const duration = followTicker && tickerDuration > 0
+      ? clamp(tickerDuration, 2, 3600)
+      : followTicker
+        ? Math.max(manualDuration, 120)
+        : manualDuration;
     // Match YouTube SC card scale: slightly smaller than scrolling danmaku.
     const baseSize = clamp(Math.round(settings.fontSize * 0.82), 13, 28);
     const item = document.createElement('div');
-    item.className = `ydm-superchat-item ydm-sc-${animation}`;
+    item.className = `ydm-superchat-item ydm-sc-${animation}${compact ? ' ydm-sc-compact' : ''}`;
     item.style.setProperty('--ydm-sc-duration', `${duration}s`);
     item.style.background = safeCssColor(superchatStyle?.background || '#e53935');
     item.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
     item.style.fontSize = `${baseSize}px`;
     item.style.fontFamily = settings.fontFamily;
     item.style.zIndex = String(10 + this.pinnedItems.size);
+    item.style.pointerEvents = 'auto';
+
+    const detailPayload = {
+      username: username || '',
+      message: message || '',
+      bodyText,
+      displayParts,
+      amount: amount || '',
+      usernameColor,
+      profileUrl: profileUrl || '',
+      avatarUrl: avatarUrl || '',
+      originalMessage: originalMessage || message || bodyText || '',
+      translated: !!translated,
+      superchatStyle: superchatStyle || null,
+    };
+    item._ydmScPayload = detailPayload;
 
     const avatarSrc = safeEmoteSrc(avatarUrl);
     if (avatarSrc) {
@@ -408,7 +589,7 @@ class DanmakuEngine {
 
     if (username) {
       const name = document.createElement('span');
-      name.className = 'ydm-sc-username';
+      name.className = compact ? 'ydm-sc-username ydm-sc-username-compact' : 'ydm-sc-username';
       name.textContent = username;
       name.title = username;
       name.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
@@ -417,7 +598,7 @@ class DanmakuEngine {
 
     if (amount) {
       const amt = document.createElement('span');
-      amt.className = 'ydm-sc-amount';
+      amt.className = compact ? 'ydm-sc-amount ydm-sc-amount-badge' : 'ydm-sc-amount';
       amt.textContent = amount;
       amt.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
       item.appendChild(amt);
@@ -425,7 +606,7 @@ class DanmakuEngine {
 
     let messageClip = null;
     let messageTrack = null;
-    if (bodyText || hasEmote) {
+    if (!compact && (bodyText || hasEmote)) {
       messageClip = document.createElement('span');
       messageClip.className = 'ydm-sc-message-clip';
       messageTrack = document.createElement('span');
@@ -446,8 +627,12 @@ class DanmakuEngine {
 
     this.superchatLayer.appendChild(item);
     this.pinnedItems.add(item);
-    if (!skipLayout) this.updateLayout();
-    this.armSuperchatMarquee(item, messageClip, messageTrack, duration);
+    if (!skipLayout) {
+      this.updateLayout();
+      // Remeasure after paint so multi-row stacks get a tall enough band.
+      requestAnimationFrame(() => this.updateLayout());
+    }
+    if (!compact) this.armSuperchatMarquee(item, messageClip, messageTrack, duration);
     requestSpeech(speechSourceText(bodyText || message, displayParts));
 
     let fallback = null;
@@ -455,10 +640,41 @@ class DanmakuEngine {
       clearTimeout(fallback);
       fallback = setTimeout(() => this.finishSuperchat(item), ms);
     };
-    armFallback((duration + 2) * 1000);
+    item._ydmArmFallback = armFallback;
+    item._ydmClearFallback = () => clearTimeout(fallback);
+    item._ydmTickerCleanup = null;
+
+    if (followTicker) {
+      ticker._ydmBoundPin = item;
+      item._ydmTickerEl = ticker;
+      const host = ticker.parentElement || ticker.ownerDocument?.body;
+      if (host) {
+        const observer = new MutationObserver(() => {
+          if (ticker.isConnected) return;
+          observer.disconnect();
+          clearTimeout(fallback);
+          this.finishSuperchat(item);
+        });
+        observer.observe(host, { childList: true, subtree: true });
+        item._ydmTickerCleanup = () => {
+          observer.disconnect();
+          if (ticker._ydmBoundPin === item) delete ticker._ydmBoundPin;
+        };
+      }
+    }
+
+    // When following YouTube without a readable durationSec, wait on ticker removal
+    // and keep a generous fallback so CSS animation does not dismiss early.
+    const lifetimeMs = followTicker && !(tickerDuration > 0)
+      ? Math.max(manualDuration, 120) * 1000
+      : (duration + 2) * 1000;
+    armFallback(lifetimeMs);
+
     item.addEventListener('animationend', (event) => {
       if (event.target !== item) return;
       if (event.animationName === 'ydm-sc-shine-sweep' || event.animationName === 'ydm-sc-marquee') return;
+      // Ticker-synced pins dismiss when the ticker leaves (or fallback fires).
+      if (followTicker) return;
       clearTimeout(fallback);
       this.finishSuperchat(item);
     });
@@ -470,15 +686,223 @@ class DanmakuEngine {
       this.finishSuperchat(item);
     });
 
-    attachDanmakuInteraction(item, {
-      username,
-      usernameColor,
-      profileUrl,
-      originalMessage,
-      translated,
-      onPause: () => clearTimeout(fallback),
-      onResume: () => armFallback(20000),
+    if (compact) {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.ydm-sc-close')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this.openSuperchatDetail(item);
+      });
+      item.addEventListener('pointerenter', () => clearTimeout(fallback));
+      item.addEventListener('pointerleave', () => {
+        if (this.detailSourceItem === item) return;
+        armFallback(followTicker ? lifetimeMs : 20000);
+      });
+    } else {
+      attachDanmakuInteraction(item, {
+        username,
+        usernameColor,
+        profileUrl,
+        originalMessage,
+        translated,
+        onPause: () => clearTimeout(fallback),
+        onResume: () => armFallback(followTicker ? lifetimeMs : 20000),
+      });
+    }
+  }
+
+  closeSuperchatDetail() {
+    const source = this.detailSourceItem;
+    this.detailBackdrop?.remove();
+    this.detailCard?.remove();
+    this.detailBackdrop = null;
+    this.detailCard = null;
+    this.detailSourceItem = null;
+    if (source?.isConnected) {
+      source.classList.remove('ydm-sc-detail-open', 'ydm-paused');
+      source._ydmArmFallback?.(20000);
+    }
+  }
+
+  openSuperchatDetail(item) {
+    if (!item?.isConnected) return;
+    const payload = item._ydmScPayload;
+    if (!payload) return;
+
+    this.closeSuperchatDetail();
+    hideDanmakuTooltip?.();
+    item._ydmClearFallback?.();
+    item.classList.add('ydm-sc-detail-open', 'ydm-paused');
+    this.detailSourceItem = item;
+
+    const host = this.playerEl || this.overlayEl || document.body;
+    if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'ydm-sc-detail-backdrop';
+    backdrop.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeSuperchatDetail();
     });
+
+    const card = document.createElement('div');
+    card.className = 'ydm-sc-detail-card';
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    const bg = safeCssColor(payload.superchatStyle?.background || '#e53935');
+    const fg = safeCssColor(payload.superchatStyle?.color || '#ffffff');
+    const bodyFg = safeCssColor(payload.superchatStyle?.bodyColor || fg);
+    card.style.background = bg;
+    card.style.color = fg;
+
+    const header = document.createElement('div');
+    header.className = 'ydm-sc-detail-header';
+
+    const avatarSrc = safeEmoteSrc(payload.avatarUrl);
+    if (avatarSrc) {
+      const avatar = document.createElement('img');
+      avatar.className = 'ydm-sc-detail-avatar';
+      avatar.src = avatarSrc;
+      avatar.alt = '';
+      avatar.draggable = false;
+      avatar.referrerPolicy = 'no-referrer';
+      header.appendChild(avatar);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'ydm-sc-detail-meta';
+    if (payload.username) {
+      const name = document.createElement('div');
+      name.className = 'ydm-sc-detail-username';
+      name.textContent = payload.username;
+      meta.appendChild(name);
+    }
+    if (payload.amount) {
+      const amt = document.createElement('div');
+      amt.className = 'ydm-sc-detail-amount';
+      amt.textContent = payload.amount;
+      meta.appendChild(amt);
+    }
+    header.appendChild(meta);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'ydm-sc-detail-close';
+    closeBtn.setAttribute('aria-label', t('superchatDetailClose'));
+    closeBtn.setAttribute('title', t('superchatDetailClose'));
+    appendMarkup(closeBtn, ICON_CLOSE);
+    closeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.closeSuperchatDetail();
+    });
+    header.appendChild(closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'ydm-sc-detail-body';
+    body.style.color = bodyFg;
+    if (payload.bodyText || payload.displayParts?.length) {
+      appendDanmakuContent(body, payload.bodyText, payload.displayParts);
+    } else {
+      body.textContent = payload.originalMessage || '';
+    }
+
+    const translation = document.createElement('div');
+    translation.className = 'ydm-sc-detail-translation';
+    translation.hidden = true;
+
+    const actions = document.createElement('div');
+    actions.className = 'ydm-sc-detail-actions';
+
+    const makeAction = (icon, label, onClick) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ydm-sc-detail-action';
+      appendMarkup(btn, icon);
+      const span = document.createElement('span');
+      span.textContent = label;
+      btn.appendChild(span);
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick(btn);
+      });
+      actions.appendChild(btn);
+      return btn;
+    };
+
+    const settings = this.getSettings();
+    makeAction(ICON_TRANSLATE, t('chatActionTranslate'), async (btn) => {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      translation.hidden = false;
+      translation.textContent = t('chatActionTranslating');
+      translation.classList.remove('is-error');
+      try {
+        const source = payload.bodyText || payload.originalMessage || '';
+        const outcome = await translateMessagesManual(
+          source,
+          settings.translateTargetLang,
+          settings.translateProvider,
+          { bypassCache: false },
+        );
+        const text = String(outcome || '').trim();
+        if (!text || text === source) {
+          translation.textContent = t('chatActionTranslateFailed');
+          translation.classList.add('is-error');
+          return;
+        }
+        translation.textContent = text;
+        translation.dataset.translated = text;
+      } catch (_) {
+        translation.textContent = t('chatActionTranslateFailed');
+        translation.classList.add('is-error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    makeAction(ICON_SPEECH_ON, t('chatActionSpeak'), () => {
+      const spoken = translation.dataset.translated
+        || payload.bodyText
+        || payload.originalMessage
+        || '';
+      speakTextNow(spoken);
+    });
+
+    makeAction(ICON_FAVORITE, t('chatActionFavorite'), () => {
+      const text = String(payload.bodyText || payload.originalMessage || '').trim();
+      if (text) addFavoriteText(text);
+    });
+
+    if (payload.profileUrl) {
+      makeAction(ICON_PROFILE, t('chatActionOpenProfile'), () => {
+        window.open(payload.profileUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+
+    card.append(header, body, translation, actions);
+    card.addEventListener('click', (e) => e.stopPropagation());
+    card.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.closeSuperchatDetail();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+
+    const prevRemove = card.remove.bind(card);
+    card.remove = () => {
+      document.removeEventListener('keydown', onKey, true);
+      prevRemove();
+    };
+
+    host.append(backdrop, card);
+    this.detailBackdrop = backdrop;
+    this.detailCard = card;
   }
 
   armSuperchatMarquee(item, clip, track, pinDuration) {
@@ -504,6 +928,14 @@ class DanmakuEngine {
   finishSuperchat(item) {
     if (!item) return;
     if (!this.pinnedItems.has(item) && !item.isConnected) return;
+    if (this.detailSourceItem === item) this.closeSuperchatDetail();
+    item._ydmClearFallback?.();
+    item._ydmTickerCleanup?.();
+    item._ydmTickerCleanup = null;
+    if (item._ydmTickerEl && item._ydmTickerEl._ydmBoundPin === item) {
+      delete item._ydmTickerEl._ydmBoundPin;
+    }
+    item._ydmTickerEl = null;
     this.pinnedItems.delete(item);
     item.remove();
     if (this.superchatQueue.length && this.getSettings().superchatPinned && this.getSettings().enabled) {

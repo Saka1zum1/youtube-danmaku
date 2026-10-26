@@ -47,10 +47,11 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 ### Super Chat
 
-- Optional pin band at the top or bottom of the player
-- Shows avatar, truncated username, amount badge, and YouTube-like colors
-- Several Super Chats can stay on screen at once without overlapping; long text scrolls inside the pill
-- Click a Super Chat (or its detail card) to translate, read aloud, send as danmaku, or favorite
+- Optional pins at the top, corners, or bottom of the player
+- Full layout: avatar, name, amount, and message. Compact layout: avatar, short name, and amount — tap for a detail card with the full message
+- Up to ten pins at once; pin time can follow the YouTube chat ticker or your own setting
+- Optional: let pins sit over scrolling danmaku instead of pushing them aside
+- Click a Super Chat (or its detail card) to translate, read aloud, send as danmaku, favorite, or open the sender’s profile
 
 ### Live viewers
 
@@ -75,8 +76,8 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 ### Customization
 
 - Adjust scroll speed, font size, danmaku opacity (10–100%), and choose from 18 system fonts
-- Scroll area: full screen / top half / top quarter
-- Super Chat pin position, duration, and animation
+- Scroll area: full screen / top half / bottom half / top quarter
+- Super Chat pin position, compact mode, duration (manual or match YouTube ticker), overlay option, and animation
 - Block keywords. A message is hidden when the original text or the translation contains one
 - Auto-adapts to fullscreen, theater mode, and window resize
 

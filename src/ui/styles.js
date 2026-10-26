@@ -60,12 +60,20 @@ const YDM_CSS = `
       align-items: center;
       justify-content: flex-start;
       gap: 6px;
-      overflow: hidden;
+      overflow: visible;
       box-sizing: border-box;
     }
 
     .ydm-superchat-layer.ydm-sc-bottom {
       justify-content: flex-end;
+    }
+
+    .ydm-superchat-layer.ydm-sc-align-left {
+      align-items: flex-start;
+    }
+
+    .ydm-superchat-layer.ydm-sc-align-right {
+      align-items: flex-end;
     }
 
     .ydm-superchat-item {
@@ -90,6 +98,55 @@ const YDM_CSS = `
       animation-duration: var(--ydm-sc-duration, 6s);
       animation-timing-function: ease;
       animation-fill-mode: forwards;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact {
+      gap: 5px;
+      max-width: none;
+      /* Extra right padding so the close control does not sit on the amount. */
+      padding: 3px 30px 3px 3px;
+      border-radius: 999px;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-avatar {
+      width: 1.55em;
+      height: 1.55em;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-username-compact {
+      flex: 0 1 auto;
+      max-width: 6.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.72em;
+      font-weight: 600;
+      opacity: 0.95;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-amount-badge {
+      font-size: 0.72em;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      padding: 0.12em 0.55em;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+      max-width: 8.5em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ydm-superchat-item.ydm-sc-compact .ydm-sc-close {
+      top: 50%;
+      right: 4px;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+    }
+
+    .ydm-superchat-item.ydm-sc-detail-open {
+      outline: 2px solid rgba(255, 255, 255, 0.85);
+      outline-offset: 2px;
     }
 
     .ydm-sc-close {
@@ -258,6 +315,177 @@ const YDM_CSS = `
     @keyframes ydm-sc-shine-sweep {
       from { transform: translateX(-130%); }
       to { transform: translateX(130%); }
+    }
+
+    .ydm-sc-detail-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 100030;
+      background: rgba(0, 0, 0, 0.45);
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .ydm-sc-detail-card {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100031;
+      box-sizing: border-box;
+      width: min(420px, calc(100% - 48px));
+      max-height: min(70%, calc(100% - 48px));
+      overflow: auto;
+      padding: 14px 16px 12px;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      pointer-events: auto;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: ydm-sc-detail-in 0.18s ease-out;
+    }
+
+    @keyframes ydm-sc-detail-in {
+      from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .ydm-sc-detail-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .ydm-sc-detail-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .ydm-sc-detail-meta {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ydm-sc-detail-username {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ydm-sc-detail-amount {
+      font-size: 13px;
+      font-weight: 800;
+      opacity: 0.95;
+    }
+
+    .ydm-sc-detail-close {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      margin: 0 0 0 auto;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.2);
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .ydm-sc-detail-close:hover {
+      background: rgba(0, 0, 0, 0.32);
+    }
+
+    .ydm-sc-detail-close svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+      fill: currentColor;
+    }
+
+    .ydm-sc-detail-body {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 12em;
+      overflow: auto;
+    }
+
+    .ydm-sc-detail-body .ydm-emote {
+      vertical-align: -0.2em;
+    }
+
+    .ydm-sc-detail-translation {
+      font-size: 13px;
+      line-height: 1.4;
+      opacity: 0.92;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.22);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .ydm-sc-detail-translation.is-error {
+      opacity: 0.8;
+    }
+
+    .ydm-sc-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .ydm-sc-detail-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.22);
+      color: inherit;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+
+    .ydm-sc-detail-action:hover {
+      background: rgba(0, 0, 0, 0.34);
+    }
+
+    .ydm-sc-detail-action:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .ydm-sc-detail-action svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      fill: currentColor;
+      flex: 0 0 auto;
     }
 
     .ydm-click-lock-backdrop {
@@ -454,14 +682,6 @@ const YDM_CSS = `
       cursor: pointer;
       opacity: 0.9;
       flex-shrink: 0;
-    }
-
-    .ydm-control-btn.ydm-chat-expand-control-btn[hidden] {
-      display: none !important;
-    }
-
-    .ydm-control-btn.ydm-chat-expand-control-btn.ydm-visible {
-      display: inline-flex !important;
     }
 
     .ydm-control-btn:hover,
@@ -1447,8 +1667,7 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
   flex: 0 0 auto;
 }
 
-.ydm-chat-clear-wrap,
-.ydm-chat-collapse-wrap {
+.ydm-chat-clear-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1457,7 +1676,6 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
 }
 
 .ydm-chat-clear-btn,
-.ydm-chat-collapse-btn,
 .ydm-fav-btn {
   display: inline-flex;
   align-items: center;
@@ -1476,105 +1694,9 @@ yt-live-chat-paid-message-renderer > .ydm-sc-action-panel {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.ydm-chat-clear-btn:hover,
-.ydm-chat-collapse-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--yt-spec-text-primary, #f1f1f1);
+.ydm-chat-clear-btn:hover {
+  background-color: var(--yt-spec-text-primary, #f1f1f1);
 }
-
-/* Hide live chat and let the player reclaim the sidebar width. */
-html.ydm-chat-collapsed ytd-live-chat-frame,
-html.ydm-chat-collapsed #chat.ytd-watch-flexy,
-html.ydm-chat-collapsed #chat-container {
-  display: none !important;
-}
-
-html.ydm-chat-collapsed #secondary,
-html.ydm-chat-collapsed #columns > :not(#primary):has(ytd-live-chat-frame),
-html.ydm-chat-collapsed #columns > :not(#primary):has(#chat) {
-  display: none !important;
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  flex: 0 0 0 !important;
-  overflow: hidden !important;
-}
-
-html.ydm-chat-collapsed ytd-watch-flexy,
-html.ydm-chat-collapsed #columns {
-  --ytd-watch-flexy-sidebar-width: 0px !important;
-  --ytd-watch-flexy-sidebar-min-width: 0px !important;
-  --ytd-watch-flexy-chat-max-height: 0px !important;
-}
-
-html.ydm-chat-collapsed #columns.ytd-watch-flexy #primary,
-html.ydm-chat-collapsed ytd-watch-flexy #primary,
-html.ydm-chat-collapsed #primary {
-  max-width: 100% !important;
-  width: 100% !important;
-  flex: 1 1 auto !important;
-}
-
-html.ydm-chat-collapsed #primary-inner,
-html.ydm-chat-collapsed #player,
-html.ydm-chat-collapsed #player-container-outer,
-html.ydm-chat-collapsed #player-container-inner,
-html.ydm-chat-collapsed #player-container,
-html.ydm-chat-collapsed #ytd-player,
-html.ydm-chat-collapsed #ytd-player > #container {
-  width: 100% !important;
-  max-width: none !important;
-}
-
-.ydm-chat-expand-btn {
-  position: fixed;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  transition: opacity 1s ease;
-  opacity: 0;
-  z-index: 2200;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 12px 14px 12px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  background: rgba(15, 15, 15, 0.92);
-  color: #f1f1f1;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
-  box-shadow: -4px 0 18px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  font-family: "YouTube Sans", Roboto, Arial, sans-serif;
-}
-
-.ydm-chat-expand-btn:hover {
-  opacity: 1;
-  background: rgba(33, 33, 33, 0.96);
-  color: #fff;
-}
-
-.ydm-chat-expand-btn svg {
-  width: 20px;
-  height: 20px;
-  display: block;
-  flex-shrink: 0;
-  fill: currentColor;
-  pointer-events: none;
-}
-
-.ydm-chat-expand-label {
-  max-width: 7em;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 
 .ydm-fav-btn {
   color: var(--yt-spec-text-secondary, #aaa);
@@ -1586,7 +1708,6 @@ html.ydm-chat-collapsed #ytd-player > #container {
 }
 
 .ydm-chat-clear-btn svg,
-.ydm-chat-collapse-btn svg,
 .ydm-fav-btn svg {
   width: 24px;
   height: 24px;

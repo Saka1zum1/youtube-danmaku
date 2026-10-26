@@ -245,12 +245,13 @@ function isMembershipElement(msgEl) {
     || /MEMBERSHIP-ITEM/i.test(tag);
 }
 
+/** Paid Super Chat / sticker only — membership & gifts stay on the scroll pipeline. */
 function isPinnedChatElement(msgEl) {
   if (!msgEl) return false;
   const tag = msgEl.tagName || '';
+  if (isMembershipElement(msgEl)) return false;
   return tag === 'YT-LIVE-CHAT-PAID-MESSAGE-RENDERER'
     || tag === 'YT-LIVE-CHAT-PAID-STICKER-RENDERER'
-    || isMembershipElement(msgEl)
     || /PAID-MESSAGE|PAID-STICKER|TICKER-PAID/i.test(tag)
     || !!msgEl.querySelector?.('#purchase-amount, #purchase-amount-chip');
 }
@@ -310,8 +311,9 @@ function readChatMessage(msgEl) {
   }
 
   const message = dedupeRepeatedMessage(rawMessage) || rawMessage;
-  const usernameEl = msgEl.querySelector('#author-name');
-  const username = usernameEl?.textContent?.replace(/\s+/g, ' ').trim() || '';
+  const username = (typeof getAuthorDisplayName === 'function'
+    ? getAuthorDisplayName(msgEl)
+    : msgEl.querySelector('#author-name')?.textContent?.replace(/\s+/g, ' ').trim()) || '';
   const usernameColor = getUsernameColor(msgEl, username);
   const profileUrl = getYouTubeProfileUrl(msgEl);
   const avatarUrl = safeEmoteSrc(
@@ -354,23 +356,13 @@ function readCssVarColor(el, name) {
 }
 
 function readSuperchatStyle(msgEl) {
-  const membership = isMembershipElement(msgEl);
   const header = msgEl.querySelector('#header') || msgEl.querySelector('#card');
   const content = msgEl.querySelector('#content');
   const headerStyle = header ? getComputedStyle(header) : null;
   const contentStyle = content ? getComputedStyle(content) : null;
-  const fallbackBg = membership ? '#0f9d58' : '#e53935';
+  const fallbackBg = '#e53935';
 
-  const background = (
-    membership
-      ? (
-        readCssVarColor(msgEl, '--yt-live-chat-sponsor')
-        || readCssVarColor(msgEl, '--yt-live-chat-pamphlet-background-color')
-        || readCssVarColor(msgEl, '--yt-live-chat-moderator-color')
-      )
-      : ''
-  )
-    || readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
+  const background = readCssVarColor(msgEl, '--yt-live-chat-paid-message-primary-container-color')
     || readCssVarColor(msgEl, '--yt-live-chat-paid-message-header-background-color')
     || usableCssColor(headerStyle?.backgroundColor)
     || fallbackBg;

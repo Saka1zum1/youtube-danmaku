@@ -26,9 +26,22 @@ function loadSettings() {
       merged.speechVoice = typeof merged.speechVoice === 'string' ? merged.speechVoice : '';
       merged.speechLang = typeof merged.speechLang === 'string' ? merged.speechLang : '';
       merged.superchatPinned = !!merged.superchatPinned;
-      if (!['top', 'bottom'].includes(merged.superchatPosition)) merged.superchatPosition = 'top';
+      if (merged.superchatPosition === 'topleft') merged.superchatPosition = 'top-left';
+      if (merged.superchatPosition === 'bottomRight' || merged.superchatPosition === 'bottom_right') {
+        merged.superchatPosition = 'bottom-right';
+      }
+      if (merged.superchatPosition === 'bottom_left') merged.superchatPosition = 'bottom-left';
+      if (!SUPERCHAT_POSITIONS.includes(merged.superchatPosition)) merged.superchatPosition = 'top';
+      if (!SCROLL_AREAS.includes(merged.scrollArea)) merged.scrollArea = 'full';
       if (!['fade', 'slide', 'pop', 'shine'].includes(merged.superchatAnimation)) merged.superchatAnimation = 'slide';
       merged.superchatDuration = clamp(finiteNumber(merged.superchatDuration, DEFAULT_SETTINGS.superchatDuration), 2, 300);
+      merged.superchatDurationFollowYoutube = !!merged.superchatDurationFollowYoutube;
+      merged.superchatCompact = !!merged.superchatCompact;
+      if (typeof merged.superchatOverlayDanmaku !== 'boolean') {
+        merged.superchatOverlayDanmaku = DEFAULT_SETTINGS.superchatOverlayDanmaku;
+      } else {
+        merged.superchatOverlayDanmaku = !!merged.superchatOverlayDanmaku;
+      }
       return merged;
     }
   } catch (_) {

@@ -179,18 +179,13 @@ class ChatActions {
     const selectors = [
       '#chat-messages yt-live-chat-paid-message-renderer',
       '#chat-messages yt-live-chat-paid-sticker-renderer',
-      '#chat-messages yt-live-chat-membership-item-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-message-renderer',
       'yt-live-chat-banner-manager yt-live-chat-paid-sticker-renderer',
-      'yt-live-chat-banner-manager yt-live-chat-membership-item-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-message-renderer',
       'tp-yt-paper-dialog yt-live-chat-paid-sticker-renderer',
-      'tp-yt-paper-dialog yt-live-chat-membership-item-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[aria-selected="true"] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer[selected] yt-live-chat-paid-message-renderer',
       'yt-live-chat-ticker-paid-message-item-renderer #card:not([hidden]) yt-live-chat-paid-message-renderer',
-      'yt-live-chat-ticker-sponsor-item-renderer[aria-selected="true"] yt-live-chat-membership-item-renderer',
-      'yt-live-chat-ticker-sponsor-item-renderer[selected] yt-live-chat-membership-item-renderer',
     ];
 
     const found = [];

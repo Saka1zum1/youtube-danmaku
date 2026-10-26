@@ -29,8 +29,3 @@ const ICON_CLOSE = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="2
 
 const ICON_PROFILE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/></svg>`;
 
-/** Hide live chat (panel collapses toward the right edge). */
-const ICON_CHAT_COLLAPSE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h10v16H4zm12 0h4v16h-4zm-5.5 8 3.5-3.5v7z"/></svg>`;
-
-/** Restore live chat from the docked expand control. */
-const ICON_CHAT_EXPAND = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v16H4zm2 2v12h8V6zm10 0v12h2V6zM9.5 12 13 8.5v7z"/></svg>`;

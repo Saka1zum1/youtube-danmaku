@@ -4,29 +4,24 @@ class ControlButton {
     onTogglePanel,
     onToggleSpeech,
     onToggleHistory,
-    onExpandChat,
     getSettings,
     isPanelOpen,
     isSpeechPanelOpen,
     isHistoryPanelOpen,
-    isChatCollapsed,
   }) {
     this.onToggleDanmaku = onToggleDanmaku;
     this.onTogglePanel = onTogglePanel;
     this.onToggleSpeech = onToggleSpeech;
     this.onToggleHistory = onToggleHistory;
-    this.onExpandChat = onExpandChat;
     this.getSettings = getSettings;
     this.isPanelOpen = isPanelOpen;
     this.isSpeechPanelOpen = isSpeechPanelOpen;
     this.isHistoryPanelOpen = isHistoryPanelOpen;
-    this.isChatCollapsed = isChatCollapsed || (() => false);
     this.wrap = null;
     this.danmakuBtn = null;
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
-    this.chatExpandBtn = null;
     this.controlsGroup = null;
     this.mounting = false;
   }
@@ -94,19 +89,11 @@ class ControlButton {
         this.onTogglePanel(this.settingsBtn);
       });
 
-      this.chatExpandBtn = this.createBtn('ydm-chat-expand-control-btn', t('chatExpand'), ICON_CHAT_EXPAND);
-      this.chatExpandBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.onExpandChat?.();
-      });
-
       this.wrap.append(
         this.danmakuBtn,
         this.settingsBtn,
         this.speechBtn,
         this.historyBtn,
-        this.chatExpandBtn,
       );
       const first = this.controlsGroup.firstChild;
       if (first) this.controlsGroup.insertBefore(this.wrap, first);
@@ -116,17 +103,13 @@ class ControlButton {
       this.updateSpeechState();
       this.updateHistoryState();
       this.updatePanelState();
-      this.updateChatCollapsedState(this.isChatCollapsed());
     } finally {
       this.mounting = false;
     }
   }
 
   remount() {
-    if (this.wrap?.isConnected) {
-      this.updateChatCollapsedState(this.isChatCollapsed());
-      return;
-    }
+    if (this.wrap?.isConnected) return;
     const existing = document.querySelector('.ydm-controls-wrap');
     if (existing?.isConnected && existing.querySelector('.ydm-danmaku-btn') && existing.querySelector('.ydm-speech-btn') && existing.querySelector('.ydm-history-btn')) {
       this.wrap = existing;
@@ -134,19 +117,9 @@ class ControlButton {
       this.speechBtn = existing.querySelector('.ydm-speech-btn');
       this.historyBtn = existing.querySelector('.ydm-history-btn');
       this.settingsBtn = existing.querySelector('.ydm-settings-btn');
-      this.chatExpandBtn = existing.querySelector('.ydm-chat-expand-control-btn');
-      if (!this.chatExpandBtn) {
-        this.chatExpandBtn = this.createBtn('ydm-chat-expand-control-btn', t('chatExpand'), ICON_CHAT_EXPAND);
-        this.chatExpandBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.onExpandChat?.();
-        });
-        existing.appendChild(this.chatExpandBtn);
-      }
+      existing.querySelector('.ydm-chat-expand-control-btn')?.remove();
       this.updateSpeechState();
       this.updateHistoryState();
-      this.updateChatCollapsedState(this.isChatCollapsed());
       return;
     }
     existing?.remove();
@@ -155,7 +128,6 @@ class ControlButton {
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
-    this.chatExpandBtn = null;
     this.mount();
   }
 
@@ -198,17 +170,6 @@ class ControlButton {
     this.settingsBtn.setAttribute('aria-expanded', this.isPanelOpen() ? 'true' : 'false');
     this.updateSpeechState();
     this.updateHistoryState();
-    this.updateChatCollapsedState(this.isChatCollapsed());
-  }
-
-  updateChatCollapsedState(collapsed = this.isChatCollapsed()) {
-    if (!this.chatExpandBtn) return;
-    const show = !!collapsed;
-    this.chatExpandBtn.hidden = !show;
-    this.chatExpandBtn.classList.toggle('ydm-visible', show);
-    this.chatExpandBtn.title = t('chatExpand');
-    this.chatExpandBtn.setAttribute('aria-label', t('chatExpand'));
-    this.chatExpandBtn.setAttribute('aria-hidden', show ? 'false' : 'true');
   }
 
   destroy() {
@@ -218,7 +179,6 @@ class ControlButton {
     this.speechBtn = null;
     this.historyBtn = null;
     this.settingsBtn = null;
-    this.chatExpandBtn = null;
     this.mounting = false;
   }
 }

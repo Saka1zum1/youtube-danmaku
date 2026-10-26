@@ -6,7 +6,6 @@ let chatObserver = null;
 let favoritesPanel = null;
 let fullscreenChat = null;
 let chatClearButton = null;
-let chatCollapseButton = null;
 let settingsPanel = null;
 let speechPanel = null;
 let historyPanel = null;
@@ -57,13 +56,21 @@ function handleVisibilityChange() {
   }
 }
 
+function cleanupLegacyChatCollapseUi() {
+  document.documentElement.classList.remove('ydm-chat-collapsed');
+  document.querySelectorAll(
+    '[data-ydm-chat-collapse="true"], [data-ydm-chat-collapse-wrap="true"], [data-ydm-chat-expand="true"]',
+  ).forEach((el) => el.remove());
+  document.querySelector('ytd-live-chat-frame[data-ydm-collapsed]')?.removeAttribute('data-ydm-collapsed');
+}
+
 function teardown() {
   generation += 1;
   chatObserver?.stop();
   favoritesPanel?.destroy();
   fullscreenChat?.destroy();
   chatClearButton?.destroy();
-  chatCollapseButton?.destroy();
+  cleanupLegacyChatCollapseUi();
   danmaku?.destroy();
   controlButton?.destroy();
   danmakuEmitter?.clear();
@@ -77,7 +84,6 @@ function teardown() {
   favoritesPanel = null;
   fullscreenChat = null;
   chatClearButton = null;
-  chatCollapseButton = null;
   danmaku = null;
   danmakuEmitter = null;
   translateQueue = null;
@@ -112,8 +118,6 @@ async function boot() {
       chatObserver?.seenIds?.clear?.();
     },
   });
-  chatCollapseButton = new ChatCollapseButton();
-
   const observer = new ChatObserver({
     getSettings,
     danmakuEmitter: emitter,
@@ -168,15 +172,10 @@ async function boot() {
       historyPanel.toggle(anchor);
       controls.updatePanelState();
     },
-    onExpandChat: () => chatCollapseButton?.expand(),
     getSettings,
     isPanelOpen: () => settingsPanel.isOpen,
     isSpeechPanelOpen: () => speechPanel.isOpen,
     isHistoryPanelOpen: () => historyPanel.isOpen,
-    isChatCollapsed: () => !!chatCollapseButton?.collapsed,
-  });
-  chatCollapseButton.setCollapsedChangeHandler((collapsed) => {
-    controls.updateChatCollapsedState(collapsed);
   });
 
   await engine.mount();
@@ -200,10 +199,9 @@ async function boot() {
   if (gen !== generation) return;
   await favoritesPanel.mount();
   if (gen !== generation) return;
-  // Clear first so collapse can sit immediately beside it.
   await chatClearButton.mount();
   if (gen !== generation) return;
-  await chatCollapseButton.mount();
+  cleanupLegacyChatCollapseUi();
   if (gen !== generation) return;
 
   console.log('[YDM] YouTube Danmaku initialized');
@@ -218,7 +216,6 @@ async function reconcile() {
     liveViewersBadge?.remount();
     favoritesPanel?.remount();
     chatClearButton?.remount();
-    chatCollapseButton?.remount();
     if (chatObserver && !chatObserver.isConnected()) {
       chatObserver.start().catch((err) => console.warn('[YDM] Chat restart failed:', err));
     }

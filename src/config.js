@@ -25,8 +25,19 @@ const DEFAULT_SETTINGS = {
   superchatPinned: false,
   superchatPosition: 'top',
   superchatDuration: 15,
+  /** When true, pin lifetime follows the YouTube live-chat ticker countdown. */
+  superchatDurationFollowYoutube: false,
   superchatAnimation: 'slide',
+  /** Compact pin: avatar + name + amount; click opens a centered detail card. */
+  superchatCompact: false,
+  /** When true, pinned Super Chats may cover scrolling danmaku (no lane reserve). */
+  superchatOverlayDanmaku: true,
 };
+
+const SUPERCHAT_MAX_PINNED = 10;
+
+const SUPERCHAT_POSITIONS = ['top', 'top-left', 'bottom', 'bottom-left', 'bottom-right'];
+const SCROLL_AREAS = ['full', 'top-half', 'bottom-half', 'top-quarter'];
 
 const SELECTORS = {
   player: 'ytd-watch-flexy #movie_player, ytd-player#ytd-player #movie_player',

@@ -4,11 +4,11 @@
 // @name:zh-TW   YouTube 彈幕
 // @name:ja      YouTube 弾幕
 // @namespace    youtube-danmaku
-// @version      1.6.0
-// @description  Turn YouTube live chat into scrolling danmaku — favorites, fullscreen send, hide chat, and more
-// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持收藏、全屏发送、收起聊天等
-// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援收藏、全螢幕發送、收起聊天等
-// @description:ja  YouTube ライブチャットを弾幕化。お気に入り、フルスクリーン送信、チャット非表示などに対応
+// @version      1.6.5
+// @description  Turn YouTube live chat into scrolling danmaku — Super Chat pins, favorites, hide chat, and more
+// @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持 Super Chat 悬停、收藏、收起聊天等
+// @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援 Super Chat 懸停、收藏、收起聊天等
+// @description:ja  YouTube ライブチャットを弾幕化。Super Chat 固定、お気に入り、チャット非表示などに対応
 // @author       KaKa
 // @license      MIT
 // @match        https://www.youtube.com/*
