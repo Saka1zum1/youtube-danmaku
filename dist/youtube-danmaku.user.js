@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕 | 即時翻譯
 // @name:ja      YouTube 弾幕 | リアルタイム翻訳
 // @namespace    youtube-danmaku
-// @version      1.7.0
+// @version      1.7.1
 // @description  Turn YouTube live chat into scrolling danmaku with real-time translation
 // @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援即時翻譯
@@ -44,6 +44,10 @@ const LOCALES = {
     scrollSpeed: '滚动速度',
     fontSize: '字体大小',
     danmakuOpacity: '弹幕透明度',
+    danmakuColors: '弹幕颜色',
+    danmakuColorChat: '跟随聊天昵称色',
+    danmakuColorMono: '单色（白色）',
+    danmakuColorCustom: '自定义颜色',
     fontFamily: '字体',
     scrollArea: '滚动区域',
     translateEnable: '启用翻译',
@@ -249,6 +253,10 @@ const LOCALES = {
     scrollSpeed: 'Scroll speed',
     fontSize: 'Font size',
     danmakuOpacity: 'Danmaku opacity',
+    danmakuColors: 'Danmaku colors',
+    danmakuColorChat: 'Match chat',
+    danmakuColorMono: 'Single color (white)',
+    danmakuColorCustom: 'Custom color',
     fontFamily: 'Font',
     scrollArea: 'Scroll area',
     translateEnable: 'Enable translation',
@@ -454,6 +462,10 @@ const LOCALES = {
     scrollSpeed: 'スクロール速度',
     fontSize: 'フォントサイズ',
     danmakuOpacity: '弾幕の透明度',
+    danmakuColors: '弾幕の色',
+    danmakuColorChat: 'チャットの色に合わせる',
+    danmakuColorMono: '単色（白）',
+    danmakuColorCustom: 'カスタム色',
     fontFamily: 'フォント',
     scrollArea: '表示エリア',
     translateEnable: '翻訳を有効にする',
@@ -597,7 +609,7 @@ const LOCALES = {
     superchatBottom: '下部中央',
     superchatBottomLeft: '左下',
     superchatBottomRight: '右下',
-    superchatCompact: 'コンパクト固定（アバター＋名前＋金額）',
+    superchatCompact: 'コンパクト固定（アバター＋金額）',
     superchatOverlayDanmaku: '固定表示が流れる弾幕に重ねられる',
     superchatFade: 'フェード',
     superchatSlide: 'スライド',
@@ -652,12 +664,10 @@ const LOCALES = {
 };
 
 function detectLocale() {
-  const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
-  for (const lang of langs) {
-    if (lang && /^zh(-|$)/i.test(lang)) return 'zh';
-    if (lang && /^ja(-|$)/i.test(lang)) return 'ja';
-  }
-  return 'en';
+  const lang = navigator.language;
+  if (/^zh(-|$)/i.test(lang)) return 'zh';
+  else if (/^ja(-|$)/i.test(lang)) return 'ja';
+  else return 'en';
 }
 
 const LOCALE = detectLocale();
@@ -718,6 +728,14 @@ function getScrollAreaOptions() {
   ];
 }
 
+function getDanmakuColorModeOptions() {
+  return [
+    { label: t('danmakuColorChat'), value: 'chat' },
+    { label: t('danmakuColorMono'), value: 'mono' },
+    { label: t('danmakuColorCustom'), value: 'custom' },
+  ];
+}
+
 function getTranslateProviderOptions() {
   return [
     { label: t('translateProviderAuto'), value: 'auto' },
@@ -757,6 +775,9 @@ const DEFAULT_SETTINGS = {
   speed: 5,
   fontSize: 22,
   opacity: 100,
+  /** chat = YouTube chatter colors; mono = single white; custom = danmakuColor */
+  danmakuColorMode: 'chat',
+  danmakuColor: '#ffffff',
   fontFamily: 'system-ui, sans-serif',
   scrollArea: 'full',
   translateEnabled: false,
@@ -780,7 +801,7 @@ const DEFAULT_SETTINGS = {
   /** When true, pin lifetime follows the YouTube live-chat ticker countdown. */
   superchatDurationFollowYoutube: false,
   superchatAnimation: 'slide',
-  /** Compact pin: avatar + name + amount; click opens a centered detail card. */
+  /** Compact pin: avatar + amount; click opens a centered detail card (name in card). */
   superchatCompact: false,
   /** When true, pinned Super Chats may cover scrolling danmaku (no lane reserve). */
   superchatOverlayDanmaku: true,
@@ -790,6 +811,7 @@ const SUPERCHAT_MAX_PINNED = 10;
 
 const SUPERCHAT_POSITIONS = ['top', 'top-left', 'bottom', 'bottom-left', 'bottom-right'];
 const SCROLL_AREAS = ['full', 'top-half', 'bottom-half', 'top-quarter'];
+const DANMAKU_COLOR_MODES = ['chat', 'mono', 'custom'];
 
 const SELECTORS = {
   player: 'ytd-watch-flexy #movie_player, ytd-player#ytd-player #movie_player',
@@ -866,6 +888,10 @@ function loadSettings() {
       } else {
         merged.superchatOverlayDanmaku = !!merged.superchatOverlayDanmaku;
       }
+      if (!DANMAKU_COLOR_MODES.includes(merged.danmakuColorMode)) {
+        merged.danmakuColorMode = DEFAULT_SETTINGS.danmakuColorMode;
+      }
+      merged.danmakuColor = safeCssColor(merged.danmakuColor || DEFAULT_SETTINGS.danmakuColor);
       return merged;
     }
   } catch (_) {
@@ -1070,6 +1096,15 @@ function colorFromName(name) {
   return NAME_COLORS[(hash >>> 0) % NAME_COLORS.length];
 }
 
+function normalizeHexColor(color) {
+  const value = String(color || '').trim();
+  if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+  if (/^#[0-9a-f]{3}$/i.test(value)) {
+    return `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`;
+  }
+  return '#ffffff';
+}
+
 function safeCssColor(color) {
   const value = String(color || '').trim();
   if (/^#[0-9a-f]{3,8}$/i.test(value)) return value;
@@ -1077,6 +1112,13 @@ function safeCssColor(color) {
     return value;
   }
   return '#ffffff';
+}
+
+function resolveDanmakuTextColor(usernameColor, settings) {
+  const mode = settings?.danmakuColorMode || 'chat';
+  if (mode === 'mono') return '#ffffff';
+  if (mode === 'custom') return safeCssColor(settings?.danmakuColor);
+  return safeCssColor(usernameColor);
 }
 
 function getUsernameColor(msgEl, username) {
@@ -1509,17 +1551,6 @@ const YDM_CSS = `
     .ydm-superchat-item.ydm-sc-compact .ydm-sc-avatar {
       width: 1.55em;
       height: 1.55em;
-    }
-
-    .ydm-superchat-item.ydm-sc-compact .ydm-sc-username-compact {
-      flex: 0 1 auto;
-      max-width: 6.5em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 0.72em;
-      font-weight: 600;
-      opacity: 0.95;
     }
 
     .ydm-superchat-item.ydm-sc-compact .ydm-sc-amount-badge {
@@ -2027,10 +2058,16 @@ const YDM_CSS = `
       padding: 0 !important;
     }
 
-    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-time-wrapper {
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-concurrent-wrapper {
       white-space: nowrap;
       max-width: none;
       padding-right: 2px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-concurrent-wrapper[hidden] {
+      display: none !important;
     }
 
     .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper {
@@ -2300,6 +2337,21 @@ const YDM_CSS = `
       background: #0f0f0f;
       color: #f1f1f1;
       font-size: 13px;
+    }
+
+    .ydm-balloon-color {
+      width: 100%;
+      height: 36px;
+      margin-top: 6px;
+      padding: 2px;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #0f0f0f;
+      cursor: pointer;
+    }
+
+    .ydm-balloon-color[hidden] {
+      display: none !important;
     }
 
     .ydm-keyword-hint {
@@ -4078,9 +4130,9 @@ class DanmakuEngine {
       item.appendChild(avatar);
     }
 
-    if (username) {
+    if (username && !compact) {
       const name = document.createElement('span');
-      name.className = compact ? 'ydm-sc-username ydm-sc-username-compact' : 'ydm-sc-username';
+      name.className = 'ydm-sc-username';
       name.textContent = username;
       name.title = username;
       name.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
@@ -4452,7 +4504,7 @@ class DanmakuEngine {
     item.className = 'ydm-danmaku-item';
     appendDanmakuContent(item, message, parts);
     item.style.top = '0';
-    item.style.color = safeCssColor(usernameColor);
+    item.style.color = resolveDanmakuTextColor(usernameColor, settings);
     item.style.fontSize = `${settings.fontSize}px`;
     item.style.fontFamily = settings.fontFamily;
     item.style.opacity = String(this.getItemOpacity());
@@ -8470,9 +8522,9 @@ function formatCountNumber(count) {
   }
 }
 
-function formatLiveConcurrentLabel(count) {
-  if (count == null) return 'Live';
-  return `Live · ${formatCountNumber(count)} ${t('liveWatching')}`;
+function formatLiveConcurrentSuffix(count) {
+  if (count == null) return '';
+  return `· ${formatCountNumber(count)} ${t('liveWatching')}`;
 }
 
 class SettingsPanel {
@@ -8681,6 +8733,7 @@ class SettingsPanel {
       this.createRange(t('scrollSpeed'), 'speed', 1, 10, 1, (v) => String(v)),
       this.createRange(t('fontSize'), 'fontSize', 14, 40, 1, (v) => `${v}px`),
       this.createRange(t('danmakuOpacity'), 'opacity', 10, 100, 5, (v) => `${v}%`),
+      this.createDanmakuColorBlock(),
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),
@@ -8704,6 +8757,48 @@ class SettingsPanel {
     this.balloon.append(header, body);
     const mountTarget = getFullscreenElement() || document.body;
     mountTarget.appendChild(this.balloon);
+  }
+
+  createDanmakuColorBlock() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = t('danmakuColors');
+
+    const select = document.createElement('select');
+    select.className = 'ydm-balloon-select';
+    for (const opt of getDanmakuColorModeOptions()) {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === this.settings.danmakuColorMode) option.selected = true;
+      select.appendChild(option);
+    }
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.className = 'ydm-balloon-color';
+    colorInput.value = normalizeHexColor(this.settings.danmakuColor);
+    colorInput.hidden = this.settings.danmakuColorMode !== 'custom';
+    colorInput.setAttribute('aria-label', t('danmakuColorCustom'));
+
+    const syncColorVisibility = () => {
+      colorInput.hidden = this.settings.danmakuColorMode !== 'custom';
+    };
+
+    select.addEventListener('change', () => {
+      this.updateSetting('danmakuColorMode', select.value);
+      syncColorVisibility();
+    });
+
+    colorInput.addEventListener('input', () => {
+      this.updateSetting('danmakuColor', colorInput.value);
+    });
+
+    row.append(labelEl, select, colorInput);
+    return row;
   }
 
   createKeywordBlock() {
@@ -11192,7 +11287,7 @@ class EnhancedPip {
       return;
     }
     const opacity = clamp(Number(settings.opacity) || 100, 10, 100) / 100;
-    item.style.color = safeCssColor(payload.usernameColor);
+    item.style.color = resolveDanmakuTextColor(payload.usernameColor, settings);
     item.style.fontSize = `${settings.fontSize || 22}px`;
     item.style.fontFamily = settings.fontFamily || 'sans-serif';
     item.style.opacity = String(opacity);
@@ -11932,12 +12027,12 @@ class LiveViewersBadge {
   constructor() {
     this.timer = null;
     this.mounting = false;
-    this.wrapper = null;
     this.display = null;
+    this.concurrentWrap = null;
+    this.concurrentEl = null;
     this.viewsWrap = null;
     this.countEl = null;
     this.lastVideoId = '';
-    this.originalWrapperText = '';
     this.boundVisibility = () => {
       if (!document.hidden) this.refresh().catch(() => {});
     };
@@ -11965,9 +12060,19 @@ class LiveViewersBadge {
   }
 
   remount() {
-    if (this.viewsWrap?.isConnected && this.wrapper?.isConnected) return;
+    if (this.concurrentWrap?.isConnected && this.viewsWrap?.isConnected) return;
     this.teardownUi(false);
     this.mount().then(() => this.refresh()).catch(() => {});
+  }
+
+  insertAfterNativeTime(display, node) {
+    const nativeWrap = display.querySelector(
+      '.ytp-time-wrapper:not(.ydm-live-views-wrapper):not(.ydm-live-concurrent-wrapper)',
+    );
+    const liveBadge = display.querySelector('.ytp-live-badge');
+    const anchor = nativeWrap || liveBadge;
+    if (anchor?.parentElement === display) anchor.after(node);
+    else display.appendChild(node);
   }
 
   async mount() {
@@ -11981,17 +12086,25 @@ class LiveViewersBadge {
       if (!display?.isConnected) return;
 
       this.display = display;
-      this.wrapper = display.querySelector('.ytp-time-wrapper:not(.ydm-live-views-wrapper)');
-      if (!this.wrapper) return;
 
-      if (!this.originalWrapperText) {
-        this.originalWrapperText = this.wrapper.textContent?.trim() || 'Live';
+      let concurrentWrap = display.querySelector('.ydm-live-concurrent-wrapper');
+      if (!concurrentWrap) {
+        concurrentWrap = document.createElement('span');
+        concurrentWrap.className = 'ytp-time-wrapper ydm-live-concurrent-wrapper';
+        concurrentWrap.setAttribute('aria-hidden', 'true');
+
+        const count = document.createElement('span');
+        count.className = 'ydm-live-concurrent-count';
+        concurrentWrap.appendChild(count);
+        this.insertAfterNativeTime(display, concurrentWrap);
       }
+      this.concurrentWrap = concurrentWrap;
+      this.concurrentEl = concurrentWrap.querySelector('.ydm-live-concurrent-count');
 
       let viewsWrap = display.querySelector('.ydm-live-views-wrapper');
       if (!viewsWrap) {
-        viewsWrap = this.wrapper.cloneNode(false);
-        viewsWrap.classList.add('ydm-live-views-wrapper');
+        viewsWrap = document.createElement('span');
+        viewsWrap.className = 'ytp-time-wrapper ydm-live-views-wrapper';
         viewsWrap.removeAttribute('id');
         viewsWrap.setAttribute('aria-label', t('liveTotalViews'));
         viewsWrap.title = t('liveTotalViews');
@@ -12004,7 +12117,8 @@ class LiveViewersBadge {
         count.className = 'ydm-live-views-count';
 
         viewsWrap.append(iconWrap, count);
-        this.wrapper.after(viewsWrap);
+        if (concurrentWrap.isConnected) concurrentWrap.after(viewsWrap);
+        else this.insertAfterNativeTime(display, viewsWrap);
       }
 
       this.viewsWrap = viewsWrap;
@@ -12014,33 +12128,37 @@ class LiveViewersBadge {
     }
   }
 
-  teardownUi(restoreText = true) {
-    if (restoreText && this.wrapper?.isConnected && this.originalWrapperText) {
-      this.wrapper.textContent = this.originalWrapperText;
-    }
+  teardownUi() {
+    this.concurrentWrap?.remove();
     this.viewsWrap?.remove();
+    this.concurrentWrap = null;
+    this.concurrentEl = null;
     this.viewsWrap = null;
     this.countEl = null;
-    this.wrapper = null;
     this.display = null;
-    this.originalWrapperText = '';
   }
 
   applyCounts({ live, concurrent, total }) {
     if (!live) {
-      this.teardownUi(true);
+      this.teardownUi();
       return;
     }
 
-    if (!this.wrapper?.isConnected || !this.viewsWrap?.isConnected) {
+    if (!this.concurrentWrap?.isConnected || !this.viewsWrap?.isConnected) {
       this.mount().then(() => {
-        if (this.wrapper?.isConnected) this.applyCounts({ live, concurrent, total });
+        if (this.concurrentWrap?.isConnected) this.applyCounts({ live, concurrent, total });
       }).catch(() => {});
       return;
     }
 
-    this.wrapper.textContent = formatLiveConcurrentLabel(concurrent);
-    this.wrapper.classList.add('ydm-live-time-wrapper');
+    const concurrentText = formatLiveConcurrentSuffix(concurrent);
+    if (this.concurrentEl) this.concurrentEl.textContent = concurrentText;
+    if (this.concurrentWrap) {
+      this.concurrentWrap.hidden = !concurrentText;
+      this.concurrentWrap.title = concurrentText
+        ? `${formatCountNumber(concurrent)} ${t('liveWatching')}`
+        : '';
+    }
 
     if (total == null) {
       this.viewsWrap.hidden = true;
@@ -12062,15 +12180,12 @@ class LiveViewersBadge {
       return;
     }
 
-    if (!this.wrapper?.isConnected || !this.viewsWrap?.isConnected) {
+    if (!this.concurrentWrap?.isConnected || !this.viewsWrap?.isConnected) {
       await this.mount();
     }
 
     const videoId = liveVideoId();
-    if (videoId && videoId !== this.lastVideoId) {
-      this.lastVideoId = videoId;
-      this.originalWrapperText = this.wrapper?.textContent?.trim() || 'Live';
-    }
+    if (videoId) this.lastVideoId = videoId;
 
     const data = await fetchLiveViewers(videoId);
     this.applyCounts(data);

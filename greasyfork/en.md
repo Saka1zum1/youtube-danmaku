@@ -27,7 +27,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 ### Live Danmaku
 
 - Automatically captures new live-chat and chat-replay messages and displays them on the video
-- Shows message content only — each sender gets a stable color. Owner and moderator colors are kept
+- Shows message content only — each sender gets a stable color by default (owner and moderator colors are kept). In settings, switch to a single white color or pick a custom color instead of chat colors
 - Hover or click any danmaku to pause it
 - Click to reveal the sender. The copy button in the bubble writes the message into the live chat input. The speaker button reads that line
 - Right-click a chat message for Translate / Retranslate, read aloud, send as danmaku, favorite, or open profile. If one translation engine fails, another is tried
@@ -56,14 +56,14 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 ### Super Chat
 
 - Optional pins at the top, corners, or bottom of the player
-- Full layout: avatar, name, amount, and message. Compact layout: avatar, short name, and amount — tap for a detail card with the full message
+- Full layout: avatar, name, amount, and message. Compact layout: avatar and amount — tap for a detail card with name and full message
 - Up to ten pins at once; pin time can follow the YouTube chat ticker or your own setting
 - Optional: let pins sit over scrolling danmaku instead of pushing them aside
 - Click a Super Chat (or its detail card) to translate, read aloud, send as danmaku, favorite, or open the sender’s profile
 
 ### Live viewers
 
-- When the stream reports them, concurrent and total viewers appear beside the Live badge
+- When the stream reports them, concurrent and total viewers appear beside the Live badge without replacing YouTube’s live time or jump-to-live control
 
 ### Read aloud
 
@@ -83,7 +83,7 @@ No more constantly glancing at the chat panel. Messages flow across the screen s
 
 ### Customization
 
-- Adjust scroll speed, font size, danmaku opacity (10–100%), and choose from 18 system fonts
+- Adjust scroll speed, font size, danmaku opacity (10–100%), danmaku colors (match chat / white / custom), and choose from 18 system fonts
 - Scroll area: full screen / top half / bottom half / top quarter
 - Super Chat pin position, compact mode, duration (manual or match YouTube ticker), overlay option, and animation
 - Block keywords. A message is hidden when the original text or the translation contains one

@@ -336,7 +336,7 @@ function formatCountNumber(count) {
   }
 }
 
-function formatLiveConcurrentLabel(count) {
-  if (count == null) return 'Live';
-  return `Live · ${formatCountNumber(count)} ${t('liveWatching')}`;
+function formatLiveConcurrentSuffix(count) {
+  if (count == null) return '';
+  return `· ${formatCountNumber(count)} ${t('liveWatching')}`;
 }

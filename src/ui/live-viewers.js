@@ -2,12 +2,12 @@ class LiveViewersBadge {
   constructor() {
     this.timer = null;
     this.mounting = false;
-    this.wrapper = null;
     this.display = null;
+    this.concurrentWrap = null;
+    this.concurrentEl = null;
     this.viewsWrap = null;
     this.countEl = null;
     this.lastVideoId = '';
-    this.originalWrapperText = '';
     this.boundVisibility = () => {
       if (!document.hidden) this.refresh().catch(() => {});
     };
@@ -35,9 +35,19 @@ class LiveViewersBadge {
   }
 
   remount() {
-    if (this.viewsWrap?.isConnected && this.wrapper?.isConnected) return;
+    if (this.concurrentWrap?.isConnected && this.viewsWrap?.isConnected) return;
     this.teardownUi(false);
     this.mount().then(() => this.refresh()).catch(() => {});
+  }
+
+  insertAfterNativeTime(display, node) {
+    const nativeWrap = display.querySelector(
+      '.ytp-time-wrapper:not(.ydm-live-views-wrapper):not(.ydm-live-concurrent-wrapper)',
+    );
+    const liveBadge = display.querySelector('.ytp-live-badge');
+    const anchor = nativeWrap || liveBadge;
+    if (anchor?.parentElement === display) anchor.after(node);
+    else display.appendChild(node);
   }
 
   async mount() {
@@ -51,17 +61,25 @@ class LiveViewersBadge {
       if (!display?.isConnected) return;
 
       this.display = display;
-      this.wrapper = display.querySelector('.ytp-time-wrapper:not(.ydm-live-views-wrapper)');
-      if (!this.wrapper) return;
 
-      if (!this.originalWrapperText) {
-        this.originalWrapperText = this.wrapper.textContent?.trim() || 'Live';
+      let concurrentWrap = display.querySelector('.ydm-live-concurrent-wrapper');
+      if (!concurrentWrap) {
+        concurrentWrap = document.createElement('span');
+        concurrentWrap.className = 'ytp-time-wrapper ydm-live-concurrent-wrapper';
+        concurrentWrap.setAttribute('aria-hidden', 'true');
+
+        const count = document.createElement('span');
+        count.className = 'ydm-live-concurrent-count';
+        concurrentWrap.appendChild(count);
+        this.insertAfterNativeTime(display, concurrentWrap);
       }
+      this.concurrentWrap = concurrentWrap;
+      this.concurrentEl = concurrentWrap.querySelector('.ydm-live-concurrent-count');
 
       let viewsWrap = display.querySelector('.ydm-live-views-wrapper');
       if (!viewsWrap) {
-        viewsWrap = this.wrapper.cloneNode(false);
-        viewsWrap.classList.add('ydm-live-views-wrapper');
+        viewsWrap = document.createElement('span');
+        viewsWrap.className = 'ytp-time-wrapper ydm-live-views-wrapper';
         viewsWrap.removeAttribute('id');
         viewsWrap.setAttribute('aria-label', t('liveTotalViews'));
         viewsWrap.title = t('liveTotalViews');
@@ -74,7 +92,8 @@ class LiveViewersBadge {
         count.className = 'ydm-live-views-count';
 
         viewsWrap.append(iconWrap, count);
-        this.wrapper.after(viewsWrap);
+        if (concurrentWrap.isConnected) concurrentWrap.after(viewsWrap);
+        else this.insertAfterNativeTime(display, viewsWrap);
       }
 
       this.viewsWrap = viewsWrap;
@@ -84,33 +103,37 @@ class LiveViewersBadge {
     }
   }
 
-  teardownUi(restoreText = true) {
-    if (restoreText && this.wrapper?.isConnected && this.originalWrapperText) {
-      this.wrapper.textContent = this.originalWrapperText;
-    }
+  teardownUi() {
+    this.concurrentWrap?.remove();
     this.viewsWrap?.remove();
+    this.concurrentWrap = null;
+    this.concurrentEl = null;
     this.viewsWrap = null;
     this.countEl = null;
-    this.wrapper = null;
     this.display = null;
-    this.originalWrapperText = '';
   }
 
   applyCounts({ live, concurrent, total }) {
     if (!live) {
-      this.teardownUi(true);
+      this.teardownUi();
       return;
     }
 
-    if (!this.wrapper?.isConnected || !this.viewsWrap?.isConnected) {
+    if (!this.concurrentWrap?.isConnected || !this.viewsWrap?.isConnected) {
       this.mount().then(() => {
-        if (this.wrapper?.isConnected) this.applyCounts({ live, concurrent, total });
+        if (this.concurrentWrap?.isConnected) this.applyCounts({ live, concurrent, total });
       }).catch(() => {});
       return;
     }
 
-    this.wrapper.textContent = formatLiveConcurrentLabel(concurrent);
-    this.wrapper.classList.add('ydm-live-time-wrapper');
+    const concurrentText = formatLiveConcurrentSuffix(concurrent);
+    if (this.concurrentEl) this.concurrentEl.textContent = concurrentText;
+    if (this.concurrentWrap) {
+      this.concurrentWrap.hidden = !concurrentText;
+      this.concurrentWrap.title = concurrentText
+        ? `${formatCountNumber(concurrent)} ${t('liveWatching')}`
+        : '';
+    }
 
     if (total == null) {
       this.viewsWrap.hidden = true;
@@ -132,15 +155,12 @@ class LiveViewersBadge {
       return;
     }
 
-    if (!this.wrapper?.isConnected || !this.viewsWrap?.isConnected) {
+    if (!this.concurrentWrap?.isConnected || !this.viewsWrap?.isConnected) {
       await this.mount();
     }
 
     const videoId = liveVideoId();
-    if (videoId && videoId !== this.lastVideoId) {
-      this.lastVideoId = videoId;
-      this.originalWrapperText = this.wrapper?.textContent?.trim() || 'Live';
-    }
+    if (videoId) this.lastVideoId = videoId;
 
     const data = await fetchLiveViewers(videoId);
     this.applyCounts(data);

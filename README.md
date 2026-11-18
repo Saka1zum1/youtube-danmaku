@@ -7,7 +7,7 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 ## Features
 
 - **Live danmaku** — New live-chat messages scroll across the video
-- **Sender colors** — The scrolling line is the message only; each chatter gets a stable color, and owner / moderator colors are kept
+- **Sender colors** — The scrolling line is the message only. By default each chatter gets a stable color, and owner / moderator colors are kept. In settings you can use a single white color or pick a custom color instead of chat colors
 - **Interactive pause** — Hover or click to pause; click to show the sender, and the original text when a line was translated
 - **Copy to chat** — The tooltip copy button writes the message into the live chat input
 - **Read aloud** — Optional speech for new danmaku. The control-bar icon opens the speech panel. Volume 0 shows a mute icon. Lines that are only symbols, emotes, or numbers are skipped, and a repeated phrase is read at most three times
@@ -21,9 +21,9 @@ A Tampermonkey userscript that turns YouTube live chat into scrolling danmaku on
 - **Hide / show chat** — Collapse the live chat to free video space; restore from the side tab or the player control bar
 - **Fullscreen chat input** — In live fullscreen, press Enter to compose and send without leaving fullscreen
 - **Enhanced picture-in-picture** — A player button opens a floating window with the video and danmaku. Turn danmaku on or off, open settings, send chat (including favorites), lock or stretch the picture, refresh the video, or return to the watch page. While that window is open, chat and danmaku keep going if you switch tabs. Needs Chrome or Edge 116 or newer
-- **Super Chat pin** — Optional pins at the top, corners, or bottom of the player. Full mode shows avatar, name, amount, and message; compact mode shows avatar, truncated name, and amount — tap to open a detail card. Up to ten can show at once. Pin time can follow the YouTube chat ticker or use your own setting. Pins may optionally sit over scrolling danmaku
+- **Super Chat pin** — Optional pins at the top, corners, or bottom of the player. Full mode shows avatar, name, amount, and message; compact mode shows avatar and amount — tap to open a detail card (name and message there). Up to ten can show at once. Pin time can follow the YouTube chat ticker or use your own setting. Pins may optionally sit over scrolling danmaku
 - **Super Chat actions** — Click a Super Chat (or its detail card) for translate, read aloud, send as danmaku, favorite, or open the sender’s profile
-- **Live viewers** — Concurrent and total viewers beside the Live badge when the stream reports them
+- **Live viewers** — Concurrent and total viewers beside the Live badge when the stream reports them. Does not replace YouTube’s live time or jump-to-live control
 - **Anti-flood** — Messages already on screen when you join, and the first 2.5 seconds after that, are not fired as a burst
 - **UI languages** — Follows the browser language (Chinese / English / Japanese)
 
@@ -67,6 +67,7 @@ The built script is `dist/youtube-danmaku.user.js`.
 | Scroll speed | 1–10, higher is faster |
 | Font size | 14–40 px |
 | Danmaku opacity | 10–100% |
+| Danmaku colors | Match chat, single white, or custom |
 | Read aloud | Off by default. The panel sets voice, volume, pitch, and speed. Volume 0 mutes the icon |
 | Pace mode | Raises speed so one line stays within the max time. With translation on, length uses the translated text |
 | Font | 18 system fonts |

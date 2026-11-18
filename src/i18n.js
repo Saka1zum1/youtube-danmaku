@@ -9,6 +9,10 @@ const LOCALES = {
     scrollSpeed: '滚动速度',
     fontSize: '字体大小',
     danmakuOpacity: '弹幕透明度',
+    danmakuColors: '弹幕颜色',
+    danmakuColorChat: '跟随聊天昵称色',
+    danmakuColorMono: '单色（白色）',
+    danmakuColorCustom: '自定义颜色',
     fontFamily: '字体',
     scrollArea: '滚动区域',
     translateEnable: '启用翻译',
@@ -214,6 +218,10 @@ const LOCALES = {
     scrollSpeed: 'Scroll speed',
     fontSize: 'Font size',
     danmakuOpacity: 'Danmaku opacity',
+    danmakuColors: 'Danmaku colors',
+    danmakuColorChat: 'Match chat',
+    danmakuColorMono: 'Single color (white)',
+    danmakuColorCustom: 'Custom color',
     fontFamily: 'Font',
     scrollArea: 'Scroll area',
     translateEnable: 'Enable translation',
@@ -419,6 +427,10 @@ const LOCALES = {
     scrollSpeed: 'スクロール速度',
     fontSize: 'フォントサイズ',
     danmakuOpacity: '弾幕の透明度',
+    danmakuColors: '弾幕の色',
+    danmakuColorChat: 'チャットの色に合わせる',
+    danmakuColorMono: '単色（白）',
+    danmakuColorCustom: 'カスタム色',
     fontFamily: 'フォント',
     scrollArea: '表示エリア',
     translateEnable: '翻訳を有効にする',
@@ -562,7 +574,7 @@ const LOCALES = {
     superchatBottom: '下部中央',
     superchatBottomLeft: '左下',
     superchatBottomRight: '右下',
-    superchatCompact: 'コンパクト固定（アバター＋名前＋金額）',
+    superchatCompact: 'コンパクト固定（アバター＋金額）',
     superchatOverlayDanmaku: '固定表示が流れる弾幕に重ねられる',
     superchatFade: 'フェード',
     superchatSlide: 'スライド',
@@ -617,12 +629,10 @@ const LOCALES = {
 };
 
 function detectLocale() {
-  const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
-  for (const lang of langs) {
-    if (lang && /^zh(-|$)/i.test(lang)) return 'zh';
-    if (lang && /^ja(-|$)/i.test(lang)) return 'ja';
-  }
-  return 'en';
+  const lang = navigator.language;
+  if (/^zh(-|$)/i.test(lang)) return 'zh';
+  else if (/^ja(-|$)/i.test(lang)) return 'ja';
+  else return 'en';
 }
 
 const LOCALE = detectLocale();
@@ -680,6 +690,14 @@ function getScrollAreaOptions() {
     { label: t('scrollAreaTopHalf'), value: 'top-half' },
     { label: t('scrollAreaBottomHalf'), value: 'bottom-half' },
     { label: t('scrollAreaTopQuarter'), value: 'top-quarter' },
+  ];
+}
+
+function getDanmakuColorModeOptions() {
+  return [
+    { label: t('danmakuColorChat'), value: 'chat' },
+    { label: t('danmakuColorMono'), value: 'mono' },
+    { label: t('danmakuColorCustom'), value: 'custom' },
   ];
 }
 

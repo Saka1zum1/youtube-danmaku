@@ -151,6 +151,15 @@ function colorFromName(name) {
   return NAME_COLORS[(hash >>> 0) % NAME_COLORS.length];
 }
 
+function normalizeHexColor(color) {
+  const value = String(color || '').trim();
+  if (/^#[0-9a-f]{6}$/i.test(value)) return value;
+  if (/^#[0-9a-f]{3}$/i.test(value)) {
+    return `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`;
+  }
+  return '#ffffff';
+}
+
 function safeCssColor(color) {
   const value = String(color || '').trim();
   if (/^#[0-9a-f]{3,8}$/i.test(value)) return value;
@@ -158,6 +167,13 @@ function safeCssColor(color) {
     return value;
   }
   return '#ffffff';
+}
+
+function resolveDanmakuTextColor(usernameColor, settings) {
+  const mode = settings?.danmakuColorMode || 'chat';
+  if (mode === 'mono') return '#ffffff';
+  if (mode === 'custom') return safeCssColor(settings?.danmakuColor);
+  return safeCssColor(usernameColor);
 }
 
 function getUsernameColor(msgEl, username) {

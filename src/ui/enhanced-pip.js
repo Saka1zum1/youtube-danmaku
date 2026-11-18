@@ -473,7 +473,7 @@ class EnhancedPip {
       return;
     }
     const opacity = clamp(Number(settings.opacity) || 100, 10, 100) / 100;
-    item.style.color = safeCssColor(payload.usernameColor);
+    item.style.color = resolveDanmakuTextColor(payload.usernameColor, settings);
     item.style.fontSize = `${settings.fontSize || 22}px`;
     item.style.fontFamily = settings.fontFamily || 'sans-serif';
     item.style.opacity = String(opacity);

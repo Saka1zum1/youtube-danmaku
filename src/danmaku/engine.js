@@ -600,9 +600,9 @@ class DanmakuEngine {
       item.appendChild(avatar);
     }
 
-    if (username) {
+    if (username && !compact) {
       const name = document.createElement('span');
-      name.className = compact ? 'ydm-sc-username ydm-sc-username-compact' : 'ydm-sc-username';
+      name.className = 'ydm-sc-username';
       name.textContent = username;
       name.title = username;
       name.style.color = safeCssColor(superchatStyle?.color || '#ffffff');
@@ -974,7 +974,7 @@ class DanmakuEngine {
     item.className = 'ydm-danmaku-item';
     appendDanmakuContent(item, message, parts);
     item.style.top = '0';
-    item.style.color = safeCssColor(usernameColor);
+    item.style.color = resolveDanmakuTextColor(usernameColor, settings);
     item.style.fontSize = `${settings.fontSize}px`;
     item.style.fontFamily = settings.fontFamily;
     item.style.opacity = String(this.getItemOpacity());

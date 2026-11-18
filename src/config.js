@@ -5,6 +5,9 @@ const DEFAULT_SETTINGS = {
   speed: 5,
   fontSize: 22,
   opacity: 100,
+  /** chat = YouTube chatter colors; mono = single white; custom = danmakuColor */
+  danmakuColorMode: 'chat',
+  danmakuColor: '#ffffff',
   fontFamily: 'system-ui, sans-serif',
   scrollArea: 'full',
   translateEnabled: false,
@@ -28,7 +31,7 @@ const DEFAULT_SETTINGS = {
   /** When true, pin lifetime follows the YouTube live-chat ticker countdown. */
   superchatDurationFollowYoutube: false,
   superchatAnimation: 'slide',
-  /** Compact pin: avatar + name + amount; click opens a centered detail card. */
+  /** Compact pin: avatar + amount; click opens a centered detail card (name in card). */
   superchatCompact: false,
   /** When true, pinned Super Chats may cover scrolling danmaku (no lane reserve). */
   superchatOverlayDanmaku: true,
@@ -38,6 +41,7 @@ const SUPERCHAT_MAX_PINNED = 10;
 
 const SUPERCHAT_POSITIONS = ['top', 'top-left', 'bottom', 'bottom-left', 'bottom-right'];
 const SCROLL_AREAS = ['full', 'top-half', 'bottom-half', 'top-quarter'];
+const DANMAKU_COLOR_MODES = ['chat', 'mono', 'custom'];
 
 const SELECTORS = {
   player: 'ytd-watch-flexy #movie_player, ytd-player#ytd-player #movie_player',

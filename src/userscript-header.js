@@ -4,7 +4,7 @@
 // @name:zh-TW   YouTube 彈幕 | 即時翻譯
 // @name:ja      YouTube 弾幕 | リアルタイム翻訳
 // @namespace    youtube-danmaku
-// @version      1.7.0
+// @version      1.7.1
 // @description  Turn YouTube live chat into scrolling danmaku with real-time translation
 // @description:zh-CN  将 YouTube 直播聊天转为滚动弹幕，支持实时翻译
 // @description:zh-TW  將 YouTube 直播聊天轉為滾動彈幕，支援即時翻譯

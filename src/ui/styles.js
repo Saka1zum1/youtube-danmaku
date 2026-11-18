@@ -113,17 +113,6 @@ const YDM_CSS = `
       height: 1.55em;
     }
 
-    .ydm-superchat-item.ydm-sc-compact .ydm-sc-username-compact {
-      flex: 0 1 auto;
-      max-width: 6.5em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 0.72em;
-      font-weight: 600;
-      opacity: 0.95;
-    }
-
     .ydm-superchat-item.ydm-sc-compact .ydm-sc-amount-badge {
       font-size: 0.72em;
       font-weight: 800;
@@ -629,10 +618,16 @@ const YDM_CSS = `
       padding: 0 !important;
     }
 
-    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-time-wrapper {
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-concurrent-wrapper {
       white-space: nowrap;
       max-width: none;
       padding-right: 2px;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-concurrent-wrapper[hidden] {
+      display: none !important;
     }
 
     .ytp-time-display.ytp-live .ytp-time-wrapper.ydm-live-views-wrapper {
@@ -902,6 +897,21 @@ const YDM_CSS = `
       background: #0f0f0f;
       color: #f1f1f1;
       font-size: 13px;
+    }
+
+    .ydm-balloon-color {
+      width: 100%;
+      height: 36px;
+      margin-top: 6px;
+      padding: 2px;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      background: #0f0f0f;
+      cursor: pointer;
+    }
+
+    .ydm-balloon-color[hidden] {
+      display: none !important;
     }
 
     .ydm-keyword-hint {

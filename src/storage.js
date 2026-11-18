@@ -42,6 +42,10 @@ function loadSettings() {
       } else {
         merged.superchatOverlayDanmaku = !!merged.superchatOverlayDanmaku;
       }
+      if (!DANMAKU_COLOR_MODES.includes(merged.danmakuColorMode)) {
+        merged.danmakuColorMode = DEFAULT_SETTINGS.danmakuColorMode;
+      }
+      merged.danmakuColor = safeCssColor(merged.danmakuColor || DEFAULT_SETTINGS.danmakuColor);
       return merged;
     }
   } catch (_) {

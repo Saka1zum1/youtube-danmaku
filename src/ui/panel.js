@@ -204,6 +204,7 @@ class SettingsPanel {
       this.createRange(t('scrollSpeed'), 'speed', 1, 10, 1, (v) => String(v)),
       this.createRange(t('fontSize'), 'fontSize', 14, 40, 1, (v) => `${v}px`),
       this.createRange(t('danmakuOpacity'), 'opacity', 10, 100, 5, (v) => `${v}%`),
+      this.createDanmakuColorBlock(),
       this.createSelect(t('fontFamily'), 'fontFamily', getFontOptions()),
       this.createSelect(t('scrollArea'), 'scrollArea', getScrollAreaOptions()),
       this.createDivider(),
@@ -227,6 +228,48 @@ class SettingsPanel {
     this.balloon.append(header, body);
     const mountTarget = getFullscreenElement() || document.body;
     mountTarget.appendChild(this.balloon);
+  }
+
+  createDanmakuColorBlock() {
+    const row = document.createElement('div');
+    row.className = 'ydm-balloon-row ydm-balloon-row--field';
+
+    const labelEl = document.createElement('div');
+    labelEl.className = 'ydm-balloon-label';
+    labelEl.textContent = t('danmakuColors');
+
+    const select = document.createElement('select');
+    select.className = 'ydm-balloon-select';
+    for (const opt of getDanmakuColorModeOptions()) {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === this.settings.danmakuColorMode) option.selected = true;
+      select.appendChild(option);
+    }
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.className = 'ydm-balloon-color';
+    colorInput.value = normalizeHexColor(this.settings.danmakuColor);
+    colorInput.hidden = this.settings.danmakuColorMode !== 'custom';
+    colorInput.setAttribute('aria-label', t('danmakuColorCustom'));
+
+    const syncColorVisibility = () => {
+      colorInput.hidden = this.settings.danmakuColorMode !== 'custom';
+    };
+
+    select.addEventListener('change', () => {
+      this.updateSetting('danmakuColorMode', select.value);
+      syncColorVisibility();
+    });
+
+    colorInput.addEventListener('input', () => {
+      this.updateSetting('danmakuColor', colorInput.value);
+    });
+
+    row.append(labelEl, select, colorInput);
+    return row;
   }
 
   createKeywordBlock() {
